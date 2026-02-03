@@ -1,0 +1,1306 @@
+/* ═══════════════════════════════════════════════════════════════════════════════
+   JML Wizard 3-Column Accordion Layout Styles
+   Based on Policy Builder pattern from PolicyAuthor.module.scss
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Page Container (Full Page Wrapper) ─── */
+.pageContainer {
+  min-height: 100vh;
+  background: #f5f5f5;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ─── Page Header (Gradient Bar) ─── */
+.pageHeader {
+  color: #ffffff;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.pageHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pageHeaderLogo {
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pageHeaderTitleGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.pageHeaderTitle {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.pageHeaderSubtitle {
+  font-size: 11px;
+  opacity: 0.85;
+  margin: 0;
+}
+
+.pageHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pageHeaderBtn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.pageHeaderBtn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* ─── Page Body (Content Area) ─── */
+.pageBody {
+  flex: 1;
+  padding: 24px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── Theme-based Page Header Gradients ─── */
+.themeJoiner .pageHeader {
+  background: linear-gradient(135deg, #005BAA 0%, #004A8F 100%);
+}
+
+.themeMover .pageHeader {
+  background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+}
+
+.themeLeaver .pageHeader {
+  background: linear-gradient(135deg, #d13438 0%, #a4262c 100%);
+}
+
+/* ─── Main Layout Container ─── */
+.wizardLayout {
+  display: flex;
+  flex: 1;
+  gap: 0;
+  background: #f5f5f5;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ─── Left Sidebar (Accordion Steps) ─── */
+.sidebar {
+  width: 220px;
+  min-width: 220px;
+  background: #f8f8f8;
+  border-right: 1px solid #edebe9;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.sidebarHeader {
+  padding: 24px 20px;
+  border-bottom: 1px solid #edebe9;
+}
+
+.sidebarTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #323130;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sidebarSubtitle {
+  font-size: 11px;
+  color: #605e5c;
+  margin-top: 4px;
+}
+
+.stepsList {
+  flex: 1;
+  padding: 16px 0;
+  overflow-y: auto;
+}
+
+.stepItem {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+}
+
+.stepItem:hover {
+  background: #f3f2f1;
+}
+
+.stepItemActive {
+  background: #ffffff;
+  border-left-color: currentColor;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.stepItemCompleted {
+  opacity: 0.9;
+}
+
+.stepNumber {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  margin-right: 12px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.stepNumberPending {
+  background: #edebe9;
+  color: #8a8886;
+}
+
+.stepNumberActive {
+  background: currentColor;
+  color: #ffffff;
+}
+
+.stepNumberCompleted {
+  background: #059669;
+  color: #ffffff;
+}
+
+.stepLabel {
+  font-size: 13px;
+  color: #605e5c;
+  font-weight: 500;
+}
+
+.stepLabelActive {
+  color: #323130;
+  font-weight: 600;
+}
+
+/* ─── Center Content Area ─── */
+.centerArea {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  min-width: 0;
+}
+
+.formHeader {
+  padding: 24px 32px 20px;
+  border-bottom: 1px solid #edebe9;
+}
+
+.formTitle {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 4px 0;
+}
+
+.formSubtitle {
+  font-size: 13px;
+  color: #605e5c;
+  margin: 0;
+}
+
+.formContent {
+  flex: 1;
+  padding: 24px 32px;
+  overflow-y: auto;
+}
+
+.formCard {
+  background: #ffffff;
+  border: 1px solid #edebe9;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.formCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f3f2f1;
+}
+
+.formCardIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.formCardTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.formCardDescription {
+  font-size: 13px;
+  color: #605e5c;
+  margin: 0;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.formGridFull {
+  grid-column: span 2;
+}
+
+/* ─── Footer with Navigation ─── */
+.footer {
+  padding: 16px 32px;
+  border-top: 1px solid #edebe9;
+  background: #fafafa;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.footerLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.footerRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.progressBar {
+  width: 200px;
+  height: 6px;
+  background: #edebe9;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.progressText {
+  font-size: 12px;
+  color: #605e5c;
+  margin-left: 8px;
+}
+
+/* ─── Buttons ─── */
+.btnPrimary {
+  padding: 10px 24px;
+  border-radius: 6px;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+  color: #ffffff;
+}
+
+.btnPrimary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btnSecondary {
+  padding: 10px 20px;
+  border-radius: 6px;
+  border: 1px solid #d1d1d1;
+  background: #ffffff;
+  color: #323130;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+}
+
+.btnSecondary:hover {
+  background: #f3f2f1;
+  border-color: #c8c6c4;
+}
+
+.btnSecondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btnGhost {
+  padding: 10px 16px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: #605e5c;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+}
+
+.btnGhost:hover {
+  background: #f3f2f1;
+}
+
+/* ─── Right Context Panel ─── */
+.rightPanel {
+  width: 280px;
+  min-width: 280px;
+  background: #fafafa;
+  border-left: 1px solid #edebe9;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.rightPanelHeader {
+  padding: 20px;
+  border-bottom: 1px solid #edebe9;
+}
+
+.rightPanelTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #323130;
+  margin: 0;
+}
+
+.rightPanelContent {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.tipCard {
+  background: #ffffff;
+  border: 1px solid #edebe9;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.tipCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.tipCardIcon {
+  font-size: 16px;
+}
+
+.tipCardTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: #323130;
+}
+
+.tipCardBody {
+  font-size: 12px;
+  color: #605e5c;
+  line-height: 1.5;
+}
+
+/* ─── Checklist in Right Panel ─── */
+.checklist {
+  margin-top: 16px;
+}
+
+.checklistTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: #323130;
+  margin-bottom: 12px;
+}
+
+.checklistItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f3f2f1;
+}
+
+.checklistItem:last-child {
+  border-bottom: none;
+}
+
+.checklistIcon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+.checklistIconPending {
+  background: #edebe9;
+  color: #8a8886;
+}
+
+.checklistIconComplete {
+  background: #059669;
+  color: #ffffff;
+}
+
+.checklistLabel {
+  font-size: 12px;
+  color: #605e5c;
+}
+
+.checklistLabelComplete {
+  color: #059669;
+  text-decoration: line-through;
+}
+
+/* ─── JML Theme Colors ─── */
+
+/* Joiner (Onboarding) - Blue */
+.themeJoiner .stepItemActive {
+  color: #005BAA;
+}
+
+.themeJoiner .formCardIcon {
+  background: rgba(0, 91, 170, 0.1);
+  color: #005BAA;
+}
+
+.themeJoiner .btnPrimary {
+  background: linear-gradient(135deg, #005BAA 0%, #004A8F 100%);
+}
+
+.themeJoiner .btnPrimary:hover {
+  background: linear-gradient(135deg, #004A8F 0%, #003d75 100%);
+}
+
+.themeJoiner .progressFill {
+  background: #005BAA;
+}
+
+.themeJoiner .tipCardIcon {
+  color: #005BAA;
+}
+
+/* Mover (Transfers) - Orange */
+.themeMover .stepItemActive {
+  color: #ea580c;
+}
+
+.themeMover .formCardIcon {
+  background: rgba(234, 88, 12, 0.1);
+  color: #ea580c;
+}
+
+.themeMover .btnPrimary {
+  background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+}
+
+.themeMover .btnPrimary:hover {
+  background: linear-gradient(135deg, #c2410c 0%, #9a3412 100%);
+}
+
+.themeMover .progressFill {
+  background: #ea580c;
+}
+
+.themeMover .tipCardIcon {
+  color: #ea580c;
+}
+
+/* Leaver (Offboarding) - Red */
+.themeLeaver .stepItemActive {
+  color: #d13438;
+}
+
+.themeLeaver .formCardIcon {
+  background: rgba(209, 52, 56, 0.1);
+  color: #d13438;
+}
+
+.themeLeaver .btnPrimary {
+  background: linear-gradient(135deg, #d13438 0%, #a4262c 100%);
+}
+
+.themeLeaver .btnPrimary:hover {
+  background: linear-gradient(135deg, #a4262c 0%, #8a2025 100%);
+}
+
+.themeLeaver .progressFill {
+  background: #d13438;
+}
+
+.themeLeaver .tipCardIcon {
+  color: #d13438;
+}
+
+/* ─── Success Screen ─── */
+.successScreen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 40px;
+  text-align: center;
+  min-height: 400px;
+  width: 100%;
+}
+
+.successHeader {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.successIcon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.successHeaderText {
+  text-align: left;
+}
+
+.successTitle {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 4px 0;
+}
+
+.successSubtitle {
+  font-size: 14px;
+  color: #605e5c;
+  margin: 0;
+}
+
+/* 3-Panel Summary Grid */
+.successPanelsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  width: 100%;
+  max-width: 1000px;
+  margin-bottom: 24px;
+}
+
+.successPanel {
+  background: #ffffff;
+  border: 1px solid #edebe9;
+  border-radius: 10px;
+  padding: 16px;
+  text-align: left;
+}
+
+.successPanelHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #f3f2f1;
+}
+
+.successPanelIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.successPanelTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #323130;
+  margin: 0;
+}
+
+.successPanelCount {
+  font-size: 12px;
+  color: #8a8886;
+  margin-left: auto;
+}
+
+.successPanelList {
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.successPanelItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 13px;
+  color: #323130;
+  border-bottom: 1px solid #f9f9f9;
+}
+
+.successPanelItem:last-child {
+  border-bottom: none;
+}
+
+.successPanelItemIcon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 10px;
+}
+
+.successPanelItemIconSuccess {
+  background: #059669;
+  color: #ffffff;
+}
+
+.successPanelItemIconPending {
+  background: #edebe9;
+  color: #605e5c;
+}
+
+.successPanelEmptyState {
+  text-align: center;
+  color: #8a8886;
+  font-size: 12px;
+  padding: 20px 0;
+}
+
+/* Theme colors for panels */
+.themeJoiner .successPanelIcon {
+  background: rgba(0, 91, 170, 0.1);
+  color: #005BAA;
+}
+
+.themeMover .successPanelIcon {
+  background: rgba(234, 88, 12, 0.1);
+  color: #ea580c;
+}
+
+.themeLeaver .successPanelIcon {
+  background: rgba(209, 52, 56, 0.1);
+  color: #d13438;
+}
+
+/* Legacy single summary (keep for backward compat) */
+.successSummary {
+  background: #f9f9f9;
+  border-radius: 12px;
+  padding: 24px;
+  width: 100%;
+  max-width: 400px;
+  text-align: left;
+  margin-bottom: 24px;
+}
+
+.successStats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  width: 100%;
+  max-width: 600px;
+  margin-bottom: 24px;
+}
+
+.successStatCard {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+  border: 1px solid #edebe9;
+}
+
+.successStatValue {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.successStatLabel {
+  font-size: 11px;
+  color: #8a8886;
+}
+
+/* Success actions */
+.successActions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+/* ─── Loading State ─── */
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  color: #605e5c;
+}
+
+/* ─── Scrollable List Items ─── */
+.scrollableList {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #edebe9;
+  border-radius: 6px;
+}
+
+.listItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f3f2f1;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.listItem:last-child {
+  border-bottom: none;
+}
+
+.listItem:hover {
+  background: #f9f9f9;
+}
+
+.listItemSelected {
+  background: rgba(0, 91, 170, 0.08);
+  border-left: 3px solid #005BAA;
+}
+
+.listItemTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: #323130;
+}
+
+.listItemSubtitle {
+  font-size: 12px;
+  color: #605e5c;
+}
+
+/* ─── Toggle Row for Selections ─── */
+.toggleRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f3f2f1;
+}
+
+.toggleRow:last-child {
+  border-bottom: none;
+}
+
+.toggleLabel {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: #323130;
+}
+
+.toggleMeta {
+  font-size: 12px;
+  color: #8a8886;
+}
+
+/* ─── Info/Warning Boxes ─── */
+.infoBox {
+  padding: 12px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.infoBoxIcon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.infoBoxInfo {
+  background: #e6f2ff;
+  color: #0050a3;
+  border: 1px solid #b8d4f0;
+}
+
+.infoBoxWarning {
+  background: #fff8e6;
+  color: #9a6700;
+  border: 1px solid #ffd666;
+}
+
+.infoBoxSuccess {
+  background: #e6f9ed;
+  color: #047857;
+  border: 1px solid #86efac;
+}
+
+.infoBoxError {
+  background: #fff0f0;
+  color: #d13438;
+  border: 1px solid #fca5a5;
+}
+
+/* ─── Back to Tracker Link ─── */
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  margin-bottom: 16px;
+  color: #605e5c;
+  font-size: 13px;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.backLink:hover {
+  color: #323130;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   ACCORDION CATEGORY STYLES
+   For grouping documents, systems, equipment, training by category
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.accordionContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.accordionCategory {
+  background: #ffffff;
+  border: 1px solid #edebe9;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: box-shadow 0.2s ease;
+}
+
+.accordionCategory:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.accordionHeader {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  user-select: none;
+}
+
+.accordionHeader:hover {
+  background: #fafafa;
+}
+
+.accordionIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-right: 12px;
+}
+
+.accordionIconHR {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8b5cf6;
+}
+
+.accordionIconLegal {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.accordionIconFinance {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
+
+.accordionIconCompliance {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.accordionIconIT {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.accordionIconHardware {
+  background: rgba(107, 114, 128, 0.1);
+  color: #6b7280;
+}
+
+.accordionIconOrientation {
+  background: rgba(0, 91, 170, 0.1);
+  color: #005BAA;
+}
+
+.accordionIconSafety {
+  background: rgba(234, 88, 12, 0.1);
+  color: #ea580c;
+}
+
+.accordionIconTechnical {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8b5cf6;
+}
+
+.accordionTitleGroup {
+  flex: 1;
+  min-width: 0;
+}
+
+.accordionTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #323130;
+  margin: 0;
+}
+
+.accordionMeta {
+  font-size: 12px;
+  color: #8a8886;
+  margin-top: 2px;
+}
+
+.accordionBadge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: #f3f2f1;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #605e5c;
+  margin-right: 12px;
+}
+
+.accordionChevron {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #8a8886;
+  transition: transform 0.2s ease;
+}
+
+.accordionChevronOpen {
+  transform: rotate(180deg);
+}
+
+.accordionBody {
+  border-top: 1px solid #edebe9;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.accordionBodyOpen {
+  max-height: 500px;
+}
+
+.accordionList {
+  padding: 8px 0;
+}
+
+.accordionItem {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px 10px 64px;
+  border-bottom: 1px solid #f5f5f5;
+  transition: background 0.15s ease;
+}
+
+.accordionItem:last-child {
+  border-bottom: none;
+}
+
+.accordionItem:hover {
+  background: #fafafa;
+}
+
+.accordionItemCheckbox {
+  margin-right: 12px;
+}
+
+.accordionItemLabel {
+  flex: 1;
+  font-size: 13px;
+  color: #323130;
+}
+
+.accordionItemRequired {
+  color: #d13438;
+  font-size: 11px;
+  font-weight: 600;
+  margin-left: 4px;
+}
+
+.accordionItemActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.accordionItemBtn {
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: 1px solid #d1d1d1;
+  background: #ffffff;
+  color: #323130;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.accordionItemBtn:hover {
+  background: #f3f2f1;
+  border-color: #c8c6c4;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   REVIEW STEP GRID LAYOUT
+   3 columns x 2 rows for final review before submission
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.reviewGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.reviewGridFullWidth {
+  grid-column: 1 / -1;
+}
+
+.reviewCard {
+  background: #ffffff;
+  border: 1px solid #edebe9;
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.reviewCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #f3f2f1;
+}
+
+.reviewCardIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: rgba(0, 91, 170, 0.1);
+  color: #005BAA;
+}
+
+.themeMover .reviewCardIcon {
+  background: rgba(234, 88, 12, 0.1);
+  color: #ea580c;
+}
+
+.themeLeaver .reviewCardIcon {
+  background: rgba(209, 52, 56, 0.1);
+  color: #d13438;
+}
+
+.reviewCardTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #323130;
+  margin: 0;
+}
+
+.reviewCardCount {
+  font-size: 12px;
+  color: #8a8886;
+  margin-left: auto;
+  background: #f3f2f1;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.reviewCardList {
+  flex: 1;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.reviewCardItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  font-size: 13px;
+  color: #323130;
+  border-bottom: 1px solid #f9f9f9;
+}
+
+.reviewCardItem:last-child {
+  border-bottom: none;
+}
+
+.reviewCardItemIcon {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.reviewCardItemIconSuccess {
+  background: #059669;
+  color: #ffffff;
+}
+
+.reviewCardItemIconPending {
+  background: #edebe9;
+  color: #605e5c;
+}
+
+.reviewCardEmpty {
+  text-align: center;
+  color: #8a8886;
+  font-size: 12px;
+  padding: 16px 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   FORM FIELD STYLING
+   Border-radius and consistent styling for TextField, Toggle, and other inputs
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* TextField - border-radius 4px */
+:global(.ms-TextField-fieldGroup) {
+  border-radius: 4px !important;
+}
+
+:global(.ms-TextField-field) {
+  border-radius: 4px !important;
+}
+
+/* Toggle - rounded pill styling */
+:global(.ms-Toggle-background) {
+  border-radius: 10px !important;
+}
+
+:global(.ms-Toggle-thumb) {
+  border-radius: 50% !important;
+}
+
+/* Dropdown - border-radius 4px */
+:global(.ms-Dropdown-title) {
+  border-radius: 4px !important;
+}
+
+:global(.ms-Dropdown-caretDownWrapper) {
+  border-radius: 0 4px 4px 0 !important;
+}
+
+/* DatePicker - border-radius 4px */
+:global(.ms-DatePicker) :global(.ms-TextField-fieldGroup) {
+  border-radius: 4px !important;
+}
+
+/* Checkbox - border-radius 2px for square with slight round */
+:global(.ms-Checkbox-checkbox) {
+  border-radius: 2px !important;
+}

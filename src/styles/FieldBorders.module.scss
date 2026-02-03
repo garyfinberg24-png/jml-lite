@@ -1,0 +1,187 @@
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Field Borders for Recruitment Manager forms
+   Purple Theme: #005BAA primary focus color
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.fieldWithBorder label {
+  font-family: "Segoe UI", "Segoe UI Web (West European)", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #323130;
+  margin-bottom: 6px;
+  display: block;
+}
+
+/* ─── Fluent UI v9 Input wrapper ─── */
+.fieldWithBorder :global(.fui-Input) {
+  border: 1px solid #8a8886 !important;
+  border-radius: 4px !important;
+  min-height: 34px;
+  background-color: #ffffff;
+}
+
+.fieldWithBorder :global(.fui-Input:hover) {
+  border-color: #605e5c !important;
+}
+
+.fieldWithBorder :global(.fui-Input:focus-within) {
+  border-color: #005BAA !important;
+  box-shadow: 0 0 0 1px #005BAA !important;
+}
+
+/* ─── Fluent UI v9 Dropdown trigger ─── */
+.fieldWithBorder :global(.fui-Dropdown) {
+  border: 1px solid #8a8886 !important;
+  border-radius: 4px !important;
+  min-height: 34px;
+  background-color: #ffffff;
+}
+
+.fieldWithBorder :global(.fui-Dropdown:hover) {
+  border-color: #605e5c !important;
+}
+
+.fieldWithBorder :global(.fui-Dropdown:focus-within) {
+  border-color: #005BAA !important;
+  box-shadow: 0 0 0 1px #005BAA !important;
+}
+
+/* ─── Fluent UI v9 Textarea wrapper ─── */
+.fieldWithBorder :global(.fui-Textarea) {
+  border: 1px solid #8a8886 !important;
+  border-radius: 4px !important;
+  min-height: 60px;
+  background-color: #ffffff;
+}
+
+.fieldWithBorder :global(.fui-Textarea:hover) {
+  border-color: #605e5c !important;
+}
+
+.fieldWithBorder :global(.fui-Textarea:focus-within) {
+  border-color: #005BAA !important;
+  box-shadow: 0 0 0 1px #005BAA !important;
+}
+
+.fieldWithBorder :global(.fui-Textarea) textarea {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  padding: 6px 12px;
+  font-size: 14px;
+  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.fieldWithBorder :global(.fui-Input) input {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  font-size: 14px;
+  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.fieldWithBorder :global(.fui-Listbox) {
+  background-color: #ffffff;
+  border: 1px solid #8a8886;
+  box-shadow: 0 6.4px 14.4px 0 rgba(0,0,0,0.132), 0 1.2px 3.6px 0 rgba(0,0,0,0.108);
+  border-radius: 4px;
+}
+
+.fieldWithBorder :global(.fui-Option) {
+  padding: 6px 12px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.fieldWithBorder :global(.fui-Option:hover) {
+  background-color: #f3f2f1;
+}
+
+.fieldWithBorder :global(.fui-Option[aria-selected="true"]) {
+  background-color: #edebe9;
+}
+
+.fieldWithBorder :global(.fui-Label) {
+  font-weight: 600;
+  color: #323130;
+  font-size: 13px;
+  padding-bottom: 4px;
+}
+
+.fieldWithBorder :global(.fui-Label .fui-Label__required) {
+  color: #d13438;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   Fluent UI v8 controls
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.fieldWithBorder :global(.ms-TextField-fieldGroup) {
+  border: 1px solid #8a8886;
+  border-radius: 4px;
+  min-height: 34px;
+}
+
+.fieldWithBorder :global(.ms-TextField-fieldGroup::after) {
+  border-radius: 4px;
+  border-color: #005BAA;
+}
+
+.fieldWithBorder :global(.ms-TextField-fieldGroup:hover) {
+  border-color: #605e5c;
+}
+
+.fieldWithBorder :global(.ms-Label) {
+  font-weight: 600;
+  color: #323130;
+  font-size: 13px;
+}
+
+.fieldWithBorder :global(.ms-Label .ms-Label--required::after),
+.fieldWithBorder :global(.ms-Label.is-required::after) {
+  color: #d13438;
+}
+
+.fieldWithBorder :global(.ms-Dropdown-title) {
+  border: 1px solid #8a8886;
+  border-radius: 4px;
+  min-height: 34px;
+  line-height: 32px;
+}
+
+.fieldWithBorder :global(.ms-Dropdown-title:hover) {
+  border-color: #605e5c;
+}
+
+.fieldWithBorder :global(.ms-Dropdown-caretDownWrapper) {
+  top: 1px;
+}
+
+.fieldWithBorder :global(.ms-BasePicker-text) {
+  border: 1px solid #8a8886;
+  border-radius: 4px;
+  min-height: 34px;
+  padding: 2px 8px;
+}
+
+.fieldWithBorder :global(.ms-BasePicker-text:hover) {
+  border-color: #605e5c;
+}
+
+.fieldWithBorder :global(.ms-BasePicker-text::after) {
+  border-color: #005BAA;
+  border-radius: 4px;
+}
+
+.fieldWithBorder :global(.ms-Toggle) {
+  margin-bottom: 0;
+}
+
+.fieldWithBorder :global(.ms-Toggle-background) {
+  border-radius: 10px;
+}
+
+.fieldWithBorder :global(.ms-Toggle.is-checked .ms-Toggle-background) {
+  background-color: #005BAA;
+  border-color: #005BAA;
+}

@@ -1,0 +1,50 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
+  "solution": {
+    "name": "jml-lite-client-side-solution",
+    "id": "b2c3d4e5-f6a7-8901-bcde-f23456789012",
+    "version": "1.0.0.0",
+    "includeClientSideAssets": true,
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "developer": {
+      "name": "First Digital",
+      "websiteUrl": "",
+      "privacyUrl": "",
+      "termsOfUseUrl": "",
+      "mpnId": "Undefined-1.20.0"
+    },
+    "metadata": {
+      "shortDescription": {
+        "default": "DWx JML Lite — Employee Lifecycle Management (Joiner, Mover, Leaver)"
+      },
+      "longDescription": {
+        "default": "Standalone employee lifecycle management solution. Part of the DWx (Digital Workplace Excellence) suite by First Digital. Manages onboarding (joiners), internal transfers (movers), and offboarding (leavers) with task tracking, asset management, and self-service portals."
+      },
+      "screenshotPaths": [],
+      "videoUrl": "",
+      "categories": []
+    },
+    "features": [
+      {
+        "title": "DWx JML Lite",
+        "description": "DWx JML Lite — Employee Lifecycle Management (Joiner, Mover, Leaver)",
+        "id": "c3d4e5f6-a7b8-9012-cdef-345678901234",
+        "version": "1.0.0.0"
+      }
+    ],
+    "webApiPermissionRequests": [
+      {
+        "resource": "Microsoft Graph",
+        "scope": "User.Read"
+      },
+      {
+        "resource": "Microsoft Graph",
+        "scope": "User.ReadBasic.All"
+      }
+    ]
+  },
+  "paths": {
+    "zippedPackage": "solution/jml-lite.sppkg"
+  }
+}

@@ -1,0 +1,371 @@
+/* ═══════════════════════════════════════════════════════════════════════════════
+   RECRUITMENT MANAGER - PANEL & MODAL STYLE GUIDE
+   Brand: DWx (Digital Workplace Excellence) by First Digital
+   Primary Color: #005BAA (Customer Blue)
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   CUSTOMER COLOR PALETTE (Blue)
+   ─────────────────────────────────────────────────────────────────────────────
+   --rm-primary:        #005BAA   (Customer Blue)
+   --rm-primary-dark:   #004A8F   (Dark Blue - for gradients/hovers)
+   --rm-primary-light:  #0070D4   (Light Blue - for accents)
+   --rm-gradient:       linear-gradient(135deg, #005BAA 0%, #004A8F 100%)
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.panelHeader {
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #005BAA 0%, #004A8F 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.panelTitleArea {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex: 1;
+}
+
+.panelIcon {
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.panelIcon svg {
+  width: 22px;
+  height: 22px;
+  color: #ffffff;
+}
+
+.panelTitle {
+  font-size: 20px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+  line-height: 1.3;
+  font-family: "Segoe UI", "Segoe UI Web (West European)", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+}
+
+.panelSubtitle {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+  margin-top: 4px;
+  font-weight: 400;
+}
+
+.panelCloseBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  transition: background 0.15s ease;
+  flex-shrink: 0;
+  margin-left: 12px;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.panelCloseBtn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.panelFooter {
+  padding: 16px 24px;
+  background: #ffffff;
+  border-top: 1px solid #e1dfdd;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.panelFooter button {
+  font-family: "Segoe UI", "Segoe UI Web (West European)", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+}
+
+.panelBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.formSectionTitle {
+  font-size: 12px;
+  font-weight: 700;
+  color: #005BAA;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #005BAA;
+  display: inline-block;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.fullWidth {
+  grid-column: 1 / -1;
+}
+
+.btnPrimary {
+  padding: 8px 20px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  background: #005BAA;
+  color: #ffffff;
+  font-family: "Segoe UI", "Segoe UI Web (West European)", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+}
+
+.btnPrimary:hover {
+  background: #004A8F;
+}
+
+.btnPrimary:disabled {
+  background: #c8c6c4;
+  cursor: not-allowed;
+}
+
+.btnSecondary {
+  padding: 8px 20px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  background: #ffffff;
+  color: #333333;
+  border: 1px solid #8a8886;
+  font-family: "Segoe UI", "Segoe UI Web (West European)", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+}
+
+.btnSecondary:hover {
+  background: #f3f2f1;
+}
+
+.btnDanger {
+  padding: 8px 20px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  color: #d13438;
+  border: 1px solid #d13438;
+  font-family: "Segoe UI", "Segoe UI Web (West European)", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+}
+
+.btnDanger:hover {
+  background: #fde7e9;
+}
+
+.rmPanel :global(.ms-Panel-header) {
+  padding: 0;
+  margin: 0;
+}
+
+.rmPanel :global(.ms-Panel-headerText) {
+  display: none;
+}
+
+/* Remove all padding/margin from panel commands area to ensure header is flush */
+.rmPanel :global(.ms-Panel-commands) {
+  padding: 0;
+  margin: 0;
+}
+
+.rmPanel :global(.ms-Panel-navigation) {
+  padding: 0;
+  margin: 0;
+  height: 0;
+  min-height: 0;
+}
+
+.rmPanel :global(.ms-Panel-contentInner) {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.rmPanel :global(.ms-Panel-scrollableContent) {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.rmPanel :global(.ms-Panel-content) {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px !important;
+}
+
+.rmPanel :global(.ms-Panel-footer) {
+  border-top: 1px solid #e1dfdd;
+}
+
+.rmPanel :global(.ms-Panel-footerInner) {
+  padding: 16px 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   JML COLOR VARIANTS
+   - Onboarding: Purple (default)
+   - Mover: Orange (#ea580c)
+   - Offboarding: Red (#d13438)
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   MOVER VARIANT (Orange)
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.panelHeaderMover {
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.formSectionTitleMover {
+  font-size: 12px;
+  font-weight: 700;
+  color: #ea580c;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #ea580c;
+  display: inline-block;
+}
+
+.btnPrimaryMover {
+  padding: 8px 20px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  background: #ea580c;
+  color: #ffffff;
+  font-family: "Segoe UI", "Segoe UI Web (West European)", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+}
+
+.btnPrimaryMover:hover {
+  background: #c2410c;
+}
+
+.btnPrimaryMover:disabled {
+  background: #c8c6c4;
+  cursor: not-allowed;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   OFFBOARDING VARIANT (Red)
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.panelHeaderOffboarding {
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #d13438 0%, #a80000 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.formSectionTitleOffboarding {
+  font-size: 12px;
+  font-weight: 700;
+  color: #d13438;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #d13438;
+  display: inline-block;
+}
+
+.btnPrimaryOffboarding {
+  padding: 8px 20px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  background: #d13438;
+  color: #ffffff;
+  font-family: "Segoe UI", "Segoe UI Web (West European)", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+}
+
+.btnPrimaryOffboarding:hover {
+  background: #a80000;
+}
+
+.btnPrimaryOffboarding:disabled {
+  background: #c8c6c4;
+  cursor: not-allowed;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   FORM SECTION UTILITY CLASSES
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.formSection {
+  margin-bottom: 24px;
+}
+
+.panelContent {
+  padding: 0;
+}
