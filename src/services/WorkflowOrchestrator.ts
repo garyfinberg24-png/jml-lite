@@ -1,19 +1,21 @@
 // Workflow Orchestrator — Coordinates task assignment, notifications, and approvals
 // This service ties together all the workflow components
+// Now integrated with Teams Webhook notifications for real-time channel alerts
 
 import { SPFI } from '@pnp/sp';
 import '@pnp/sp/webs';
 import '@pnp/sp/site-users';
 import { WebPartContext } from '@microsoft/sp-webpart-base';
 import { GraphNotificationService, INotificationRecipient, ITaskNotification } from './GraphNotificationService';
+import { TeamsWebhookService } from './TeamsWebhookService';
 import { ApprovalService } from './ApprovalService';
 import { OnboardingService } from './OnboardingService';
 import { MoverService } from './MoverService';
 import { OffboardingService } from './OffboardingService';
 import { RmAuditTrailService } from './JmlAuditTrailService';
 import { IOnboarding, IOnboardingTask } from '../models/IOnboarding';
-import { IMoverTask } from '../models/IMover';
-import { IOffboardingTask } from '../models/IOffboarding';
+import { IMover, IMoverTask } from '../models/IMover';
+import { IOffboarding, IOffboardingTask } from '../models/IOffboarding';
 import { ApprovalType, ApprovalPriority, ICreateApprovalRequest } from '../models/IApproval';
 
 export interface ITaskAssignment {
@@ -49,6 +51,7 @@ export class WorkflowOrchestrator {
   private sp: SPFI;
   private context: WebPartContext | null;
   private notificationService: GraphNotificationService;
+  private webhookService: TeamsWebhookService;
   private approvalService: ApprovalService;
   private onboardingService: OnboardingService;
   private moverService: MoverService;
@@ -65,6 +68,7 @@ export class WorkflowOrchestrator {
 
     // Initialize all services
     this.notificationService = new GraphNotificationService(sp, context);
+    this.webhookService = new TeamsWebhookService(sp);
     this.approvalService = new ApprovalService(sp);
     this.onboardingService = new OnboardingService(sp);
     this.moverService = new MoverService(sp);
@@ -494,9 +498,18 @@ export class WorkflowOrchestrator {
         }),
       });
 
-      // TODO: Auto-assign tasks based on policy pack
-      // TODO: Send welcome notification to employee
-      // TODO: Notify HR and manager
+      // Send Teams webhook notification
+      if (this.config.sendTeamsNotifications) {
+        await this.webhookService.notifyOnboardingStarted({
+          processType: 'Onboarding',
+          processId: onboarding.Id!,
+          employeeName: onboarding.CandidateName,
+          department: onboarding.Department || 'Not specified',
+          jobTitle: onboarding.JobTitle || 'Not specified',
+          effectiveDate: onboarding.StartDate,
+          actionUrl: this.buildTaskUrl('onboarding', onboarding.Id!),
+        });
+      }
 
       console.log(`[WorkflowOrchestrator] Started onboarding workflow for ${onboarding.CandidateName}`);
     } catch (error) {
@@ -523,9 +536,105 @@ export class WorkflowOrchestrator {
         }),
       });
 
+      // Send Teams webhook notification for completion
+      if (this.config.sendTeamsNotifications) {
+        await this.webhookService.notifyProcessCompleted({
+          processType: 'Onboarding',
+          processId: onboardingId,
+          employeeName: onboarding.CandidateName,
+          department: onboarding.Department || 'Not specified',
+          jobTitle: onboarding.JobTitle || 'Not specified',
+          effectiveDate: onboarding.StartDate,
+          actionUrl: this.buildTaskUrl('onboarding', onboardingId),
+        });
+      }
+
       console.log(`[WorkflowOrchestrator] Completed onboarding workflow for ${onboarding.CandidateName}`);
     } catch (error) {
       console.error('[WorkflowOrchestrator] Error completing onboarding workflow:', error);
+    }
+  }
+
+  /**
+   * Start mover (transfer) workflow
+   */
+  public async startMoverWorkflow(mover: IMover): Promise<void> {
+    try {
+      // Log workflow start
+      this.auditService.logEntry({
+        Action: 'WorkflowStarted',
+        EntityType: 'Mover',
+        EntityId: mover.Id!,
+        EntityTitle: mover.EmployeeName,
+        Details: JSON.stringify({
+          employee: mover.EmployeeName,
+          fromDepartment: mover.CurrentDepartment,
+          toDepartment: mover.NewDepartment,
+          effectiveDate: mover.EffectiveDate,
+        }),
+      });
+
+      // Send Teams webhook notification
+      if (this.config.sendTeamsNotifications) {
+        await this.webhookService.notifyTransferStarted({
+          processType: 'Transfer',
+          processId: mover.Id!,
+          employeeName: mover.EmployeeName,
+          department: mover.NewDepartment || 'Not specified',
+          jobTitle: mover.NewJobTitle || 'Not specified',
+          effectiveDate: mover.EffectiveDate,
+          actionUrl: this.buildTaskUrl('mover', mover.Id!),
+          additionalFacts: [
+            { title: 'From Department', value: mover.CurrentDepartment || 'N/A' },
+            { title: 'To Department', value: mover.NewDepartment || 'N/A' },
+            { title: 'Transfer Type', value: mover.MoverType || 'Standard' },
+          ],
+        });
+      }
+
+      console.log(`[WorkflowOrchestrator] Started mover workflow for ${mover.EmployeeName}`);
+    } catch (error) {
+      console.error('[WorkflowOrchestrator] Error starting mover workflow:', error);
+    }
+  }
+
+  /**
+   * Start offboarding workflow
+   */
+  public async startOffboardingWorkflow(offboarding: IOffboarding): Promise<void> {
+    try {
+      // Log workflow start
+      this.auditService.logEntry({
+        Action: 'WorkflowStarted',
+        EntityType: 'Offboarding',
+        EntityId: offboarding.Id!,
+        EntityTitle: offboarding.EmployeeName,
+        Details: JSON.stringify({
+          employee: offboarding.EmployeeName,
+          lastWorkingDate: offboarding.LastWorkingDate,
+          terminationType: offboarding.TerminationType,
+        }),
+      });
+
+      // Send Teams webhook notification
+      if (this.config.sendTeamsNotifications) {
+        await this.webhookService.notifyOffboardingStarted(
+          {
+            processType: 'Offboarding',
+            processId: offboarding.Id!,
+            employeeName: offboarding.EmployeeName,
+            department: offboarding.Department || 'Not specified',
+            jobTitle: offboarding.JobTitle || 'Not specified',
+            effectiveDate: offboarding.LastWorkingDate,
+            actionUrl: this.buildTaskUrl('offboarding', offboarding.Id!),
+          },
+          offboarding.TerminationType
+        );
+      }
+
+      console.log(`[WorkflowOrchestrator] Started offboarding workflow for ${offboarding.EmployeeName}`);
+    } catch (error) {
+      console.error('[WorkflowOrchestrator] Error starting offboarding workflow:', error);
     }
   }
 

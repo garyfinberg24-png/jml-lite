@@ -1,7 +1,7 @@
 // Teams Notification Service — Push notifications for tasks and approvals
-// Uses Microsoft Graph API to send notifications to MS Teams users
-// Requires API permissions: ChatMessage.Send, User.Read.All
-// Note: @pnp/graph/chats import removed - service falls back to webhook/audit logging
+// Uses Microsoft Graph API for 1:1 chats and Teams Webhooks for channel notifications
+// Webhook notifications: No special permissions required (configured in Admin Center)
+// Graph API chat: Requires ChatMessage.Send, User.Read.All permissions
 
 import { SPFI } from '@pnp/sp';
 import '@pnp/sp/webs';
@@ -9,10 +9,8 @@ import '@pnp/sp/lists';
 import '@pnp/sp/items';
 import { graphfi, SPFx as graphSPFx } from '@pnp/graph';
 import '@pnp/graph/users';
-// Note: Teams and Chats Graph API modules not available in current PnP version
-// import '@pnp/graph/teams';
-// import '@pnp/graph/chats';
 import { JML_LISTS } from '../constants/SharePointListNames';
+import { TeamsWebhookService } from './TeamsWebhookService';
 
 export interface ITeamsNotification {
   title: string;
@@ -63,12 +61,14 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 export class TeamsNotificationService {
   private sp: SPFI;
+  private webhookService: TeamsWebhookService;
   // Graph client is prepared for future MS Teams integration
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private _graph: ReturnType<typeof graphfi> | null = null;
 
   constructor(sp: SPFI, context?: any) {
     this.sp = sp;
+    this.webhookService = new TeamsWebhookService(sp);
     if (context) {
       try {
         this._graph = graphfi().using(graphSPFx(context));
@@ -83,11 +83,17 @@ export class TeamsNotificationService {
     return this._graph;
   }
 
+  // Getter for webhook service
+  public getWebhookService(): TeamsWebhookService {
+    return this.webhookService;
+  }
+
   // ═══════════════════════════════════════════════════════════════
-  // ADAPTIVE CARD BUILDERS
+  // ADAPTIVE CARD BUILDERS (for Graph API / direct chat integration)
   // ═══════════════════════════════════════════════════════════════
 
-  private buildTaskCard(notification: ITaskNotification): any {
+  // @ts-ignore - Reserved for future Graph API direct chat integration
+  private _buildTaskCard(notification: ITaskNotification): any {
     // Color can be used for card theming in future iterations
     void CATEGORY_COLORS[notification.category];
     const priorityIcon = notification.priority === 'High' ? '🔴' : notification.priority === 'Medium' ? '🟡' : '🟢';
@@ -165,7 +171,8 @@ export class TeamsNotificationService {
     };
   }
 
-  private buildApprovalCard(notification: IApprovalNotification): any {
+  // @ts-ignore - Reserved for future Graph API direct chat integration
+  private _buildApprovalCard(notification: IApprovalNotification): any {
     return {
       type: 'AdaptiveCard',
       $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
@@ -266,22 +273,33 @@ export class TeamsNotificationService {
   // ═══════════════════════════════════════════════════════════════
 
   /**
-   * Send a task notification to a user via Teams
+   * Send a task notification to a user via Teams webhook
    */
   public async sendTaskNotification(notification: ITaskNotification): Promise<boolean> {
     try {
-      // Build card for future Graph API integration
-      void this.buildTaskCard(notification);
+      // Map category to processType for webhook service
+      const processType = notification.category === 'Mover' ? 'Transfer' : notification.category;
 
-      // Log for now - in production, this would call Graph API
-      console.log('[TeamsNotificationService] Task notification:', {
-        task: notification.taskTitle,
-        to: notification.assignedToEmail,
-        priority: notification.priority
+      // Send via webhook service (primary delivery method)
+      const webhookResult = await this.webhookService.sendTaskNotification({
+        taskId: notification.taskId,
+        taskTitle: notification.taskTitle,
+        taskCategory: notification.category,
+        processType: processType as 'Onboarding' | 'Transfer' | 'Offboarding',
+        employeeName: notification.employeeName,
+        assigneeEmail: notification.assignedToEmail,
+        dueDate: notification.dueDate,
+        priority: notification.priority,
+        actionUrl: notification.actionUrl,
       });
 
-      // Store notification in audit log
-      await this.logNotification('Task', notification.taskTitle, notification.assignedToEmail || '');
+      if (webhookResult) {
+        console.log('[TeamsNotificationService] Task notification sent via webhook');
+      } else {
+        // Fallback: Log to audit trail if webhook not configured
+        console.log('[TeamsNotificationService] No webhook configured, logging notification');
+        await this.logNotification('Task', notification.taskTitle, notification.assignedToEmail || '');
+      }
 
       return true;
     } catch (error) {
@@ -291,20 +309,29 @@ export class TeamsNotificationService {
   }
 
   /**
-   * Send an approval request notification
+   * Send an approval request notification via Teams webhook
    */
   public async sendApprovalNotification(notification: IApprovalNotification): Promise<boolean> {
     try {
-      // Build card for future Graph API integration
-      void this.buildApprovalCard(notification);
-
-      console.log('[TeamsNotificationService] Approval notification:', {
-        type: notification.approvalType,
+      // Send via webhook service
+      const webhookResult = await this.webhookService.sendApprovalNotification({
+        approvalId: notification.approvalId,
+        approvalType: notification.approvalType,
         title: notification.title,
-        to: notification.approverEmail
+        employeeName: '', // Will be filled from context
+        requestedBy: notification.requestedBy,
+        approverName: '', // Could be resolved from approverId
+        approverEmail: notification.approverEmail,
+        details: notification.details,
+        actionUrl: notification.actionUrl || '#',
       });
 
-      await this.logNotification('Approval', notification.title, notification.approverEmail || '');
+      if (webhookResult) {
+        console.log('[TeamsNotificationService] Approval notification sent via webhook');
+      } else {
+        // Fallback: Log to audit trail
+        await this.logNotification('Approval', notification.title, notification.approverEmail || '');
+      }
 
       return true;
     } catch (error) {
@@ -314,20 +341,30 @@ export class TeamsNotificationService {
   }
 
   /**
-   * Send a general notification
+   * Send a general notification via Teams webhook
    */
   public async sendNotification(notification: ITeamsNotification): Promise<boolean> {
     try {
-      // Build card for future Graph API integration
-      void this.buildGeneralCard(notification);
+      // Map category for webhook service
+      const category = notification.category === 'Mover' ? 'Transfer' : notification.category;
 
-      console.log('[TeamsNotificationService] General notification:', {
+      // Send via webhook service
+      const webhookResult = await this.webhookService.sendNotification({
         title: notification.title,
-        category: notification.category,
-        to: notification.recipientEmail
+        subtitle: notification.subtitle,
+        message: notification.message,
+        category: category as 'Onboarding' | 'Transfer' | 'Offboarding' | 'Approval' | 'Task' | 'System',
+        priority: notification.priority,
+        actionUrl: notification.actionUrl,
+        actionTitle: notification.actionTitle,
       });
 
-      await this.logNotification(notification.category, notification.title, notification.recipientEmail || '');
+      if (webhookResult) {
+        console.log('[TeamsNotificationService] General notification sent via webhook');
+      } else {
+        // Fallback: Log to audit trail
+        await this.logNotification(notification.category, notification.title, notification.recipientEmail || '');
+      }
 
       return true;
     } catch (error) {

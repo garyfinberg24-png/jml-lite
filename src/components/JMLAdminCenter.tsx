@@ -8,6 +8,7 @@ import { OffboardingConfigAdmin } from './OffboardingConfigAdmin';
 import { TaskLibraryAdmin } from './TaskLibraryAdmin';
 import { ClassificationRulesAdmin } from './ClassificationRulesAdmin';
 import { ImportData } from './ImportData';
+import { NotificationSettings } from './NotificationSettings';
 
 interface IProps { sp: SPFI; }
 
@@ -70,26 +71,7 @@ export const JMLAdminCenter: React.FC<IProps> = ({ sp }) => {
           </div>
         );
       case 'notifications':
-        return (
-          <div style={{ background: '#ffffff', borderRadius: '8px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: 600, margin: '0 0 16px 0', color: '#1a1a1a' }}>
-              Notification Settings
-            </h3>
-            <p style={{ color: '#605e5c', fontSize: '14px', marginBottom: '24px' }}>
-              Configure email and Microsoft Teams notifications.
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{ padding: '16px', background: '#f9f9f9', borderRadius: '8px' }}>
-                <div style={{ fontWeight: 500, marginBottom: '4px' }}>Teams Channel Notifications</div>
-                <div style={{ fontSize: '13px', color: '#605e5c' }}>Webhook configured for HR channel</div>
-              </div>
-              <div style={{ padding: '16px', background: '#f9f9f9', borderRadius: '8px' }}>
-                <div style={{ fontWeight: 500, marginBottom: '4px' }}>Email Notifications</div>
-                <div style={{ fontSize: '13px', color: '#605e5c' }}>Sent to managers and assigned users</div>
-              </div>
-            </div>
-          </div>
-        );
+        return <NotificationSettings sp={sp} />;
       case 'audit':
         return (
           <div style={{ background: '#ffffff', borderRadius: '8px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
