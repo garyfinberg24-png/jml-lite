@@ -8,6 +8,7 @@ import { DatePicker } from '@fluentui/react/lib/DatePicker';
 import { Toggle } from '@fluentui/react/lib/Toggle';
 import { Icon } from '@fluentui/react/lib/Icon';
 import { OffboardingService } from '../services/OffboardingService';
+import { ProcessCompletionService } from '../services/ProcessCompletionService';
 import {
   IOffboarding, IOffboardingTask, IAssetReturn,
   OffboardingStatus, OffboardingTaskStatus, AssetReturnStatus
@@ -110,7 +111,11 @@ export const OffboardingForm: React.FC<IProps> = ({ sp, isOpen, mode, item, onDi
       updates.CompletedDate = undefined;
     }
     await svc.updateOffboardingTask(task.Id, updates);
-    await svc.recalculateProgress(item.Id);
+
+    // Use ProcessCompletionService to recalculate and check for completion
+    const completionSvc = new ProcessCompletionService(sp);
+    await completionSvc.recalculateAndCheckOffboarding(item.Id);
+
     const updatedTasks = await svc.getOffboardingTasks(item.Id);
     setTasks(updatedTasks);
     const updatedOffboarding = await svc.getOffboardingById(item.Id);

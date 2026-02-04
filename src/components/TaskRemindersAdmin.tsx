@@ -1,5 +1,6 @@
 // Task Reminders Admin Component — Run overdue task checks and view reminder stats
 // Part of JML Lite Admin Center
+// Now integrated with WorkflowOrchestrator for comprehensive notifications
 
 import * as React from 'react';
 import { useState, useEffect } from 'react';
@@ -8,7 +9,9 @@ import { Icon } from '@fluentui/react/lib/Icon';
 import { PrimaryButton, DefaultButton } from '@fluentui/react/lib/Button';
 import { MessageBar, MessageBarType } from '@fluentui/react/lib/MessageBar';
 import { Spinner, SpinnerSize } from '@fluentui/react/lib/Spinner';
+import { Toggle } from '@fluentui/react/lib/Toggle';
 import { TaskReminderService, ITaskWithReminder, IReminderResult } from '../services/TaskReminderService';
+import { WorkflowOrchestrator } from '../services/WorkflowOrchestrator';
 import { WebPartContext } from '@microsoft/sp-webpart-base';
 
 interface IProps {
@@ -25,13 +28,16 @@ interface ITaskStats {
 
 export const TaskRemindersAdmin: React.FC<IProps> = ({ sp, context }) => {
   const [reminderService] = useState(() => new TaskReminderService(sp, context));
+  const [workflowOrchestrator] = useState(() => new WorkflowOrchestrator(sp, context, { sendTeamsNotifications: true }));
   const [loading, setLoading] = useState(true);
   const [runningOverdue, setRunningOverdue] = useState(false);
   const [runningDueToday, setRunningDueToday] = useState(false);
+  const [runningWorkflowReminders, setRunningWorkflowReminders] = useState(false);
   const [stats, setStats] = useState<ITaskStats | null>(null);
   const [overdueTasks, setOverdueTasks] = useState<ITaskWithReminder[]>([]);
   const [dueTodayTasks, setDueTodayTasks] = useState<ITaskWithReminder[]>([]);
   const [lastResults, setLastResults] = useState<IReminderResult[] | null>(null);
+  const [useWorkflowOrchestrator, setUseWorkflowOrchestrator] = useState(true);
   const [message, setMessage] = useState<{ type: MessageBarType; text: string } | null>(null);
 
   useEffect(() => {
@@ -115,6 +121,47 @@ export const TaskRemindersAdmin: React.FC<IProps> = ({ sp, context }) => {
     } finally {
       setRunningDueToday(false);
     }
+  };
+
+  /**
+   * Run overdue reminders using WorkflowOrchestrator
+   * This method iterates through all active JML processes and sends reminders
+   * via the configured notification channels (Teams webhooks + email)
+   */
+  const handleRunWorkflowOrchestratorReminders = async (): Promise<void> => {
+    setRunningWorkflowReminders(true);
+    setMessage(null);
+    setLastResults(null);
+
+    try {
+      const remindersSent = await workflowOrchestrator.sendOverdueReminders();
+
+      if (remindersSent === 0) {
+        setMessage({ type: MessageBarType.info, text: 'No overdue tasks found at configured reminder intervals (1, 3, 7 days).' });
+      } else {
+        setMessage({ type: MessageBarType.success, text: `WorkflowOrchestrator sent ${remindersSent} overdue reminders via email notifications.` });
+      }
+
+      // Refresh stats
+      await loadStats();
+    } catch (error) {
+      console.error('[TaskRemindersAdmin] Error with WorkflowOrchestrator reminders:', error);
+      setMessage({ type: MessageBarType.error, text: 'Failed to send WorkflowOrchestrator reminders. Check console for details.' });
+    } finally {
+      setRunningWorkflowReminders(false);
+    }
+  };
+
+  /**
+   * Combined handler that uses both services based on toggle setting
+   */
+  const handleSendAllReminders = async (): Promise<void> => {
+    if (useWorkflowOrchestrator) {
+      // Use WorkflowOrchestrator for comprehensive notifications (email + audit)
+      await handleRunWorkflowOrchestratorReminders();
+    }
+    // Always send Teams webhook reminders via TaskReminderService
+    await handleRunOverdueReminders();
   };
 
   const getCategoryColor = (category: string): string => {
@@ -238,12 +285,29 @@ export const TaskRemindersAdmin: React.FC<IProps> = ({ sp, context }) => {
         <h4 style={{ fontSize: '14px', fontWeight: 600, margin: '0 0 16px 0', color: '#1a1a1a' }}>
           Send Reminder Notifications
         </h4>
-        <div style={{ display: 'flex', gap: '16px' }}>
+
+        {/* Toggle for WorkflowOrchestrator */}
+        <div style={{ marginBottom: '16px', padding: '12px', background: '#f9f9f9', borderRadius: '6px' }}>
+          <Toggle
+            label="Include email notifications (via WorkflowOrchestrator)"
+            checked={useWorkflowOrchestrator}
+            onChange={(_, checked) => setUseWorkflowOrchestrator(checked || false)}
+            onText="Email + Teams"
+            offText="Teams Only"
+            styles={{ root: { marginBottom: 0 } }}
+          />
+          <p style={{ fontSize: '11px', color: '#605e5c', marginTop: '4px', marginBottom: 0 }}>
+            When enabled, reminders are sent via email (Graph API) in addition to Teams webhooks.
+            WorkflowOrchestrator sends reminders at 1, 3, and 7 days overdue.
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
           <PrimaryButton
-            text={runningOverdue ? 'Sending...' : `Send Overdue Reminders (${stats?.overdue || 0})`}
+            text={runningOverdue || runningWorkflowReminders ? 'Sending...' : `Send Overdue Reminders (${stats?.overdue || 0})`}
             iconProps={{ iconName: 'Clock' }}
-            onClick={handleRunOverdueReminders}
-            disabled={runningOverdue || runningDueToday || (stats?.overdue || 0) === 0}
+            onClick={handleSendAllReminders}
+            disabled={runningOverdue || runningDueToday || runningWorkflowReminders || (stats?.overdue || 0) === 0}
             styles={{
               root: {
                 background: 'linear-gradient(135deg, #d13438 0%, #a52828 100%)',
@@ -258,11 +322,12 @@ export const TaskRemindersAdmin: React.FC<IProps> = ({ sp, context }) => {
             text={runningDueToday ? 'Sending...' : `Send Due Today Reminders (${stats?.dueToday || 0})`}
             iconProps={{ iconName: 'Calendar' }}
             onClick={handleRunDueTodayReminders}
-            disabled={runningOverdue || runningDueToday || (stats?.dueToday || 0) === 0}
+            disabled={runningOverdue || runningDueToday || runningWorkflowReminders || (stats?.dueToday || 0) === 0}
           />
         </div>
         <p style={{ fontSize: '12px', color: '#605e5c', marginTop: '12px', marginBottom: 0 }}>
           Reminders are sent to configured Teams webhook channels. Configure webhooks in the Notifications settings.
+          {useWorkflowOrchestrator && ' Email notifications require Microsoft Graph API permissions (Mail.Send).'}
         </p>
       </div>
 
@@ -440,6 +505,49 @@ export const TaskRemindersAdmin: React.FC<IProps> = ({ sp, context }) => {
           <li>Due today reminders help assignees stay on track</li>
           <li>Consider running reminders daily as part of your workflow</li>
         </ul>
+      </div>
+
+      {/* Scheduled Reminders Info */}
+      <div style={{ background: '#fff7ed', borderRadius: '8px', padding: '16px', border: '1px solid #fed7aa' }}>
+        <div style={{ fontWeight: 500, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Icon iconName="Timer" style={{ color: '#ea580c' }} />
+          Automating Scheduled Reminders
+        </div>
+        <p style={{ fontSize: '13px', color: '#9a3412', margin: '0 0 12px 0' }}>
+          To automate daily reminder checks, you can set up a scheduled trigger using one of these approaches:
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ padding: '12px', background: '#ffffff', borderRadius: '6px', border: '1px solid #fdba74' }}>
+            <div style={{ fontWeight: 500, fontSize: '13px', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Icon iconName="Flow" style={{ color: '#0078d4' }} />
+              Power Automate (Recommended)
+            </div>
+            <p style={{ fontSize: '12px', color: '#605e5c', margin: 0 }}>
+              Create a scheduled flow that runs daily and calls the SharePoint REST API to trigger the reminder endpoint.
+              Use "Recurrence" trigger → "HTTP" action pointing to: <code style={{ background: '#f3f2f1', padding: '2px 4px', borderRadius: '3px' }}>{`{siteUrl}/_api/web/lists`}</code>
+            </p>
+          </div>
+          <div style={{ padding: '12px', background: '#ffffff', borderRadius: '6px', border: '1px solid #fdba74' }}>
+            <div style={{ fontWeight: 500, fontSize: '13px', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Icon iconName="AzureLogo" style={{ color: '#0078d4' }} />
+              Azure Function (Timer Trigger)
+            </div>
+            <p style={{ fontSize: '12px', color: '#605e5c', margin: 0 }}>
+              Deploy an Azure Function with a Timer trigger (CRON: <code style={{ background: '#f3f2f1', padding: '2px 4px', borderRadius: '3px' }}>0 8 * * *</code> for 8 AM daily)
+              that calls the JML Lite API or directly queries SharePoint lists to send reminders.
+            </p>
+          </div>
+          <div style={{ padding: '12px', background: '#ffffff', borderRadius: '6px', border: '1px solid #fdba74' }}>
+            <div style={{ fontWeight: 500, fontSize: '13px', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Icon iconName="WebComponents" style={{ color: '#0078d4' }} />
+              SPFx Application Customizer
+            </div>
+            <p style={{ fontSize: '12px', color: '#605e5c', margin: 0 }}>
+              For client-side automation, an Application Customizer can check for overdue tasks when users visit the site
+              and send reminders once per day using local storage to track last run time.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

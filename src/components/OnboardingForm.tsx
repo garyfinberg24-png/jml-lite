@@ -8,6 +8,7 @@ import { DatePicker } from '@fluentui/react/lib/DatePicker';
 import { Icon } from '@fluentui/react/lib/Icon';
 import { Spinner, SpinnerSize } from '@fluentui/react/lib/Spinner';
 import { OnboardingService } from '../services/OnboardingService';
+import { ProcessCompletionService } from '../services/ProcessCompletionService';
 import { DocumentService, IEmployeeDocument, DOCUMENT_CATEGORIES, DocumentCategory } from '../services/DocumentService';
 import { IOnboarding, IOnboardingTask, OnboardingStatus, OnboardingTaskStatus } from '../models/IOnboarding';
 import styles from '../styles/JmlPanelStyles.module.scss';
@@ -154,7 +155,11 @@ export const OnboardingForm: React.FC<IProps> = ({ sp, isOpen, mode, item, onDis
       updates.CompletedDate = undefined;
     }
     await svc.updateOnboardingTask(task.Id, updates);
-    await svc.recalculateProgress(item.Id);
+
+    // Use ProcessCompletionService to recalculate and check for completion
+    const completionSvc = new ProcessCompletionService(sp);
+    await completionSvc.recalculateAndCheckOnboarding(item.Id);
+
     const updatedTasks = await svc.getOnboardingTasks(item.Id);
     setTasks(updatedTasks);
     const updatedOnboarding = await svc.getOnboardingById(item.Id);

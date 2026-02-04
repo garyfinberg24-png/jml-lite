@@ -441,6 +441,49 @@ export const OnboardingWizardPage: React.FC<IProps> = ({ sp, context, onComplete
           console.warn('[OnboardingWizardPage] Workflow orchestrator notification failed:', err);
         });
 
+        // ═══════════════════════════════════════════════════════════════
+        // CREATE APPROVAL REQUESTS for tasks that require approval
+        // ═══════════════════════════════════════════════════════════════
+        const tasksRequiringApproval = tasksToCreate.filter(t => t.requiresApproval && t.approverId);
+
+        for (const task of tasksRequiringApproval) {
+          // Determine approval type based on task category
+          if (task.sourceType === 'system' && task.approverId) {
+            // System Access approval
+            workflowOrchestrator.requestSystemAccessApproval(
+              task.title, // system name
+              'Standard', // requested role
+              {
+                name: wizardData.candidateName || 'New Employee',
+                email: '', // Could be enhanced
+                department: wizardData.department || '',
+                jobTitle: wizardData.jobTitle || '',
+              },
+              'Onboarding',
+              onboarding.Id,
+              task.approverId
+            ).catch(err => {
+              console.warn(`[OnboardingWizardPage] System access approval request failed for ${task.title}:`, err);
+            });
+          } else if (task.sourceType === 'asset' && task.approverId) {
+            // Equipment/Asset approval
+            workflowOrchestrator.requestEquipmentApproval(
+              task.title, // asset name
+              task.category, // asset type (Equipment)
+              wizardData.candidateName || 'New Employee',
+              'Onboarding',
+              onboarding.Id,
+              task.approverId
+            ).catch(err => {
+              console.warn(`[OnboardingWizardPage] Equipment approval request failed for ${task.title}:`, err);
+            });
+          }
+        }
+
+        if (tasksRequiringApproval.length > 0) {
+          console.log(`[OnboardingWizardPage] Created ${tasksRequiringApproval.length} approval requests`);
+        }
+
         console.log(`[OnboardingWizardPage] Notifications sent for ${createdTasks.filter(t => t.assigneeEmail).length} tasks`);
 
         setSubmitted(true);

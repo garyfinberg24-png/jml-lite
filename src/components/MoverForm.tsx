@@ -7,6 +7,7 @@ import { Dropdown, IDropdownOption } from '@fluentui/react/lib/Dropdown';
 import { DatePicker } from '@fluentui/react/lib/DatePicker';
 import { Icon } from '@fluentui/react/lib/Icon';
 import { MoverService } from '../services/MoverService';
+import { ProcessCompletionService } from '../services/ProcessCompletionService';
 import {
   IMover, IMoverTask, IMoverSystemAccess,
   MoverStatus, MoverTaskStatus, MoverType
@@ -123,7 +124,10 @@ export const MoverForm: React.FC<IProps> = ({ sp, isOpen, mode, item, onDismiss,
       ));
 
       if (item?.Id) {
-        await svc.recalculateProgress(item.Id);
+        // Use ProcessCompletionService to recalculate and check for completion
+        const completionSvc = new ProcessCompletionService(sp);
+        await completionSvc.recalculateAndCheckMover(item.Id);
+
         const updated = await svc.getMoverById(item.Id);
         if (updated) {
           setFormData(prev => ({

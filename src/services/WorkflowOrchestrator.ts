@@ -556,6 +556,46 @@ export class WorkflowOrchestrator {
   }
 
   /**
+   * Complete mover (transfer) workflow
+   */
+  public async completeMoverWorkflow(moverId: number): Promise<void> {
+    try {
+      const mover = await this.moverService.getMoverById(moverId);
+      if (!mover) return;
+
+      this.auditService.logEntry({
+        Action: 'WorkflowCompleted',
+        EntityType: 'Mover',
+        EntityId: moverId,
+        EntityTitle: mover.EmployeeName,
+        Details: JSON.stringify({
+          employee: mover.EmployeeName,
+          completedDate: new Date(),
+          newDepartment: mover.NewDepartment,
+          newJobTitle: mover.NewJobTitle,
+        }),
+      });
+
+      // Send Teams webhook notification for completion
+      if (this.config.sendTeamsNotifications) {
+        await this.webhookService.notifyProcessCompleted({
+          processType: 'Transfer',
+          processId: moverId,
+          employeeName: mover.EmployeeName,
+          department: mover.NewDepartment || 'Not specified',
+          jobTitle: mover.NewJobTitle || 'Not specified',
+          effectiveDate: mover.EffectiveDate,
+          actionUrl: this.buildTaskUrl('mover', moverId),
+        });
+      }
+
+      console.log(`[WorkflowOrchestrator] Completed mover workflow for ${mover.EmployeeName}`);
+    } catch (error) {
+      console.error('[WorkflowOrchestrator] Error completing mover workflow:', error);
+    }
+  }
+
+  /**
    * Start mover (transfer) workflow
    */
   public async startMoverWorkflow(mover: IMover): Promise<void> {
@@ -595,6 +635,46 @@ export class WorkflowOrchestrator {
       console.log(`[WorkflowOrchestrator] Started mover workflow for ${mover.EmployeeName}`);
     } catch (error) {
       console.error('[WorkflowOrchestrator] Error starting mover workflow:', error);
+    }
+  }
+
+  /**
+   * Complete offboarding workflow
+   */
+  public async completeOffboardingWorkflow(offboardingId: number): Promise<void> {
+    try {
+      const offboarding = await this.offboardingService.getOffboardingById(offboardingId);
+      if (!offboarding) return;
+
+      this.auditService.logEntry({
+        Action: 'WorkflowCompleted',
+        EntityType: 'Offboarding',
+        EntityId: offboardingId,
+        EntityTitle: offboarding.EmployeeName,
+        Details: JSON.stringify({
+          employee: offboarding.EmployeeName,
+          completedDate: new Date(),
+          lastWorkingDate: offboarding.LastWorkingDate,
+          terminationType: offboarding.TerminationType,
+        }),
+      });
+
+      // Send Teams webhook notification for completion
+      if (this.config.sendTeamsNotifications) {
+        await this.webhookService.notifyProcessCompleted({
+          processType: 'Offboarding',
+          processId: offboardingId,
+          employeeName: offboarding.EmployeeName,
+          department: offboarding.Department || 'Not specified',
+          jobTitle: offboarding.JobTitle || 'Not specified',
+          effectiveDate: offboarding.LastWorkingDate,
+          actionUrl: this.buildTaskUrl('offboarding', offboardingId),
+        });
+      }
+
+      console.log(`[WorkflowOrchestrator] Completed offboarding workflow for ${offboarding.EmployeeName}`);
+    } catch (error) {
+      console.error('[WorkflowOrchestrator] Error completing offboarding workflow:', error);
     }
   }
 

@@ -10,6 +10,7 @@ import { ClassificationRulesAdmin } from './ClassificationRulesAdmin';
 import { ImportData } from './ImportData';
 import { NotificationSettings } from './NotificationSettings';
 import { TaskRemindersAdmin } from './TaskRemindersAdmin';
+import { AuditLogViewer } from './AuditLogViewer';
 
 interface IProps { sp: SPFI; context?: any; }
 
@@ -77,20 +78,7 @@ export const JMLAdminCenter: React.FC<IProps> = ({ sp, context }) => {
       case 'task-reminders':
         return <TaskRemindersAdmin sp={sp} context={context} />;
       case 'audit':
-        return (
-          <div style={{ background: '#ffffff', borderRadius: '8px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: 600, margin: '0 0 16px 0', color: '#1a1a1a' }}>
-              Audit Log
-            </h3>
-            <p style={{ color: '#605e5c', fontSize: '14px', marginBottom: '24px' }}>
-              View system activity and changes.
-            </p>
-            <div style={{ padding: '40px', textAlign: 'center', color: '#8a8886' }}>
-              <Icon iconName="History" style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.5 }} />
-              <div>Audit log viewer coming soon</div>
-            </div>
-          </div>
-        );
+        return <AuditLogViewer sp={sp} />;
       case 'system':
         return (
           <div style={{ background: '#ffffff', borderRadius: '8px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>

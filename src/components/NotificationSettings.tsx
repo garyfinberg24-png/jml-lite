@@ -409,29 +409,102 @@ export const NotificationSettings: React.FC<IProps> = ({ sp }) => {
         </div>
       </div>
 
-      {/* Email Settings (Future) */}
-      <div style={{ background: '#ffffff', borderRadius: '8px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', opacity: 0.7 }}>
+      {/* Email Settings via Microsoft Graph */}
+      <div style={{ background: '#ffffff', borderRadius: '8px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-          <Icon iconName="Mail" style={{ fontSize: '24px', color: '#0078d4' }} />
-          <div>
-            <h4 style={{ fontSize: '14px', fontWeight: 600, margin: '0 0 4px 0', color: '#1a1a1a' }}>
-              Email Notifications
+          <div style={{
+            width: '48px',
+            height: '48px',
+            borderRadius: '12px',
+            background: 'linear-gradient(135deg, #0078d4 0%, #005a9e 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <Icon iconName="Mail" style={{ fontSize: '24px', color: '#ffffff' }} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <h4 style={{ fontSize: '16px', fontWeight: 600, margin: '0 0 4px 0', color: '#1a1a1a' }}>
+              Email Notifications (Microsoft Graph API)
             </h4>
-            <p style={{ fontSize: '12px', color: '#605e5c', margin: 0 }}>
-              Coming soon — Configure email notifications via Microsoft Graph
+            <p style={{ fontSize: '13px', color: '#605e5c', margin: 0 }}>
+              Send email notifications to task assignees and stakeholders
             </p>
           </div>
         </div>
+
+        {/* Graph API Info */}
         <div style={{
-          padding: '20px',
-          background: '#f3f2f1',
+          background: '#f0f7ff',
           borderRadius: '8px',
-          textAlign: 'center',
-          color: '#605e5c',
-          fontSize: '13px',
+          padding: '16px',
+          marginBottom: '16px',
+          border: '1px solid #c7e0f4',
         }}>
-          <Icon iconName="ComingSoon" style={{ fontSize: '32px', marginBottom: '8px', opacity: 0.5 }} />
-          <div>Email notification configuration will be available in a future update</div>
+          <div style={{ fontWeight: 500, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Icon iconName="Info" style={{ color: '#0078d4' }} />
+            Microsoft Graph API Integration
+          </div>
+          <p style={{ fontSize: '13px', color: '#323130', margin: '0 0 12px 0' }}>
+            Email notifications are sent via the Microsoft Graph API. The system uses the current user's permissions to send emails.
+          </p>
+          <div style={{ fontSize: '12px', color: '#605e5c' }}>
+            <strong>Required API Permissions:</strong>
+            <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px' }}>
+              <li><code style={{ background: '#f3f2f1', padding: '2px 4px', borderRadius: '3px' }}>Mail.Send</code> - Send mail as the signed-in user</li>
+              <li><code style={{ background: '#f3f2f1', padding: '2px 4px', borderRadius: '3px' }}>User.Read</code> - Read user profile (for sender info)</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Email Types */}
+        <div style={{ marginBottom: '16px' }}>
+          <h5 style={{ fontSize: '13px', fontWeight: 600, margin: '0 0 12px 0', color: '#1a1a1a' }}>
+            Supported Email Notifications
+          </h5>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px' }}>
+            {[
+              { icon: 'TaskManager', label: 'Task Assignment', desc: 'When tasks are assigned to users', color: '#107c10' },
+              { icon: 'CompletedSolid', label: 'Task Completion', desc: 'When assigned tasks are completed', color: '#0078d4' },
+              { icon: 'Clock', label: 'Overdue Reminders', desc: 'For tasks past their due date', color: '#d83b01' },
+              { icon: 'WaitlistConfirm', label: 'Approval Requests', desc: 'When approval is required', color: '#7c3aed' },
+              { icon: 'Accept', label: 'Approval Decisions', desc: 'When approvals are granted/rejected', color: '#10b981' },
+            ].map((item) => (
+              <div
+                key={item.label}
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '10px',
+                  padding: '12px',
+                  background: '#f9f9f9',
+                  borderRadius: '6px',
+                }}
+              >
+                <Icon iconName={item.icon} style={{ fontSize: '16px', color: item.color, marginTop: '2px' }} />
+                <div>
+                  <div style={{ fontSize: '13px', fontWeight: 500, color: '#323130' }}>{item.label}</div>
+                  <div style={{ fontSize: '11px', color: '#605e5c' }}>{item.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Status & Usage Note */}
+        <div style={{
+          background: '#fff7ed',
+          borderRadius: '8px',
+          padding: '12px 16px',
+          border: '1px solid #fed7aa',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Icon iconName="Lightbulb" style={{ color: '#ea580c' }} />
+            <span style={{ fontSize: '13px', color: '#9a3412' }}>
+              <strong>Automatic:</strong> Email notifications are sent automatically when enabled in the Task Configuration panel during wizard completion.
+              Enable "Email" notification in task settings to send emails to assignees.
+            </span>
+          </div>
         </div>
       </div>
     </div>
