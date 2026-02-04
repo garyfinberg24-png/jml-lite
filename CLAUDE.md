@@ -276,40 +276,55 @@ SP Groups: `JML Admin`, `JML Manager`
 
 ## Session State (Last Updated: 2026-02-04)
 
-### Current Version: v1.1.0
+### Current Version: v1.2.0
 
-### Recent Changes
-1. **Task Configuration Panel** - Full-screen task assignment & scheduling
-2. **Task Library** - Reusable task templates with classification codes
-3. **Classification Rules** - Auto-routing based on task classification
-4. **Notification System** - 3-tier (Email, Teams, In-App)
-5. **Document Service** - Employee folder management with category subfolders
-6. **Approval Workflow** - Foundation for approval management
-7. **OnboardingWizard Step 7** - "Configure Tasks" step always shows
-8. **Dashboard Illustration** - Isometric 3D cards for Joiner/Mover/Leaver
+### Recent Changes (v1.2.0)
+
+1. **Task Dependencies** - Tasks can now depend on other tasks with circular dependency detection
+2. **TaskConfigurationOverlay** - New full-screen overlay component for task configuration
+3. **Two-Phase Task Creation** - Proper ID mapping from temp IDs to SharePoint IDs
+4. **Blocked Status** - Tasks with dependencies start as "Blocked" until prerequisites complete
+5. **Visual Dependency Indicators** - Orange/green badges showing dependency relationships
+6. **SharePoint Schema Update** - DependsOnTaskIds and BlockedUntilComplete fields added
+
+### Previous Release (v1.1.0)
+
+- Task Configuration Panel - Full-screen task assignment & scheduling
+- Task Library - Reusable task templates with classification codes
+- Classification Rules - Auto-routing based on task classification
+- Notification System - 3-tier (Email, Teams, In-App)
+- Document Service - Employee folder management with category subfolders
+- Approval Workflow - Foundation for approval management
+- Dashboard Illustration - Isometric 3D cards for Joiner/Mover/Leaver
 
 ### Known Issues Being Tested
-- Step 7 "Configure Tasks" visibility in OnboardingWizard
-- Document upload display in Onboarding Buddy
+
+- Task dependency UI in TaskConfigurationOverlay
+- Two-phase task creation ID mapping
+- Blocked task status transitions
 
 ### Pending Features
+
+- Automatic unblocking when dependencies complete
 - Full approval workflow integration
 - Email notification triggers
 - Teams notification webhooks
 - Task reminder scheduling
 
-### Files Modified in v1.1.0
-- `OnboardingWizard.tsx` - Added Step 7, task building, classification rules integration
-- `OnboardingBuddy.tsx` - Document upload, profile panel redesign
-- `JmlAppHeader.tsx` - NotificationPanel integration
-- `DocumentService.ts` - Fixed subfolder fetching
-- `Deploy-JMLLists.ps1` - Added new list definitions
-- Plus 60+ new/modified files
+### Files Modified in v1.2.0
+
+- `TaskConfigurationOverlay.tsx` (NEW) - Full-screen task config with dependencies
+- `OnboardingWizardPage.tsx` - Two-phase task creation with dependency mapping
+- `TaskConfigurationPanel.tsx` - Interface consistency updates
+- `IOnboarding.ts` - DependsOnTaskIds, BlockedUntilComplete fields
+- `OnboardingService.ts` - Create/update/map dependency fields
+- `Deploy-JMLLists.ps1` - DependsOnTaskIds, BlockedUntilComplete columns
 
 ### Build Status
 
 - Last successful build: 2026-02-04
 - Package: `sharepoint/solution/jml-lite.sppkg`
+- Git tag: v1.2.0
 
 ---
 
@@ -367,6 +382,7 @@ Track what was worked on each session so new agents can pick up quickly.
 
 | Date | What Was Done | Next Steps |
 | ---- | ------------- | ---------- |
+| 2026-02-04 | v1.2.0: Task dependencies with circular detection, two-phase creation, blocked status | Test dependency UI, automatic unblocking |
 | 2026-02-04 | Updated CLAUDE.md with session recovery guide | Continue feature development |
 | 2026-02-04 | Task Configuration Panel, Notification System, Document Service | Test Step 7 visibility, document uploads |
 | 2026-02-03 | Initial v1.1.0 release with 60+ new files | Deploy and test on SharePoint |
