@@ -80,6 +80,9 @@ export const MoverConfigAdmin: React.FC<IProps> = ({ sp }) => {
   const [importText, setImportText] = useState('');
   const [importing, setImporting] = useState(false);
 
+  // Seed state
+  const [seeding, setSeeding] = useState(false);
+
   const loadTemplates = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -231,6 +234,68 @@ export const MoverConfigAdmin: React.FC<IProps> = ({ sp }) => {
     setEditItem(prev => prev ? { ...prev, [field]: value } : null);
   };
 
+  // Default transfer task templates for seeding
+  const DEFAULT_TRANSFER_TEMPLATES: Omit<IMoverTaskTemplate, 'Id'>[] = [
+    // System Access
+    { Title: 'Revoke access to current department systems', Category: 'System Access', AssignToRole: 'IT Manager', DaysBeforeEffective: 1, IsMandatory: true, SortOrder: 10, IsActive: true },
+    { Title: 'Grant access to new department systems', Category: 'System Access', AssignToRole: 'IT Manager', DaysAfterEffective: 1, IsMandatory: true, SortOrder: 20, IsActive: true },
+    { Title: 'Update SharePoint/Teams permissions', Category: 'System Access', AssignToRole: 'IT Manager', DaysAfterEffective: 1, IsMandatory: false, SortOrder: 30, IsActive: true },
+    { Title: 'Transfer email distribution list memberships', Category: 'System Access', AssignToRole: 'IT Manager', DaysAfterEffective: 2, IsMandatory: false, SortOrder: 40, IsActive: true },
+
+    // Asset Transfer
+    { Title: 'Return equipment to current location', Category: 'Asset Transfer', AssignToRole: 'Employee', DaysBeforeEffective: 3, IsMandatory: true, SortOrder: 50, IsActive: true },
+    { Title: 'Collect equipment for new role', Category: 'Asset Transfer', AssignToRole: 'Employee', DaysAfterEffective: 1, IsMandatory: false, SortOrder: 60, IsActive: true },
+    { Title: 'Update asset assignment records', Category: 'Asset Transfer', AssignToRole: 'IT Manager', DaysAfterEffective: 2, IsMandatory: true, SortOrder: 70, IsActive: true },
+    { Title: 'Issue new access badge/key card', Category: 'Asset Transfer', AssignToRole: 'HR Manager', DaysAfterEffective: 1, IsMandatory: false, SortOrder: 80, IsActive: true },
+
+    // Documentation
+    { Title: 'Update HR records with new position', Category: 'Documentation', AssignToRole: 'HR Manager', DaysAfterEffective: 1, IsMandatory: true, SortOrder: 90, IsActive: true },
+    { Title: 'Update organization chart', Category: 'Documentation', AssignToRole: 'HR Manager', DaysAfterEffective: 2, IsMandatory: false, SortOrder: 100, IsActive: true },
+    { Title: 'Issue updated employment contract', Category: 'Documentation', AssignToRole: 'HR Manager', DaysBeforeEffective: 5, IsMandatory: true, SortOrder: 110, IsActive: true },
+    { Title: 'Update emergency contact information', Category: 'Documentation', AssignToRole: 'Employee', DaysAfterEffective: 3, IsMandatory: false, SortOrder: 120, IsActive: true },
+
+    // Knowledge Transfer
+    { Title: 'Document current responsibilities and processes', Category: 'Knowledge Transfer', AssignToRole: 'Employee', DaysBeforeEffective: 7, IsMandatory: true, SortOrder: 130, IsActive: true },
+    { Title: 'Create handover documentation', Category: 'Knowledge Transfer', AssignToRole: 'Employee', DaysBeforeEffective: 5, IsMandatory: true, SortOrder: 140, IsActive: true },
+    { Title: 'Conduct knowledge transfer sessions', Category: 'Knowledge Transfer', AssignToRole: 'Employee', DaysBeforeEffective: 3, IsMandatory: true, SortOrder: 150, IsActive: true },
+    { Title: 'Introduce successor to key contacts', Category: 'Knowledge Transfer', AssignToRole: 'Employee', DaysBeforeEffective: 2, IsMandatory: false, SortOrder: 160, IsActive: true },
+
+    // Training
+    { Title: 'Complete role-specific training', Category: 'Training', AssignToRole: 'Employee', DaysAfterEffective: 14, IsMandatory: true, SortOrder: 170, IsActive: true },
+    { Title: 'Complete compliance training for new role', Category: 'Training', AssignToRole: 'Employee', DaysAfterEffective: 7, IsMandatory: true, SortOrder: 180, IsActive: true },
+    { Title: 'Shadow new team members', Category: 'Training', AssignToRole: 'Employee', DaysAfterEffective: 5, IsMandatory: false, SortOrder: 190, IsActive: true },
+
+    // Orientation
+    { Title: 'Meet with new line manager', Category: 'Orientation', AssignToRole: 'New Manager', DaysAfterEffective: 1, IsMandatory: true, SortOrder: 200, IsActive: true },
+    { Title: 'Introduce to new team', Category: 'Orientation', AssignToRole: 'New Manager', DaysAfterEffective: 1, IsMandatory: true, SortOrder: 210, IsActive: true },
+    { Title: 'Tour new work area/location', Category: 'Orientation', AssignToRole: 'New Manager', DaysAfterEffective: 1, IsMandatory: false, SortOrder: 220, IsActive: true },
+    { Title: 'Review new role objectives and expectations', Category: 'Orientation', AssignToRole: 'New Manager', DaysAfterEffective: 2, IsMandatory: true, SortOrder: 230, IsActive: true },
+
+    // Compliance
+    { Title: 'Complete conflict of interest declaration', Category: 'Compliance', AssignToRole: 'Employee', DaysAfterEffective: 3, IsMandatory: true, SortOrder: 240, IsActive: true },
+    { Title: 'Review and sign updated policies', Category: 'Compliance', AssignToRole: 'Employee', DaysAfterEffective: 5, IsMandatory: false, SortOrder: 250, IsActive: true },
+  ];
+
+  const handleSeedDefaults = async (): Promise<void> => {
+    setSeeding(true);
+    setError(null);
+    try {
+      let sortOrder = templates.length * 10;
+      for (const template of DEFAULT_TRANSFER_TEMPLATES) {
+        await sp.web.lists.getByTitle(MOVER_TEMPLATES_LIST).items.add({
+          ...template,
+          SortOrder: sortOrder,
+        });
+        sortOrder += 10;
+      }
+      await loadTemplates();
+    } catch (err: any) {
+      console.error('[MoverConfigAdmin] Error seeding defaults:', err);
+      setError('Failed to seed default templates. Check if the list exists.');
+    }
+    setSeeding(false);
+  };
+
   const renderTable = (): React.ReactElement => {
     if (templates.length === 0) {
       return (
@@ -361,6 +426,19 @@ export const MoverConfigAdmin: React.FC<IProps> = ({ sp }) => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h2 style={{ fontSize: 24, fontWeight: 600, color: '#1a1a1a', margin: 0 }}>Transfer Configuration</h2>
         <div style={{ display: 'flex', gap: 8 }}>
+          {templates.length === 0 && (
+            <button
+              onClick={handleSeedDefaults}
+              disabled={seeding}
+              style={{
+                padding: '8px 16px', borderRadius: 4, border: `1px solid ${MOVER_COLOR}`, background: 'transparent',
+                color: MOVER_COLOR, fontSize: 13, fontWeight: 600, cursor: seeding ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                opacity: seeding ? 0.6 : 1,
+              }}
+            >
+              <Icon iconName="Database" style={{ fontSize: 14 }} /> {seeding ? 'Seeding...' : 'Seed Defaults'}
+            </button>
+          )}
           <button
             onClick={() => setImportDialogOpen(true)}
             style={{

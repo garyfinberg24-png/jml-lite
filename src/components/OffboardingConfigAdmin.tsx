@@ -89,6 +89,9 @@ export const OffboardingConfigAdmin: React.FC<IProps> = ({ sp }) => {
   const [importText, setImportText] = useState('');
   const [importing, setImporting] = useState(false);
 
+  // Seed state
+  const [seeding, setSeeding] = useState(false);
+
   const loadTemplates = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -239,6 +242,75 @@ export const OffboardingConfigAdmin: React.FC<IProps> = ({ sp }) => {
     setEditItem(prev => prev ? { ...prev, [field]: value } : null);
   };
 
+  // Default offboarding task templates for seeding
+  const DEFAULT_OFFBOARDING_TEMPLATES: Omit<IOffboardingTaskTemplate, 'Id'>[] = [
+    // Asset Return
+    { Title: 'Return laptop and charger', Category: 'Asset Return', AssignToRole: 'Employee', DaysBeforeLastDay: 1, IsMandatory: true, SortOrder: 10, IsActive: true },
+    { Title: 'Return mobile phone and SIM card', Category: 'Asset Return', AssignToRole: 'Employee', DaysBeforeLastDay: 1, IsMandatory: true, SortOrder: 20, IsActive: true },
+    { Title: 'Return access badge and keys', Category: 'Asset Return', AssignToRole: 'Employee', DaysBeforeLastDay: 0, IsMandatory: true, SortOrder: 30, IsActive: true },
+    { Title: 'Return parking pass', Category: 'Asset Return', AssignToRole: 'Employee', DaysBeforeLastDay: 0, IsMandatory: false, SortOrder: 40, IsActive: true },
+    { Title: 'Verify asset return checklist complete', Category: 'Asset Return', AssignToRole: 'IT Manager', DaysAfterLastDay: 1, IsMandatory: true, SortOrder: 50, IsActive: true },
+    { Title: 'Collect company credit card', Category: 'Asset Return', AssignToRole: 'Finance', DaysBeforeLastDay: 1, IsMandatory: true, SortOrder: 60, IsActive: true },
+
+    // System Access
+    { Title: 'Disable Active Directory account', Category: 'System Access', AssignToRole: 'IT Manager', DaysAfterLastDay: 0, IsMandatory: true, SortOrder: 70, IsActive: true },
+    { Title: 'Revoke email and calendar access', Category: 'System Access', AssignToRole: 'IT Manager', DaysAfterLastDay: 0, IsMandatory: true, SortOrder: 80, IsActive: true },
+    { Title: 'Remove from SharePoint and Teams', Category: 'System Access', AssignToRole: 'IT Manager', DaysAfterLastDay: 1, IsMandatory: true, SortOrder: 90, IsActive: true },
+    { Title: 'Revoke VPN and remote access', Category: 'System Access', AssignToRole: 'IT Manager', DaysAfterLastDay: 0, IsMandatory: true, SortOrder: 100, IsActive: true },
+    { Title: 'Disable application-specific accounts', Category: 'System Access', AssignToRole: 'IT Manager', DaysAfterLastDay: 1, IsMandatory: true, SortOrder: 110, IsActive: true },
+    { Title: 'Forward email to manager for 30 days', Category: 'System Access', AssignToRole: 'IT Manager', DaysAfterLastDay: 1, IsMandatory: false, SortOrder: 120, IsActive: true },
+
+    // Documentation
+    { Title: 'Complete exit documentation', Category: 'Documentation', AssignToRole: 'HR Manager', DaysBeforeLastDay: 3, IsMandatory: true, SortOrder: 130, IsActive: true },
+    { Title: 'Issue final reference letter', Category: 'Documentation', AssignToRole: 'HR Manager', DaysAfterLastDay: 5, IsMandatory: false, SortOrder: 140, IsActive: true },
+    { Title: 'Process separation agreement', Category: 'Documentation', AssignToRole: 'HR Manager', DaysBeforeLastDay: 5, IsMandatory: true, SortOrder: 150, IsActive: true },
+    { Title: 'Update organization chart', Category: 'Documentation', AssignToRole: 'HR Manager', DaysAfterLastDay: 2, IsMandatory: false, SortOrder: 160, IsActive: true },
+    { Title: 'Archive employee records', Category: 'Documentation', AssignToRole: 'HR Manager', DaysAfterLastDay: 7, IsMandatory: true, SortOrder: 170, IsActive: true },
+
+    // Exit Interview
+    { Title: 'Schedule exit interview', Category: 'Exit Interview', AssignToRole: 'HR Manager', DaysBeforeLastDay: 7, IsMandatory: true, SortOrder: 180, IsActive: true },
+    { Title: 'Conduct exit interview', Category: 'Exit Interview', AssignToRole: 'HR Manager', DaysBeforeLastDay: 3, IsMandatory: true, SortOrder: 190, IsActive: true },
+    { Title: 'Document exit interview feedback', Category: 'Exit Interview', AssignToRole: 'HR Manager', DaysAfterLastDay: 2, IsMandatory: true, SortOrder: 200, IsActive: true },
+
+    // Knowledge Transfer
+    { Title: 'Create handover documentation', Category: 'Knowledge Transfer', AssignToRole: 'Employee', DaysBeforeLastDay: 10, IsMandatory: true, SortOrder: 210, IsActive: true },
+    { Title: 'Conduct knowledge transfer sessions', Category: 'Knowledge Transfer', AssignToRole: 'Employee', DaysBeforeLastDay: 7, IsMandatory: true, SortOrder: 220, IsActive: true },
+    { Title: 'Transfer project ownership', Category: 'Knowledge Transfer', AssignToRole: 'Line Manager', DaysBeforeLastDay: 5, IsMandatory: true, SortOrder: 230, IsActive: true },
+    { Title: 'Document pending work and deadlines', Category: 'Knowledge Transfer', AssignToRole: 'Employee', DaysBeforeLastDay: 5, IsMandatory: true, SortOrder: 240, IsActive: true },
+    { Title: 'Introduce contacts to successor', Category: 'Knowledge Transfer', AssignToRole: 'Employee', DaysBeforeLastDay: 3, IsMandatory: false, SortOrder: 250, IsActive: true },
+
+    // Final Pay
+    { Title: 'Calculate final pay and accrued leave', Category: 'Final Pay', AssignToRole: 'Finance', DaysBeforeLastDay: 3, IsMandatory: true, SortOrder: 260, IsActive: true },
+    { Title: 'Process final payroll', Category: 'Final Pay', AssignToRole: 'Finance', DaysAfterLastDay: 5, IsMandatory: true, SortOrder: 270, IsActive: true },
+    { Title: 'Cancel expense reimbursements', Category: 'Final Pay', AssignToRole: 'Finance', DaysAfterLastDay: 2, IsMandatory: false, SortOrder: 280, IsActive: true },
+    { Title: 'Issue final pay statement', Category: 'Final Pay', AssignToRole: 'Finance', DaysAfterLastDay: 7, IsMandatory: true, SortOrder: 290, IsActive: true },
+
+    // Compliance
+    { Title: 'Ensure NDA reminder sent', Category: 'Compliance', AssignToRole: 'HR Manager', DaysBeforeLastDay: 3, IsMandatory: true, SortOrder: 300, IsActive: true },
+    { Title: 'Confirm non-compete obligations', Category: 'Compliance', AssignToRole: 'HR Manager', DaysBeforeLastDay: 5, IsMandatory: false, SortOrder: 310, IsActive: true },
+    { Title: 'Complete compliance checklist sign-off', Category: 'Compliance', AssignToRole: 'HR Manager', DaysAfterLastDay: 3, IsMandatory: true, SortOrder: 320, IsActive: true },
+  ];
+
+  const handleSeedDefaults = async (): Promise<void> => {
+    setSeeding(true);
+    setError(null);
+    try {
+      let sortOrder = templates.length * 10;
+      for (const template of DEFAULT_OFFBOARDING_TEMPLATES) {
+        await sp.web.lists.getByTitle(OFFBOARDING_TEMPLATES_LIST).items.add({
+          ...template,
+          SortOrder: sortOrder,
+        });
+        sortOrder += 10;
+      }
+      await loadTemplates();
+    } catch (err: any) {
+      console.error('[OffboardingConfigAdmin] Error seeding defaults:', err);
+      setError('Failed to seed default templates. Check if the list exists.');
+    }
+    setSeeding(false);
+  };
+
   const renderTable = (): React.ReactElement => {
     if (templates.length === 0) {
       return (
@@ -384,6 +456,19 @@ export const OffboardingConfigAdmin: React.FC<IProps> = ({ sp }) => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h2 style={{ fontSize: 24, fontWeight: 600, color: '#1a1a1a', margin: 0 }}>Offboarding Configuration</h2>
         <div style={{ display: 'flex', gap: 8 }}>
+          {templates.length === 0 && (
+            <button
+              onClick={handleSeedDefaults}
+              disabled={seeding}
+              style={{
+                padding: '8px 16px', borderRadius: 4, border: `1px solid ${LEAVER_COLOR}`, background: 'transparent',
+                color: LEAVER_COLOR, fontSize: 13, fontWeight: 600, cursor: seeding ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                opacity: seeding ? 0.6 : 1,
+              }}
+            >
+              <Icon iconName="Database" style={{ fontSize: 14 }} /> {seeding ? 'Seeding...' : 'Seed Defaults'}
+            </button>
+          )}
           <button
             onClick={() => setImportDialogOpen(true)}
             style={{

@@ -142,3 +142,46 @@ export interface IResolvedPolicyPack {
   systems: ISystemAccessType[];
   training: ITrainingCourse[];
 }
+
+// Onboarding Profile Types
+export enum OnboardingProfileType {
+  Department = 'Department',
+  Role = 'Role'
+}
+
+// Onboarding Profile - Predefined bundles of onboarding configurations
+// These allow administrators to create templates for specific departments or roles
+// that pre-populate the onboarding wizard with appropriate selections
+export interface IOnboardingProfile {
+  Id?: number;
+  Title: string;
+  Description?: string;
+  ProfileType: OnboardingProfileType;
+  // For Department profiles
+  Department?: string;
+  // For Role profiles
+  JobTitle?: string;
+  // References to configuration items (IDs from respective lists)
+  DocumentTypeIds: number[];
+  AssetTypeIds: number[];
+  SystemAccessTypeIds: number[];
+  TrainingCourseIds: number[];
+  // UI customization
+  Icon?: string;
+  Color?: string;
+  // Metadata
+  IsDefault: boolean;
+  SortOrder: number;
+  IsActive: boolean;
+  Created?: Date;
+  Modified?: Date;
+}
+
+// Resolved onboarding profile with full objects instead of IDs
+export interface IResolvedOnboardingProfile {
+  profile: IOnboardingProfile;
+  documents: IDocumentType[];
+  assets: IAssetType[];
+  systems: ISystemAccessType[];
+  training: ITrainingCourse[];
+}

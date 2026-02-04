@@ -20,23 +20,171 @@ type AdminSection = 'task-library' | 'classification-rules' | 'onboarding-config
 const JOINER_COLOR = '#005BAA';
 const MOVER_COLOR = '#ea580c';
 const LEAVER_COLOR = '#d13438';
+const TASK_MGMT_COLOR = '#6264a7';
+
+interface INavItem {
+  key: AdminSection;
+  label: string;
+  icon: string;
+  color?: string;
+  description?: string;
+}
+
+interface INavGroup {
+  groupKey: string;
+  groupLabel: string;
+  groupIcon: string;
+  groupColor?: string;
+  items: INavItem[];
+}
 
 export const JMLAdminCenter: React.FC<IProps> = ({ sp, context }) => {
   const [activeSection, setActiveSection] = useState<AdminSection>('onboarding-config');
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['task-management']));
 
-  const sections: { key: AdminSection; label: string; icon: string; color?: string; description?: string }[] = [
-    { key: 'task-library', label: 'Task Library', icon: 'TaskManager', color: '#6264a7', description: 'Predefined tasks with classification codes' },
-    { key: 'classification-rules', label: 'Classification Rules', icon: 'Flow', color: '#0078d4', description: 'Assignment & approval routing per classification' },
+  // Navigation structure with groups
+  const navGroups: INavGroup[] = [
+    {
+      groupKey: 'task-management',
+      groupLabel: 'Task Management',
+      groupIcon: 'TaskManager',
+      groupColor: TASK_MGMT_COLOR,
+      items: [
+        { key: 'task-library', label: 'Task Library', icon: 'Library', color: TASK_MGMT_COLOR, description: 'Predefined tasks with classification codes' },
+        { key: 'classification-rules', label: 'Classification Rules', icon: 'Flow', color: '#0078d4', description: 'Assignment & approval routing' },
+        { key: 'task-reminders', label: 'Task Reminders', icon: 'Clock', color: '#d83b01', description: 'Overdue task checks and reminders' },
+      ],
+    },
+  ];
+
+  // Standalone items (not in groups)
+  const standaloneItems: INavItem[] = [
     { key: 'onboarding-config', label: 'Onboarding Configuration', icon: 'AddFriend', color: JOINER_COLOR, description: 'Documents, assets, systems, training' },
     { key: 'mover-config', label: 'Transfer Configuration', icon: 'Sync', color: MOVER_COLOR, description: 'Task templates for internal moves' },
     { key: 'offboarding-config', label: 'Offboarding Configuration', icon: 'UserRemove', color: LEAVER_COLOR, description: 'Exit checklists and templates' },
     { key: 'import-data', label: 'Import Data', icon: 'CloudUpload', color: '#217346', description: 'Bulk import from XLSX/CSV files' },
     { key: 'general', label: 'General Settings', icon: 'Settings', description: 'App-wide settings' },
     { key: 'notifications', label: 'Notifications', icon: 'Ringer', description: 'Email and Teams alerts' },
-    { key: 'task-reminders', label: 'Task Reminders', icon: 'Clock', color: '#d83b01', description: 'Overdue task checks and reminders' },
     { key: 'audit', label: 'Audit Log', icon: 'History', description: 'System activity trail' },
     { key: 'system', label: 'System Info', icon: 'Info', description: 'Version and diagnostics' },
   ];
+
+  const toggleGroup = (groupKey: string): void => {
+    setExpandedGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(groupKey)) {
+        next.delete(groupKey);
+      } else {
+        next.add(groupKey);
+      }
+      return next;
+    });
+  };
+
+  const renderNavItem = (item: INavItem, indent: boolean = false): JSX.Element => (
+    <button
+      key={item.key}
+      onClick={() => setActiveSection(item.key)}
+      style={{
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: '12px',
+        width: '100%',
+        padding: indent ? '10px 12px 10px 32px' : '12px',
+        border: 'none',
+        background: activeSection === item.key ? '#f9f8ff' : 'transparent',
+        color: activeSection === item.key ? (item.color || '#005BAA') : '#323130',
+        fontWeight: activeSection === item.key ? 600 : 400,
+        fontSize: '13px',
+        textAlign: 'left',
+        cursor: 'pointer',
+        borderRadius: '6px',
+        marginBottom: '2px',
+        borderLeft: activeSection === item.key ? `3px solid ${item.color || '#005BAA'}` : '3px solid transparent',
+        fontFamily: '"Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif',
+        transition: 'all 0.15s ease',
+      }}
+    >
+      <Icon
+        iconName={item.icon}
+        style={{
+          fontSize: indent ? '16px' : '18px',
+          color: activeSection === item.key ? (item.color || '#005BAA') : '#605e5c',
+          marginTop: '2px',
+        }}
+      />
+      <div>
+        <div>{item.label}</div>
+        {item.description && (
+          <div style={{
+            fontSize: '11px',
+            color: '#8a8886',
+            fontWeight: 400,
+            marginTop: '2px',
+          }}>
+            {item.description}
+          </div>
+        )}
+      </div>
+    </button>
+  );
+
+  const renderNavGroup = (group: INavGroup): JSX.Element => {
+    const isExpanded = expandedGroups.has(group.groupKey);
+    const hasActiveChild = group.items.some(item => item.key === activeSection);
+
+    return (
+      <div key={group.groupKey} style={{ marginBottom: '4px' }}>
+        {/* Group header */}
+        <button
+          onClick={() => toggleGroup(group.groupKey)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            width: '100%',
+            padding: '12px',
+            border: 'none',
+            background: hasActiveChild && !isExpanded ? '#f9f8ff' : 'transparent',
+            color: hasActiveChild ? (group.groupColor || '#005BAA') : '#323130',
+            fontWeight: 600,
+            fontSize: '13px',
+            textAlign: 'left',
+            cursor: 'pointer',
+            borderRadius: '6px',
+            borderLeft: hasActiveChild && !isExpanded ? `3px solid ${group.groupColor || '#005BAA'}` : '3px solid transparent',
+            fontFamily: '"Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif',
+            transition: 'all 0.15s ease',
+          }}
+        >
+          <Icon
+            iconName={group.groupIcon}
+            style={{
+              fontSize: '18px',
+              color: hasActiveChild ? (group.groupColor || '#005BAA') : '#605e5c',
+            }}
+          />
+          <div style={{ flex: 1 }}>
+            {group.groupLabel}
+          </div>
+          <Icon
+            iconName={isExpanded ? 'ChevronUp' : 'ChevronDown'}
+            style={{
+              fontSize: '12px',
+              color: '#8a8886',
+            }}
+          />
+        </button>
+
+        {/* Group children */}
+        {isExpanded && (
+          <div style={{ marginLeft: '8px' }}>
+            {group.items.map(item => renderNavItem(item, true))}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const renderContent = (): React.ReactElement => {
     switch (activeSection) {
@@ -109,7 +257,7 @@ export const JMLAdminCenter: React.FC<IProps> = ({ sp, context }) => {
         return (
           <div style={{ background: '#ffffff', borderRadius: '8px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
             <h3 style={{ fontSize: '16px', fontWeight: 600, margin: '0 0 16px 0', color: '#1a1a1a' }}>
-              {sections.find(s => s.key === activeSection)?.label}
+              Configuration
             </h3>
             <p style={{ color: '#605e5c', fontSize: '14px' }}>
               Configuration options coming soon.
@@ -129,53 +277,14 @@ export const JMLAdminCenter: React.FC<IProps> = ({ sp, context }) => {
         {/* Left Navigation */}
         <div style={{ width: '280px', flexShrink: 0 }}>
           <div style={{ background: '#fff', borderRadius: '8px', padding: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-            {sections.map(section => (
-              <button
-                key={section.key}
-                onClick={() => setActiveSection(section.key)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '12px',
-                  width: '100%',
-                  padding: '12px',
-                  border: 'none',
-                  background: activeSection === section.key ? '#f9f8ff' : 'transparent',
-                  color: activeSection === section.key ? (section.color || '#005BAA') : '#323130',
-                  fontWeight: activeSection === section.key ? 600 : 400,
-                  fontSize: '13px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  borderRadius: '6px',
-                  marginBottom: '4px',
-                  borderLeft: activeSection === section.key ? `3px solid ${section.color || '#005BAA'}` : '3px solid transparent',
-                  fontFamily: '"Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                <Icon
-                  iconName={section.icon}
-                  style={{
-                    fontSize: '18px',
-                    color: activeSection === section.key ? (section.color || '#005BAA') : '#605e5c',
-                    marginTop: '2px',
-                  }}
-                />
-                <div>
-                  <div>{section.label}</div>
-                  {section.description && (
-                    <div style={{
-                      fontSize: '11px',
-                      color: '#8a8886',
-                      fontWeight: 400,
-                      marginTop: '2px',
-                    }}>
-                      {section.description}
-                    </div>
-                  )}
-                </div>
-              </button>
-            ))}
+            {/* Grouped navigation items */}
+            {navGroups.map(group => renderNavGroup(group))}
+
+            {/* Separator */}
+            <div style={{ height: '1px', background: '#edebe9', margin: '8px 12px' }} />
+
+            {/* Standalone navigation items */}
+            {standaloneItems.map(item => renderNavItem(item, false))}
           </div>
         </div>
 

@@ -311,6 +311,24 @@ Ensure-Field "JML_PolicyPacks" "SortOrder" "Number"
 Ensure-Field "JML_PolicyPacks" "IsActive" "Boolean"
 
 # ══════════════════════════════════════════════════════════════════
+# JML_OnboardingProfiles — Predefined onboarding configuration bundles
+# ══════════════════════════════════════════════════════════════════
+Ensure-List "JML_OnboardingProfiles" "Predefined onboarding configuration bundles by department or role"
+Ensure-Field "JML_OnboardingProfiles" "Description" "Note"
+Ensure-ChoiceField "JML_OnboardingProfiles" "ProfileType" @("Department","Role") $true
+Ensure-Field "JML_OnboardingProfiles" "Department" "Text"
+Ensure-Field "JML_OnboardingProfiles" "JobTitle" "Text"
+Ensure-Field "JML_OnboardingProfiles" "DocumentTypeIds" "Note"
+Ensure-Field "JML_OnboardingProfiles" "AssetTypeIds" "Note"
+Ensure-Field "JML_OnboardingProfiles" "SystemAccessTypeIds" "Note"
+Ensure-Field "JML_OnboardingProfiles" "TrainingCourseIds" "Note"
+Ensure-Field "JML_OnboardingProfiles" "Icon" "Text"
+Ensure-Field "JML_OnboardingProfiles" "Color" "Text"
+Ensure-Field "JML_OnboardingProfiles" "IsDefault" "Boolean"
+Ensure-Field "JML_OnboardingProfiles" "SortOrder" "Number"
+Ensure-Field "JML_OnboardingProfiles" "IsActive" "Boolean"
+
+# ══════════════════════════════════════════════════════════════════
 # JML_Departments — Department configuration
 # ══════════════════════════════════════════════════════════════════
 Ensure-List "JML_Departments" "Department configuration"
@@ -363,28 +381,55 @@ Ensure-List "JML_ClassificationRules" "Classification-based assignment and appro
 Ensure-ChoiceField "JML_ClassificationRules" "Classification" @("DOC","SYS","HRD","TRN","ORI","CMP","FAC","SEC","FIN","COM") $true
 Ensure-Field "JML_ClassificationRules" "ProcessTypes" "Note"
 Ensure-Field "JML_ClassificationRules" "Departments" "Note"
+Ensure-Field "JML_ClassificationRules" "Description" "Note"
+
+# Default Assignment
 Ensure-ChoiceField "JML_ClassificationRules" "DefaultAssigneeType" @("Role","Specific","Manager","Employee") $true
 Ensure-Field "JML_ClassificationRules" "DefaultAssigneeRole" "Text"
 Ensure-Field "JML_ClassificationRules" "DefaultAssigneeId" "Number"
 Ensure-Field "JML_ClassificationRules" "DefaultAssigneeName" "Text"
+Ensure-Field "JML_ClassificationRules" "DefaultAssigneeEmail" "Text"
+
+# Approval Configuration
 Ensure-Field "JML_ClassificationRules" "RequiresApproval" "Boolean"
 Ensure-ChoiceField "JML_ClassificationRules" "ApproverType" @("Role","Specific","Manager","Skip-Level")
 Ensure-Field "JML_ClassificationRules" "ApproverRole" "Text"
 Ensure-Field "JML_ClassificationRules" "ApproverId" "Number"
 Ensure-Field "JML_ClassificationRules" "ApproverName" "Text"
+Ensure-Field "JML_ClassificationRules" "ApproverEmail" "Text"
+
+# Escalation
 Ensure-Field "JML_ClassificationRules" "EscalationEnabled" "Boolean"
 Ensure-Field "JML_ClassificationRules" "EscalationDays" "Number"
+Ensure-ChoiceField "JML_ClassificationRules" "EscalationApproverType" @("Role","Specific","Skip-Level")
+Ensure-Field "JML_ClassificationRules" "EscalationApproverRole" "Text"
 Ensure-Field "JML_ClassificationRules" "EscalationApproverId" "Number"
 Ensure-Field "JML_ClassificationRules" "EscalationApproverName" "Text"
+
+# Auto-Approval
 Ensure-Field "JML_ClassificationRules" "AutoApproveEnabled" "Boolean"
 Ensure-Field "JML_ClassificationRules" "AutoApproveMaxCost" "Number"
+Ensure-Field "JML_ClassificationRules" "AutoApproveMaxDays" "Number"
+
+# Notifications
 Ensure-Field "JML_ClassificationRules" "SendEmailNotification" "Boolean"
 Ensure-Field "JML_ClassificationRules" "SendTeamsNotification" "Boolean"
+Ensure-Field "JML_ClassificationRules" "NotifyOnAssignment" "Boolean"
 Ensure-Field "JML_ClassificationRules" "NotifyOnCompletion" "Boolean"
+Ensure-Field "JML_ClassificationRules" "NotifyManagerOnCompletion" "Boolean"
+Ensure-Field "JML_ClassificationRules" "TeamsChannelWebhook" "Text"
+
+# Timing & Priority
 Ensure-ChoiceField "JML_ClassificationRules" "DefaultOffsetType" @("before-start","on-start","after-start")
 Ensure-Field "JML_ClassificationRules" "DefaultDaysOffset" "Number"
 Ensure-ChoiceField "JML_ClassificationRules" "DefaultPriority" @("Low","Medium","High","Critical")
-Ensure-Field "JML_ClassificationRules" "SLADays" "Number"
+
+# SLA Settings
+Ensure-Field "JML_ClassificationRules" "SlaEnabled" "Boolean"
+Ensure-Field "JML_ClassificationRules" "SlaDays" "Number"
+Ensure-Field "JML_ClassificationRules" "SlaWarningDays" "Number"
+
+# Metadata
 Ensure-Field "JML_ClassificationRules" "SortOrder" "Number"
 Ensure-Field "JML_ClassificationRules" "IsActive" "Boolean"
 
@@ -500,6 +545,7 @@ Write-Host "  - JML_AssetTypes" -ForegroundColor Cyan
 Write-Host "  - JML_SystemAccessTypes" -ForegroundColor Cyan
 Write-Host "  - JML_TrainingCourses" -ForegroundColor Cyan
 Write-Host "  - JML_PolicyPacks" -ForegroundColor Cyan
+Write-Host "  - JML_OnboardingProfiles" -ForegroundColor Cyan
 Write-Host "  - JML_Departments" -ForegroundColor Cyan
 Write-Host "  - JML_TaskLibrary" -ForegroundColor Cyan
 Write-Host "  - JML_ClassificationRules" -ForegroundColor Cyan

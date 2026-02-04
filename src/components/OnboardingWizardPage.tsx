@@ -16,7 +16,7 @@ import { TeamsNotificationService } from '../services/TeamsNotificationService';
 import { InAppNotificationService } from '../services/InAppNotificationService';
 import { WorkflowOrchestrator } from '../services/WorkflowOrchestrator';
 import { IOnboardingWizardData, OnboardingStatus, OnboardingTaskStatus } from '../models/IOnboarding';
-import { IDocumentType, IAssetType, ISystemAccessType, ITrainingCourse, IPolicyPack, IDepartment } from '../models/IOnboardingConfig';
+import { IDocumentType, IAssetType, ISystemAccessType, ITrainingCourse, IPolicyPack, IDepartment, IOnboardingProfile, OnboardingProfileType } from '../models/IOnboardingConfig';
 import styles from '../styles/JmlWizard.module.scss';
 import { WebPartContext } from '@microsoft/sp-webpart-base';
 
@@ -41,6 +41,7 @@ interface IConfigData {
   systemAccessTypes: ISystemAccessType[];
   trainingCourses: ITrainingCourse[];
   policyPacks: IPolicyPack[];
+  profiles: IOnboardingProfile[];
   departments: IDepartment[];
 }
 
@@ -51,9 +52,8 @@ interface ISelectedTraining { id: number; name: string; category: string; mandat
 
 const STEPS: IJmlWizardStep[] = [
   { key: 'candidate', label: 'Select Candidate', icon: 'Contact' },
+  { key: 'profile', label: 'Choose Profile', icon: 'UserOptional' },
   { key: 'details', label: 'Employee Details', icon: 'EditContact' },
-  // Temporarily disabled - Policy Pack step
-  // { key: 'policypack', label: 'Policy Pack', icon: 'Package' },
   { key: 'documents', label: 'Documents', icon: 'DocumentSet' },
   { key: 'systems', label: 'System Access', icon: 'Permissions' },
   { key: 'equipment', label: 'Equipment', icon: 'Devices3' },
@@ -73,8 +73,7 @@ export const OnboardingWizardPage: React.FC<IProps> = ({ sp, context, onComplete
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
-  // Temporarily disabled - Policy Pack feature
-  // const [selectedPolicyPackId, setSelectedPolicyPackId] = useState<number | null>(null);
+  const [selectedProfileId, setSelectedProfileId] = useState<number | null>(null);
 
   const [selectedDocs, setSelectedDocs] = useState<ISelectedDoc[]>([]);
   const [selectedSystems, setSelectedSystems] = useState<ISelectedSystem[]>([]);
@@ -102,13 +101,14 @@ export const OnboardingWizardPage: React.FC<IProps> = ({ sp, context, onComplete
       const svc = new OnboardingService(sp);
       const configSvc = new OnboardingConfigService(sp);
 
-      const [cands, docs, assets, systems, courses, packs, depts] = await Promise.all([
+      const [cands, docs, assets, systems, courses, packs, profs, depts] = await Promise.all([
         svc.getEligibleCandidates(),
         configSvc.getDocumentTypes({ isActive: true }),
         configSvc.getAssetTypes({ isActive: true }),
         configSvc.getSystemAccessTypes({ isActive: true }),
         configSvc.getTrainingCourses({ isActive: true }),
         configSvc.getPolicyPacks({ isActive: true }),
+        configSvc.getOnboardingProfiles({ isActive: true }),
         configSvc.getDepartments({ isActive: true }),
       ]);
 
@@ -119,6 +119,7 @@ export const OnboardingWizardPage: React.FC<IProps> = ({ sp, context, onComplete
         systemAccessTypes: systems,
         trainingCourses: courses,
         policyPacks: packs,
+        profiles: profs,
         departments: depts,
       });
 
@@ -140,19 +141,38 @@ export const OnboardingWizardPage: React.FC<IProps> = ({ sp, context, onComplete
     setLoadingConfig(false);
   };
 
-  /* Temporarily disabled - Policy Pack feature
-  const applyPolicyPack = (packId: number): void => {
+  // Apply selected onboarding profile to pre-populate wizard selections
+  const applyProfile = (profileId: number | null): void => {
     if (!configData) return;
-    const pack = configData.policyPacks.find(p => p.Id === packId);
-    if (!pack) return;
 
-    setSelectedPolicyPackId(packId);
+    setSelectedProfileId(profileId);
 
+    if (!profileId) {
+      // "Start Blank" - reset to defaults (all items with their default states)
+      setSelectedDocs(configData.documentTypes.map(d => ({
+        id: d.Id || 0, name: d.Title, category: d.Category || 'HR', required: d.IsRequired, received: false
+      })));
+      setSelectedSystems(configData.systemAccessTypes.map(s => ({
+        id: s.Id || 0, name: s.Title, category: s.Category || 'Core', role: s.DefaultRole || 'Standard', requested: s.Category === 'Core'
+      })));
+      setSelectedAssets(configData.assetTypes.filter(a => a.Category === 'Hardware').slice(0, 3).map(a => ({
+        id: a.Id || 0, name: a.Title, category: a.Category, quantity: a.DefaultQuantity || 1, requested: true
+      })));
+      setSelectedTraining(configData.trainingCourses.map(t => ({
+        id: t.Id || 0, name: t.Title, category: t.Category || 'Orientation', mandatory: t.IsMandatory, scheduled: false
+      })));
+      return;
+    }
+
+    const profile = configData.profiles.find(p => p.Id === profileId);
+    if (!profile) return;
+
+    // Apply profile selections
     setSelectedDocs(configData.documentTypes.map(d => ({
       id: d.Id || 0,
       name: d.Title,
       category: d.Category || 'HR',
-      required: pack.DocumentTypeIds.includes(d.Id || 0) ? true : d.IsRequired,
+      required: profile.DocumentTypeIds.includes(d.Id || 0) ? true : d.IsRequired,
       received: false
     })));
 
@@ -161,11 +181,11 @@ export const OnboardingWizardPage: React.FC<IProps> = ({ sp, context, onComplete
       name: s.Title,
       category: s.Category || 'Core',
       role: s.DefaultRole || 'Standard',
-      requested: pack.SystemAccessTypeIds.includes(s.Id || 0)
+      requested: profile.SystemAccessTypeIds.includes(s.Id || 0)
     })));
 
     setSelectedAssets(configData.assetTypes.filter(a =>
-      pack.AssetTypeIds.includes(a.Id || 0)
+      profile.AssetTypeIds.includes(a.Id || 0)
     ).map(a => ({
       id: a.Id || 0,
       name: a.Title,
@@ -178,11 +198,10 @@ export const OnboardingWizardPage: React.FC<IProps> = ({ sp, context, onComplete
       id: t.Id || 0,
       name: t.Title,
       category: t.Category || 'Orientation',
-      mandatory: pack.TrainingCourseIds.includes(t.Id || 0) ? true : t.IsMandatory,
+      mandatory: profile.TrainingCourseIds.includes(t.Id || 0) ? true : t.IsMandatory,
       scheduled: false
     })));
   };
-  */
 
   const updateField = (field: keyof IOnboardingWizardData, value: any): void => {
     setWizardData(prev => ({ ...prev, [field]: value }));
@@ -571,18 +590,17 @@ export const OnboardingWizardPage: React.FC<IProps> = ({ sp, context, onComplete
   ];
 
   // Step content renderers
-  // Note: Policy Pack step (index 2) is temporarily disabled
   const renderStepContent = (): JSX.Element => {
     switch (currentStep) {
       case 0: return renderCandidateStep();
-      case 1: return renderDetailsStep();
-      // case 2: return renderPolicyPackStep(); // Temporarily disabled
-      case 2: return renderDocumentsStep();
-      case 3: return renderSystemsStep();
-      case 4: return renderEquipmentStep();
-      case 5: return renderTrainingStep();
-      case 6: return renderConfigureTasksStep();
-      case 7: return renderReviewStep();
+      case 1: return renderProfileStep();
+      case 2: return renderDetailsStep();
+      case 3: return renderDocumentsStep();
+      case 4: return renderSystemsStep();
+      case 5: return renderEquipmentStep();
+      case 6: return renderTrainingStep();
+      case 7: return renderConfigureTasksStep();
+      case 8: return renderReviewStep();
       default: return <div />;
     }
   };
@@ -632,6 +650,134 @@ export const OnboardingWizardPage: React.FC<IProps> = ({ sp, context, onComplete
       )}
     </div>
   );
+
+  const renderProfileStep = (): JSX.Element => {
+    const departmentProfiles = configData?.profiles.filter(p => p.ProfileType === OnboardingProfileType.Department) || [];
+    const roleProfiles = configData?.profiles.filter(p => p.ProfileType === OnboardingProfileType.Role) || [];
+    const selectedProfile = configData?.profiles.find(p => p.Id === selectedProfileId);
+
+    return (
+      <div className={styles.formCard}>
+        <div className={styles.formCardHeader}>
+          <div className={styles.formCardIcon} style={{ background: '#005BAA' }}>
+            <Icon iconName="UserOptional" style={{ fontSize: 18 }} />
+          </div>
+          <div>
+            <h3 className={styles.formCardTitle}>Choose Onboarding Profile</h3>
+            <p className={styles.formCardDescription}>Select a pre-configured profile to quickly set up documents, systems, equipment, and training</p>
+          </div>
+        </div>
+
+        {/* Start Blank Option */}
+        <div
+          className={`${styles.listItem} ${selectedProfileId === null ? styles.listItemSelected : ''}`}
+          onClick={() => applyProfile(null)}
+          style={{ marginBottom: 16, border: '1px dashed #d1d1d1', background: selectedProfileId === null ? '#f0f8ff' : '#fafafa' }}
+        >
+          <Icon iconName="Add" style={{ fontSize: 24, color: '#605e5c' }} />
+          <div style={{ flex: 1 }}>
+            <div className={styles.listItemTitle}>Start Blank</div>
+            <div className={styles.listItemSubtitle}>Manually select all items from scratch</div>
+          </div>
+          {selectedProfileId === null && (
+            <Icon iconName="CheckMark" style={{ fontSize: 16, color: '#005BAA' }} />
+          )}
+        </div>
+
+        {/* Department Profiles */}
+        {departmentProfiles.length > 0 && (
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#323130', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Icon iconName="Org" style={{ fontSize: 14, color: '#005BAA' }} />
+              Department Profiles
+            </div>
+            <div style={{ display: 'grid', gap: 8 }}>
+              {departmentProfiles.map(profile => (
+                <div
+                  key={profile.Id}
+                  className={`${styles.listItem} ${selectedProfileId === profile.Id ? styles.listItemSelected : ''}`}
+                  onClick={() => applyProfile(profile.Id!)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <div style={{
+                    width: 40, height: 40, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: profile.Color || '#005BAA', color: '#fff'
+                  }}>
+                    <Icon iconName={profile.Icon || 'Org'} style={{ fontSize: 18 }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div className={styles.listItemTitle}>{profile.Title}</div>
+                    <div className={styles.listItemSubtitle}>{profile.Description || profile.Department}</div>
+                    <div style={{ fontSize: 11, color: '#8a8886', marginTop: 4 }}>
+                      {profile.DocumentTypeIds.length} docs &bull; {profile.SystemAccessTypeIds.length} systems &bull; {profile.AssetTypeIds.length} assets &bull; {profile.TrainingCourseIds.length} training
+                    </div>
+                  </div>
+                  {selectedProfileId === profile.Id && (
+                    <Icon iconName="CheckMark" style={{ fontSize: 16, color: profile.Color || '#005BAA' }} />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Role Profiles */}
+        {roleProfiles.length > 0 && (
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#323130', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Icon iconName="People" style={{ fontSize: 14, color: '#ea580c' }} />
+              Role-Based Profiles
+            </div>
+            <div style={{ display: 'grid', gap: 8 }}>
+              {roleProfiles.map(profile => (
+                <div
+                  key={profile.Id}
+                  className={`${styles.listItem} ${selectedProfileId === profile.Id ? styles.listItemSelected : ''}`}
+                  onClick={() => applyProfile(profile.Id!)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <div style={{
+                    width: 40, height: 40, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: profile.Color || '#ea580c', color: '#fff'
+                  }}>
+                    <Icon iconName={profile.Icon || 'Contact'} style={{ fontSize: 18 }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div className={styles.listItemTitle}>{profile.Title}</div>
+                    <div className={styles.listItemSubtitle}>{profile.Description || profile.JobTitle}</div>
+                    <div style={{ fontSize: 11, color: '#8a8886', marginTop: 4 }}>
+                      {profile.DocumentTypeIds.length} docs &bull; {profile.SystemAccessTypeIds.length} systems &bull; {profile.AssetTypeIds.length} assets &bull; {profile.TrainingCourseIds.length} training
+                    </div>
+                  </div>
+                  {selectedProfileId === profile.Id && (
+                    <Icon iconName="CheckMark" style={{ fontSize: 16, color: profile.Color || '#ea580c' }} />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* No profiles message */}
+        {departmentProfiles.length === 0 && roleProfiles.length === 0 && (
+          <div className={`${styles.infoBox} ${styles.infoBoxWarning}`}>
+            <Icon iconName="Info" className={styles.infoBoxIcon} />
+            <div>No profiles configured yet. You can create profiles in Admin Center &gt; Onboarding Configuration &gt; Onboarding Profiles.</div>
+          </div>
+        )}
+
+        {/* Selected profile summary */}
+        {selectedProfile && (
+          <div className={`${styles.infoBox} ${styles.infoBoxSuccess}`} style={{ marginTop: 16 }}>
+            <Icon iconName="CheckMark" className={styles.infoBoxIcon} />
+            <div>
+              <strong>{selectedProfile.Title}</strong> profile selected. Wizard steps will be pre-populated with this profile's configuration.
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const renderDetailsStep = (): JSX.Element => (
     <div className={styles.formCard}>

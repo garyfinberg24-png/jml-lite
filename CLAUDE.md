@@ -95,7 +95,7 @@ Header gradient: `linear-gradient(135deg, #005BAA 0%, #004A8F 100%)`
 ### Wizard Views (Full-Page)
 | View | Component | Steps | Description |
 |------|-----------|-------|-------------|
-| Onboarding Wizard | OnboardingWizardPage | 9 | Full onboarding wizard with task configuration |
+| Onboarding Wizard | OnboardingWizardPage | 9 | Full onboarding wizard with profile selection and task configuration |
 | Mover Wizard | MoverWizardPage | 6 | Transfer wizard |
 | Offboarding Wizard | OffboardingWizardPage | 7 | Offboarding wizard |
 
@@ -132,6 +132,7 @@ All lists use the `JML_` prefix.
 | SYSTEM_ACCESS_TYPES | JML_SystemAccessTypes | System access config |
 | TRAINING_COURSES | JML_TrainingCourses | Training course config |
 | POLICY_PACKS | JML_PolicyPacks | Policy pack bundles |
+| ONBOARDING_PROFILES | JML_OnboardingProfiles | Predefined onboarding profiles by department/role |
 | DEPARTMENTS | JML_Departments | Department config |
 | CONFIGURATION | JML_Configuration | App settings (key-value) |
 | AUDIT_TRAIL | JML_AuditTrail | System audit log |
@@ -215,11 +216,11 @@ SP Groups: `JML Admin`, `JML Manager`
 
 ### Onboarding (Joiners)
 - **OnboardingTracker**: List view with status tabs, progress bars
-- **OnboardingWizard**: 9-step wizard (candidate, details, policy pack, docs, systems, assets, training, **configure tasks**, review)
-- **OnboardingWizardPage**: Full-page wrapper for wizard
+- **OnboardingWizard**: 9-step wizard (candidate, **profile**, details, policy pack, docs, systems, assets, training, **configure tasks**, review)
+- **OnboardingWizardPage**: Full-page wrapper for wizard with profile-based pre-population
 - **OnboardingForm**: Detail panel for editing onboarding records
 - **OnboardingBuddy**: Self-service portal for new hires with document upload
-- **OnboardingConfigAdmin**: Admin panel for document/asset/system/training config
+- **OnboardingConfigAdmin**: Admin panel for document/asset/system/training/profile config with seed data feature
 
 ### Mover (Internal Transfers)
 - **MoverTracker**: List view with status tabs
@@ -276,16 +277,29 @@ SP Groups: `JML Admin`, `JML Manager`
 
 ## Session State (Last Updated: 2026-02-04)
 
-### Current Version: v1.2.0
+### Current Version: v1.3.0
 
-### Recent Changes (v1.2.0)
+### Recent Changes (v1.3.0)
 
-1. **Task Dependencies** - Tasks can now depend on other tasks with circular dependency detection
-2. **TaskConfigurationOverlay** - New full-screen overlay component for task configuration
-3. **Two-Phase Task Creation** - Proper ID mapping from temp IDs to SharePoint IDs
-4. **Blocked Status** - Tasks with dependencies start as "Blocked" until prerequisites complete
-5. **Visual Dependency Indicators** - Orange/green badges showing dependency relationships
-6. **SharePoint Schema Update** - DependsOnTaskIds and BlockedUntilComplete fields added
+1. **Onboarding Profiles** - Predefined configuration bundles tied to Department or Role
+   - 4 Department profiles: IT, HR, Finance, Sales (with appropriate defaults)
+   - 4 Role profiles: Software Developer, UX/UI Designer, Administrative Assistant, Sales Representative
+   - Profile selection step added to OnboardingWizardPage (Step 2)
+   - `applyProfile()` function pre-populates wizard selections based on chosen profile
+2. **OnboardingConfigAdmin Enhancements**
+   - New "Profiles" tab for managing onboarding profiles
+   - "Seed Default Data" feature for all config types (documents, assets, systems, training, profiles)
+   - ProfileType field (Department vs Role) with conditional Department/JobTitle fields
+3. **SharePoint Schema Update** - JML_OnboardingProfiles list with all profile fields
+4. **OnboardingConfigService** - Full CRUD operations for onboarding profiles
+
+### Previous Release (v1.2.0)
+
+- Task Dependencies - Tasks can now depend on other tasks with circular dependency detection
+- TaskConfigurationOverlay - New full-screen overlay component for task configuration
+- Two-Phase Task Creation - Proper ID mapping from temp IDs to SharePoint IDs
+- Blocked Status - Tasks with dependencies start as "Blocked" until prerequisites complete
+- Visual Dependency Indicators - Orange/green badges showing dependency relationships
 
 ### Previous Release (v1.1.0)
 
@@ -299,9 +313,9 @@ SP Groups: `JML Admin`, `JML Manager`
 
 ### Known Issues Being Tested
 
-- Task dependency UI in TaskConfigurationOverlay
-- Two-phase task creation ID mapping
-- Blocked task status transitions
+- Profile selection UI in OnboardingWizardPage
+- applyProfile() pre-population accuracy
+- Seed data integrity
 
 ### Pending Features
 
@@ -311,20 +325,20 @@ SP Groups: `JML Admin`, `JML Manager`
 - Teams notification webhooks
 - Task reminder scheduling
 
-### Files Modified in v1.2.0
+### Files Modified in v1.3.0
 
-- `TaskConfigurationOverlay.tsx` (NEW) - Full-screen task config with dependencies
-- `OnboardingWizardPage.tsx` - Two-phase task creation with dependency mapping
-- `TaskConfigurationPanel.tsx` - Interface consistency updates
-- `IOnboarding.ts` - DependsOnTaskIds, BlockedUntilComplete fields
-- `OnboardingService.ts` - Create/update/map dependency fields
-- `Deploy-JMLLists.ps1` - DependsOnTaskIds, BlockedUntilComplete columns
+- `IOnboardingConfig.ts` - OnboardingProfileType enum, IOnboardingProfile, IResolvedOnboardingProfile interfaces
+- `SharePointListNames.ts` - ONBOARDING_PROFILES constant
+- `Deploy-JMLLists.ps1` - JML_OnboardingProfiles list provisioning
+- `OnboardingConfigService.ts` - Full CRUD for onboarding profiles
+- `OnboardingConfigAdmin.tsx` - Profiles tab, seed data feature, panel content
+- `OnboardingWizardPage.tsx` - Profile step, applyProfile function, updated step flow
 
 ### Build Status
 
 - Last successful build: 2026-02-04
 - Package: `sharepoint/solution/jml-lite.sppkg`
-- Git tag: v1.2.0
+- Git tag: v1.3.0
 
 ---
 
@@ -382,6 +396,7 @@ Track what was worked on each session so new agents can pick up quickly.
 
 | Date | What Was Done | Next Steps |
 | ---- | ------------- | ---------- |
+| 2026-02-04 | v1.3.0: Onboarding Profiles feature, seed data capability, profile selection step | Test profile selection and pre-population |
 | 2026-02-04 | v1.2.0: Task dependencies with circular detection, two-phase creation, blocked status | Test dependency UI, automatic unblocking |
 | 2026-02-04 | Updated CLAUDE.md with session recovery guide | Continue feature development |
 | 2026-02-04 | Task Configuration Panel, Notification System, Document Service | Test Step 7 visibility, document uploads |

@@ -27,6 +27,7 @@ export const JML_LISTS = {
   SYSTEM_ACCESS_TYPES: 'JML_SystemAccessTypes',
   TRAINING_COURSES: 'JML_TrainingCourses',
   POLICY_PACKS: 'JML_PolicyPacks',
+  ONBOARDING_PROFILES: 'JML_OnboardingProfiles',
   DEPARTMENTS: 'JML_Departments',
 } as const;
 

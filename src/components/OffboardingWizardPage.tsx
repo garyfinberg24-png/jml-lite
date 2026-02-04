@@ -141,7 +141,7 @@ export const OffboardingWizardPage: React.FC<IProps> = ({ sp, context, onComplet
         systemName: s.Title,
         category: s.Category || SystemAccessCategory.Core,
         currentRole: s.DefaultRole || 'Standard',
-        selected: true
+        selected: false  // Default to none selected - user explicitly selects which to revoke
       })));
     } catch (err) {
       console.error('[OffboardingWizardPage] Error loading data:', err);

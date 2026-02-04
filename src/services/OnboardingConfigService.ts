@@ -10,6 +10,7 @@ import { RM_LISTS } from '../constants/SharePointListNames';
 import {
   IDocumentType, IAssetType, ISystemAccessType, ITrainingCourse,
   IPolicyPack, IDepartment, IResolvedPolicyPack,
+  IOnboardingProfile, IResolvedOnboardingProfile, OnboardingProfileType,
   DocumentCategory, AssetCategory, SystemAccessCategory, TrainingCategory, TrainingDeliveryMethod
 } from '../models/IOnboardingConfig';
 import { sanitizeForOData, sanitizeNumberForOData, truncateToLength } from '../utils/validation';
@@ -568,6 +569,150 @@ export class OnboardingConfigService {
   }
 
   // ═══════════════════════════════════════════════════════════════
+  // ONBOARDING PROFILES
+  // ═══════════════════════════════════════════════════════════════
+
+  public async getOnboardingProfiles(filters?: { isActive?: boolean; profileType?: OnboardingProfileType; department?: string }): Promise<IOnboardingProfile[]> {
+    try {
+      const filterParts: string[] = [];
+      if (filters?.isActive !== undefined) {
+        filterParts.push(`IsActive eq ${filters.isActive ? 1 : 0}`);
+      }
+      if (filters?.profileType) {
+        filterParts.push(`ProfileType eq '${sanitizeForOData(filters.profileType)}'`);
+      }
+      if (filters?.department) {
+        filterParts.push(`Department eq '${sanitizeForOData(filters.department)}'`);
+      }
+
+      let query = this.sp.web.lists.getByTitle(RM_LISTS.ONBOARDING_PROFILES).items
+        .select('Id', 'Title', 'Description', 'ProfileType', 'Department', 'JobTitle', 'DocumentTypeIds', 'AssetTypeIds', 'SystemAccessTypeIds', 'TrainingCourseIds', 'Icon', 'Color', 'IsDefault', 'SortOrder', 'IsActive', 'Created', 'Modified')
+        .orderBy('SortOrder', true);
+
+      if (filterParts.length > 0) {
+        query = query.filter(filterParts.join(' and '));
+      }
+
+      const items = await query.getAll();
+      return items.map((item: any) => this.mapOnboardingProfileFromSP(item));
+    } catch (error) {
+      console.error('[OnboardingConfigService] Error getting onboarding profiles:', error);
+      return [];
+    }
+  }
+
+  public async getOnboardingProfileById(id: number): Promise<IOnboardingProfile | null> {
+    try {
+      const item = await this.sp.web.lists.getByTitle(RM_LISTS.ONBOARDING_PROFILES).items
+        .getById(id)
+        .select('Id', 'Title', 'Description', 'ProfileType', 'Department', 'JobTitle', 'DocumentTypeIds', 'AssetTypeIds', 'SystemAccessTypeIds', 'TrainingCourseIds', 'Icon', 'Color', 'IsDefault', 'SortOrder', 'IsActive', 'Created', 'Modified')();
+      return this.mapOnboardingProfileFromSP(item);
+    } catch (error) {
+      console.error('[OnboardingConfigService] Error getting onboarding profile by id:', error);
+      return null;
+    }
+  }
+
+  public async createOnboardingProfile(data: Partial<IOnboardingProfile>): Promise<IOnboardingProfile | null> {
+    try {
+      const result = await this.sp.web.lists.getByTitle(RM_LISTS.ONBOARDING_PROFILES).items.add({
+        Title: truncateToLength(data.Title, 255),
+        Description: truncateToLength(data.Description, 5000),
+        ProfileType: data.ProfileType || OnboardingProfileType.Department,
+        Department: truncateToLength(data.Department, 255),
+        JobTitle: truncateToLength(data.JobTitle, 255),
+        DocumentTypeIds: data.DocumentTypeIds ? JSON.stringify(data.DocumentTypeIds) : '[]',
+        AssetTypeIds: data.AssetTypeIds ? JSON.stringify(data.AssetTypeIds) : '[]',
+        SystemAccessTypeIds: data.SystemAccessTypeIds ? JSON.stringify(data.SystemAccessTypeIds) : '[]',
+        TrainingCourseIds: data.TrainingCourseIds ? JSON.stringify(data.TrainingCourseIds) : '[]',
+        Icon: truncateToLength(data.Icon, 50),
+        Color: truncateToLength(data.Color, 20),
+        IsDefault: data.IsDefault ?? false,
+        SortOrder: sanitizeNumberForOData(data.SortOrder) ?? 0,
+        IsActive: data.IsActive ?? true,
+      });
+      return this.mapOnboardingProfileFromSP(result);
+    } catch (error) {
+      console.error('[OnboardingConfigService] Error creating onboarding profile:', error);
+      return null;
+    }
+  }
+
+  public async updateOnboardingProfile(id: number, updates: Partial<IOnboardingProfile>): Promise<boolean> {
+    try {
+      const updateData: any = {};
+      if (updates.Title !== undefined) updateData.Title = updates.Title;
+      if (updates.Description !== undefined) updateData.Description = updates.Description;
+      if (updates.ProfileType !== undefined) updateData.ProfileType = updates.ProfileType;
+      if (updates.Department !== undefined) updateData.Department = updates.Department;
+      if (updates.JobTitle !== undefined) updateData.JobTitle = updates.JobTitle;
+      if (updates.DocumentTypeIds !== undefined) updateData.DocumentTypeIds = JSON.stringify(updates.DocumentTypeIds);
+      if (updates.AssetTypeIds !== undefined) updateData.AssetTypeIds = JSON.stringify(updates.AssetTypeIds);
+      if (updates.SystemAccessTypeIds !== undefined) updateData.SystemAccessTypeIds = JSON.stringify(updates.SystemAccessTypeIds);
+      if (updates.TrainingCourseIds !== undefined) updateData.TrainingCourseIds = JSON.stringify(updates.TrainingCourseIds);
+      if (updates.Icon !== undefined) updateData.Icon = updates.Icon;
+      if (updates.Color !== undefined) updateData.Color = updates.Color;
+      if (updates.IsDefault !== undefined) updateData.IsDefault = updates.IsDefault;
+      if (updates.SortOrder !== undefined) updateData.SortOrder = updates.SortOrder;
+      if (updates.IsActive !== undefined) updateData.IsActive = updates.IsActive;
+
+      await this.sp.web.lists.getByTitle(RM_LISTS.ONBOARDING_PROFILES).items.getById(id).update(updateData);
+      return true;
+    } catch (error) {
+      console.error('[OnboardingConfigService] Error updating onboarding profile:', error);
+      return false;
+    }
+  }
+
+  public async deleteOnboardingProfile(id: number): Promise<boolean> {
+    try {
+      await this.sp.web.lists.getByTitle(RM_LISTS.ONBOARDING_PROFILES).items.getById(id).delete();
+      return true;
+    } catch (error) {
+      console.error('[OnboardingConfigService] Error deleting onboarding profile:', error);
+      return false;
+    }
+  }
+
+  public async getResolvedOnboardingProfile(profileId: number): Promise<IResolvedOnboardingProfile | null> {
+    try {
+      const profile = await this.getOnboardingProfileById(profileId);
+      if (!profile) return null;
+
+      const [allDocs, allAssets, allSystems, allTraining] = await Promise.all([
+        this.getDocumentTypes({ isActive: true }),
+        this.getAssetTypes({ isActive: true }),
+        this.getSystemAccessTypes({ isActive: true }),
+        this.getTrainingCourses({ isActive: true }),
+      ]);
+
+      return {
+        profile,
+        documents: allDocs.filter(d => d.Id && profile.DocumentTypeIds.includes(d.Id)),
+        assets: allAssets.filter(a => a.Id && profile.AssetTypeIds.includes(a.Id)),
+        systems: allSystems.filter(s => s.Id && profile.SystemAccessTypeIds.includes(s.Id)),
+        training: allTraining.filter(t => t.Id && profile.TrainingCourseIds.includes(t.Id)),
+      };
+    } catch (error) {
+      console.error('[OnboardingConfigService] Error getting resolved onboarding profile:', error);
+      return null;
+    }
+  }
+
+  public async getDefaultOnboardingProfile(): Promise<IOnboardingProfile | null> {
+    try {
+      const items = await this.sp.web.lists.getByTitle(RM_LISTS.ONBOARDING_PROFILES).items
+        .select('Id', 'Title', 'Description', 'ProfileType', 'Department', 'JobTitle', 'DocumentTypeIds', 'AssetTypeIds', 'SystemAccessTypeIds', 'TrainingCourseIds', 'Icon', 'Color', 'IsDefault', 'SortOrder', 'IsActive', 'Created', 'Modified')
+        .filter('IsDefault eq 1 and IsActive eq 1')
+        .top(1)();
+      return items.length > 0 ? this.mapOnboardingProfileFromSP(items[0]) : null;
+    } catch (error) {
+      console.error('[OnboardingConfigService] Error getting default onboarding profile:', error);
+      return null;
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════
   // MAPPERS
   // ═══════════════════════════════════════════════════════════════
 
@@ -702,6 +847,37 @@ export class OnboardingConfigService {
       ManagerId: item.ManagerId,
       DefaultPolicyPackId: item.DefaultPolicyPackId,
       CostCenter: item.CostCenter,
+      IsActive: item.IsActive ?? true,
+      Created: item.Created ? new Date(item.Created) : undefined,
+      Modified: item.Modified ? new Date(item.Modified) : undefined,
+    };
+  }
+
+  private mapOnboardingProfileFromSP(item: any): IOnboardingProfile {
+    const parseIds = (val: any): number[] => {
+      if (!val) return [];
+      try {
+        return JSON.parse(val);
+      } catch {
+        return [];
+      }
+    };
+
+    return {
+      Id: item.Id,
+      Title: item.Title || '',
+      Description: item.Description,
+      ProfileType: (item.ProfileType as OnboardingProfileType) || OnboardingProfileType.Department,
+      Department: item.Department,
+      JobTitle: item.JobTitle,
+      DocumentTypeIds: parseIds(item.DocumentTypeIds),
+      AssetTypeIds: parseIds(item.AssetTypeIds),
+      SystemAccessTypeIds: parseIds(item.SystemAccessTypeIds),
+      TrainingCourseIds: parseIds(item.TrainingCourseIds),
+      Icon: item.Icon,
+      Color: item.Color,
+      IsDefault: item.IsDefault ?? false,
+      SortOrder: item.SortOrder ?? 0,
       IsActive: item.IsActive ?? true,
       Created: item.Created ? new Date(item.Created) : undefined,
       Modified: item.Modified ? new Date(item.Modified) : undefined,
