@@ -11,6 +11,7 @@ import {
   IMover, IMoverTask, IMoverSystemAccess, IEligibleEmployeeForMove,
   MoverStatus, MoverTaskStatus
 } from '../models/IMover';
+import { sanitizeForOData, sanitizeNumberForOData, truncateToLength } from '../utils/validation';
 
 export class MoverService {
   private sp: SPFI;
@@ -27,7 +28,10 @@ export class MoverService {
     try {
       const filterParts: string[] = [];
       if (filters?.status?.length) {
-        const statusFilters = filters.status.map(s => `Status eq '${s}'`).join(' or ');
+        // Sanitize status values to prevent OData injection
+        const statusFilters = filters.status
+          .map(s => `Status eq '${sanitizeForOData(s)}'`)
+          .join(' or ');
         filterParts.push(`(${statusFilters})`);
       }
 
@@ -81,34 +85,35 @@ export class MoverService {
 
   public async createMover(data: Partial<IMover>): Promise<IMover | null> {
     try {
+      // Sanitize and truncate string inputs
       const result = await this.sp.web.lists.getByTitle(RM_LISTS.MOVER).items.add({
-        Title: data.EmployeeName || '',
-        EmployeeId: data.EmployeeId,
-        EmployeeName: data.EmployeeName,
-        EmployeeEmail: data.EmployeeEmail,
-        CurrentJobTitle: data.CurrentJobTitle,
-        CurrentDepartment: data.CurrentDepartment,
-        CurrentLocation: data.CurrentLocation,
-        CurrentManagerId: data.CurrentManagerId,
-        NewJobTitle: data.NewJobTitle,
-        NewDepartment: data.NewDepartment,
-        NewLocation: data.NewLocation,
-        NewManagerId: data.NewManagerId,
+        Title: truncateToLength(data.EmployeeName, 255) || '',
+        EmployeeId: sanitizeNumberForOData(data.EmployeeId),
+        EmployeeName: truncateToLength(data.EmployeeName, 255),
+        EmployeeEmail: truncateToLength(data.EmployeeEmail, 255),
+        CurrentJobTitle: truncateToLength(data.CurrentJobTitle, 255),
+        CurrentDepartment: truncateToLength(data.CurrentDepartment, 255),
+        CurrentLocation: truncateToLength(data.CurrentLocation, 255),
+        CurrentManagerId: data.CurrentManagerId ? sanitizeNumberForOData(data.CurrentManagerId) : undefined,
+        NewJobTitle: truncateToLength(data.NewJobTitle, 255),
+        NewDepartment: truncateToLength(data.NewDepartment, 255),
+        NewLocation: truncateToLength(data.NewLocation, 255),
+        NewManagerId: data.NewManagerId ? sanitizeNumberForOData(data.NewManagerId) : undefined,
         MoverType: data.MoverType,
         EffectiveDate: data.EffectiveDate,
         Status: data.Status || MoverStatus.NotStarted,
-        Reason: data.Reason,
-        CompletionPercentage: data.CompletionPercentage || 0,
-        TotalTasks: data.TotalTasks || 0,
-        CompletedTasks: data.CompletedTasks || 0,
-        CurrentSalary: data.CurrentSalary,
-        NewSalary: data.NewSalary,
-        SalaryChangePercentage: data.SalaryChangePercentage,
-        AssignedToId: data.AssignedToId,
-        HRContactId: data.HRContactId,
-        Notes: data.Notes,
+        Reason: truncateToLength(data.Reason, 1000),
+        CompletionPercentage: sanitizeNumberForOData(data.CompletionPercentage) || 0,
+        TotalTasks: sanitizeNumberForOData(data.TotalTasks) || 0,
+        CompletedTasks: sanitizeNumberForOData(data.CompletedTasks) || 0,
+        CurrentSalary: data.CurrentSalary ? sanitizeNumberForOData(data.CurrentSalary) : undefined,
+        NewSalary: data.NewSalary ? sanitizeNumberForOData(data.NewSalary) : undefined,
+        SalaryChangePercentage: data.SalaryChangePercentage ? sanitizeNumberForOData(data.SalaryChangePercentage) : undefined,
+        AssignedToId: data.AssignedToId ? sanitizeNumberForOData(data.AssignedToId) : undefined,
+        HRContactId: data.HRContactId ? sanitizeNumberForOData(data.HRContactId) : undefined,
+        Notes: truncateToLength(data.Notes, 5000),
         ApprovalRequired: data.ApprovalRequired || false,
-        ApprovedById: data.ApprovedById,
+        ApprovedById: data.ApprovedById ? sanitizeNumberForOData(data.ApprovedById) : undefined,
         ApprovalDate: data.ApprovalDate,
       });
       return this.mapMoverFromSP(result);
@@ -175,6 +180,10 @@ export class MoverService {
 
   public async getMoverTasks(moverId: number): Promise<IMoverTask[]> {
     try {
+      // Sanitize ID to prevent injection
+      const safeId = sanitizeNumberForOData(moverId);
+      if (safeId <= 0) return [];
+
       const items = await this.sp.web.lists.getByTitle(RM_LISTS.MOVER_TASKS).items
         .select(
           'Id', 'Title', 'MoverId', 'Description', 'Category', 'Status',
@@ -182,7 +191,7 @@ export class MoverService {
           'Priority', 'SortOrder', 'Notes', 'RelatedSystemAccessId',
           'SystemAccessAction', 'RelatedAssetId', 'Created', 'Modified'
         )
-        .filter(`MoverId eq ${moverId}`)
+        .filter(`MoverId eq ${safeId}`)
         .orderBy('SortOrder', true)
         .getAll();
       return items.map((item: any) => this.mapTaskFromSP(item));
@@ -194,20 +203,21 @@ export class MoverService {
 
   public async createMoverTask(task: Partial<IMoverTask>): Promise<IMoverTask | null> {
     try {
+      // Sanitize and truncate inputs
       const result = await this.sp.web.lists.getByTitle(RM_LISTS.MOVER_TASKS).items.add({
-        Title: task.Title,
-        MoverId: task.MoverId,
-        Description: task.Description,
+        Title: truncateToLength(task.Title, 255),
+        MoverId: sanitizeNumberForOData(task.MoverId),
+        Description: truncateToLength(task.Description, 5000),
         Category: task.Category,
         Status: task.Status || MoverTaskStatus.Pending,
-        AssignedToId: task.AssignedToId,
+        AssignedToId: task.AssignedToId ? sanitizeNumberForOData(task.AssignedToId) : undefined,
         DueDate: task.DueDate,
         Priority: task.Priority || 'Medium',
-        SortOrder: task.SortOrder || 0,
-        Notes: task.Notes,
-        RelatedSystemAccessId: task.RelatedSystemAccessId,
+        SortOrder: sanitizeNumberForOData(task.SortOrder) || 0,
+        Notes: truncateToLength(task.Notes, 5000),
+        RelatedSystemAccessId: task.RelatedSystemAccessId ? sanitizeNumberForOData(task.RelatedSystemAccessId) : undefined,
         SystemAccessAction: task.SystemAccessAction,
-        RelatedAssetId: task.RelatedAssetId,
+        RelatedAssetId: task.RelatedAssetId ? sanitizeNumberForOData(task.RelatedAssetId) : undefined,
       });
       return this.mapTaskFromSP(result);
     } catch (error) {
@@ -253,13 +263,17 @@ export class MoverService {
 
   public async getMoverSystemAccess(moverId: number): Promise<IMoverSystemAccess[]> {
     try {
+      // Sanitize ID to prevent injection
+      const safeId = sanitizeNumberForOData(moverId);
+      if (safeId <= 0) return [];
+
       const items = await this.sp.web.lists.getByTitle(RM_LISTS.MOVER_SYSTEM_ACCESS).items
         .select(
           'Id', 'Title', 'MoverId', 'SystemAccessTypeId', 'SystemName',
           'Action', 'CurrentRole', 'NewRole', 'Status',
           'ProcessedDate', 'ProcessedById', 'Notes', 'Created', 'Modified'
         )
-        .filter(`MoverId eq ${moverId}`)
+        .filter(`MoverId eq ${safeId}`)
         .getAll();
       return items.map((item: any) => this.mapSystemAccessFromSP(item));
     } catch (error) {
@@ -270,18 +284,19 @@ export class MoverService {
 
   public async createMoverSystemAccess(data: Partial<IMoverSystemAccess>): Promise<IMoverSystemAccess | null> {
     try {
+      // Sanitize and truncate inputs
       const result = await this.sp.web.lists.getByTitle(RM_LISTS.MOVER_SYSTEM_ACCESS).items.add({
-        Title: data.SystemName || '',
-        MoverId: data.MoverId,
-        SystemAccessTypeId: data.SystemAccessTypeId,
-        SystemName: data.SystemName,
+        Title: truncateToLength(data.SystemName, 255) || '',
+        MoverId: sanitizeNumberForOData(data.MoverId),
+        SystemAccessTypeId: data.SystemAccessTypeId ? sanitizeNumberForOData(data.SystemAccessTypeId) : undefined,
+        SystemName: truncateToLength(data.SystemName, 255),
         Action: data.Action,
-        CurrentRole: data.CurrentRole,
-        NewRole: data.NewRole,
+        CurrentRole: truncateToLength(data.CurrentRole, 255),
+        NewRole: truncateToLength(data.NewRole, 255),
         Status: data.Status || MoverTaskStatus.Pending,
         ProcessedDate: data.ProcessedDate,
-        ProcessedById: data.ProcessedById,
-        Notes: data.Notes,
+        ProcessedById: data.ProcessedById ? sanitizeNumberForOData(data.ProcessedById) : undefined,
+        Notes: truncateToLength(data.Notes, 5000),
       });
       return this.mapSystemAccessFromSP(result);
     } catch (error) {

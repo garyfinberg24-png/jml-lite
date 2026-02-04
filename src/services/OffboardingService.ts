@@ -11,6 +11,7 @@ import {
   IOffboarding, IOffboardingTask, IAssetReturn, IEligibleEmployee,
   OffboardingStatus, OffboardingTaskStatus, AssetReturnStatus
 } from '../models/IOffboarding';
+import { sanitizeForOData, sanitizeNumberForOData, truncateToLength } from '../utils/validation';
 
 export class OffboardingService {
   private sp: SPFI;
@@ -27,7 +28,10 @@ export class OffboardingService {
     try {
       const filterParts: string[] = [];
       if (filters?.status?.length) {
-        const statusFilters = filters.status.map(s => `Status eq '${s}'`).join(' or ');
+        // Sanitize status values to prevent OData injection
+        const statusFilters = filters.status
+          .map(s => `Status eq '${sanitizeForOData(s)}'`)
+          .join(' or ');
         filterParts.push(`(${statusFilters})`);
       }
 
@@ -73,28 +77,29 @@ export class OffboardingService {
 
   public async createOffboarding(data: Partial<IOffboarding>): Promise<IOffboarding | null> {
     try {
+      // Sanitize and truncate string inputs
       const result = await this.sp.web.lists.getByTitle(RM_LISTS.OFFBOARDING).items.add({
-        Title: data.EmployeeName || '',
-        EmployeeId: data.EmployeeId,
-        EmployeeName: data.EmployeeName,
-        EmployeeEmail: data.EmployeeEmail,
-        JobTitle: data.JobTitle,
-        Department: data.Department,
-        ManagerId: data.ManagerId,
+        Title: truncateToLength(data.EmployeeName, 255) || '',
+        EmployeeId: sanitizeNumberForOData(data.EmployeeId),
+        EmployeeName: truncateToLength(data.EmployeeName, 255),
+        EmployeeEmail: truncateToLength(data.EmployeeEmail, 255),
+        JobTitle: truncateToLength(data.JobTitle, 255),
+        Department: truncateToLength(data.Department, 255),
+        ManagerId: data.ManagerId ? sanitizeNumberForOData(data.ManagerId) : undefined,
         LastWorkingDate: data.LastWorkingDate,
         TerminationType: data.TerminationType,
         Status: data.Status || OffboardingStatus.NotStarted,
-        CompletionPercentage: data.CompletionPercentage || 0,
-        TotalTasks: data.TotalTasks || 0,
-        CompletedTasks: data.CompletedTasks || 0,
+        CompletionPercentage: sanitizeNumberForOData(data.CompletionPercentage) || 0,
+        TotalTasks: sanitizeNumberForOData(data.TotalTasks) || 0,
+        CompletedTasks: sanitizeNumberForOData(data.CompletedTasks) || 0,
         ExitInterviewDate: data.ExitInterviewDate,
         ExitInterviewCompleted: data.ExitInterviewCompleted || false,
-        ExitInterviewNotes: data.ExitInterviewNotes,
+        ExitInterviewNotes: truncateToLength(data.ExitInterviewNotes, 5000),
         FinalPaymentProcessed: data.FinalPaymentProcessed || false,
         ReferenceEligible: data.ReferenceEligible,
         RehireEligible: data.RehireEligible,
-        AssignedToId: data.AssignedToId,
-        Notes: data.Notes,
+        AssignedToId: data.AssignedToId ? sanitizeNumberForOData(data.AssignedToId) : undefined,
+        Notes: truncateToLength(data.Notes, 5000),
       });
       return this.mapOffboardingFromSP(result);
     } catch (error) {
@@ -156,6 +161,10 @@ export class OffboardingService {
 
   public async getOffboardingTasks(offboardingId: number): Promise<IOffboardingTask[]> {
     try {
+      // Sanitize ID to prevent injection
+      const safeId = sanitizeNumberForOData(offboardingId);
+      if (safeId <= 0) return [];
+
       const items = await this.sp.web.lists.getByTitle(RM_LISTS.OFFBOARDING_TASKS).items
         .select(
           'Id', 'Title', 'OffboardingId', 'Description', 'Category', 'Status',
@@ -163,7 +172,7 @@ export class OffboardingService {
           'Priority', 'SortOrder', 'Notes', 'RelatedAssetId', 'RelatedSystemAccessId',
           'Created', 'Modified'
         )
-        .filter(`OffboardingId eq ${offboardingId}`)
+        .filter(`OffboardingId eq ${safeId}`)
         .orderBy('SortOrder', true)
         .getAll();
       return items.map((item: any) => this.mapTaskFromSP(item));
@@ -175,19 +184,20 @@ export class OffboardingService {
 
   public async createOffboardingTask(task: Partial<IOffboardingTask>): Promise<IOffboardingTask | null> {
     try {
+      // Sanitize and truncate inputs
       const result = await this.sp.web.lists.getByTitle(RM_LISTS.OFFBOARDING_TASKS).items.add({
-        Title: task.Title,
-        OffboardingId: task.OffboardingId,
-        Description: task.Description,
+        Title: truncateToLength(task.Title, 255),
+        OffboardingId: sanitizeNumberForOData(task.OffboardingId),
+        Description: truncateToLength(task.Description, 5000),
         Category: task.Category,
         Status: task.Status || OffboardingTaskStatus.Pending,
-        AssignedToId: task.AssignedToId,
+        AssignedToId: task.AssignedToId ? sanitizeNumberForOData(task.AssignedToId) : undefined,
         DueDate: task.DueDate,
         Priority: task.Priority || 'Medium',
-        SortOrder: task.SortOrder || 0,
-        Notes: task.Notes,
-        RelatedAssetId: task.RelatedAssetId,
-        RelatedSystemAccessId: task.RelatedSystemAccessId,
+        SortOrder: sanitizeNumberForOData(task.SortOrder) || 0,
+        Notes: truncateToLength(task.Notes, 5000),
+        RelatedAssetId: task.RelatedAssetId ? sanitizeNumberForOData(task.RelatedAssetId) : undefined,
+        RelatedSystemAccessId: task.RelatedSystemAccessId ? sanitizeNumberForOData(task.RelatedSystemAccessId) : undefined,
       });
       return this.mapTaskFromSP(result);
     } catch (error) {
@@ -233,6 +243,10 @@ export class OffboardingService {
 
   public async getAssetReturns(offboardingId: number): Promise<IAssetReturn[]> {
     try {
+      // Sanitize ID to prevent injection
+      const safeId = sanitizeNumberForOData(offboardingId);
+      if (safeId <= 0) return [];
+
       const items = await this.sp.web.lists.getByTitle(RM_LISTS.ASSET_RETURN).items
         .select(
           'Id', 'Title', 'OffboardingId', 'AssetTypeId', 'AssetName', 'AssetTag',
@@ -240,7 +254,7 @@ export class OffboardingService {
           'ConditionNotes', 'RequiresDataWipe', 'DataWipeCompleted', 'DataWipeDate',
           'Created', 'Modified'
         )
-        .filter(`OffboardingId eq ${offboardingId}`)
+        .filter(`OffboardingId eq ${safeId}`)
         .getAll();
       return items.map((item: any) => this.mapAssetReturnFromSP(item));
     } catch (error) {
@@ -251,18 +265,19 @@ export class OffboardingService {
 
   public async createAssetReturn(data: Partial<IAssetReturn>): Promise<IAssetReturn | null> {
     try {
+      // Sanitize and truncate inputs
       const result = await this.sp.web.lists.getByTitle(RM_LISTS.ASSET_RETURN).items.add({
-        Title: data.AssetName || '',
-        OffboardingId: data.OffboardingId,
-        AssetTypeId: data.AssetTypeId,
-        AssetName: data.AssetName,
-        AssetTag: data.AssetTag,
-        Quantity: data.Quantity || 1,
+        Title: truncateToLength(data.AssetName, 255) || '',
+        OffboardingId: sanitizeNumberForOData(data.OffboardingId),
+        AssetTypeId: data.AssetTypeId ? sanitizeNumberForOData(data.AssetTypeId) : undefined,
+        AssetName: truncateToLength(data.AssetName, 255),
+        AssetTag: truncateToLength(data.AssetTag, 100),
+        Quantity: sanitizeNumberForOData(data.Quantity) || 1,
         Status: data.Status || AssetReturnStatus.PendingReturn,
         ReturnedDate: data.ReturnedDate,
-        ReceivedById: data.ReceivedById,
+        ReceivedById: data.ReceivedById ? sanitizeNumberForOData(data.ReceivedById) : undefined,
         Condition: data.Condition,
-        ConditionNotes: data.ConditionNotes,
+        ConditionNotes: truncateToLength(data.ConditionNotes, 2000),
         RequiresDataWipe: data.RequiresDataWipe || false,
         DataWipeCompleted: data.DataWipeCompleted || false,
         DataWipeDate: data.DataWipeDate,

@@ -53,12 +53,13 @@ export async function detectUserRole(sp: SPFI): Promise<JmlRole> {
     if (groupTitles.some((t: string) => t.includes('jml manager'))) {
       return JmlRole.Manager;
     }
-    // TODO: Revert to JmlRole.User once JML Admin / JML Manager SP groups are provisioned
-    return JmlRole.Admin;
+    // Default to User (least privilege) - users must be added to JML Manager/Admin groups for elevated access
+    return JmlRole.User;
   } catch (error) {
-    // Default to Admin during development — tighten once SP groups are provisioned
-    console.warn('[JmlRoleService] Role detection failed, defaulting to Admin:', error);
-    return JmlRole.Admin;
+    // SECURITY: Default to least privilege on any error
+    // Never grant elevated access when role detection fails
+    console.warn('[JmlRoleService] Role detection failed, defaulting to User (least privilege):', error);
+    return JmlRole.User;
   }
 }
 

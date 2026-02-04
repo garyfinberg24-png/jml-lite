@@ -12,6 +12,7 @@ import {
   IPolicyPack, IDepartment, IResolvedPolicyPack,
   DocumentCategory, AssetCategory, SystemAccessCategory, TrainingCategory, TrainingDeliveryMethod
 } from '../models/IOnboardingConfig';
+import { sanitizeForOData, sanitizeNumberForOData, truncateToLength } from '../utils/validation';
 
 export class OnboardingConfigService {
   private sp: SPFI;
@@ -31,7 +32,8 @@ export class OnboardingConfigService {
         filterParts.push(`IsActive eq ${filters.isActive ? 1 : 0}`);
       }
       if (filters?.category) {
-        filterParts.push(`Category eq '${filters.category}'`);
+        // Sanitize category to prevent OData injection
+        filterParts.push(`Category eq '${sanitizeForOData(filters.category)}'`);
       }
 
       let query = this.sp.web.lists.getByTitle(RM_LISTS.DOCUMENT_TYPES).items
@@ -52,13 +54,14 @@ export class OnboardingConfigService {
 
   public async createDocumentType(data: Partial<IDocumentType>): Promise<IDocumentType | null> {
     try {
+      // Sanitize and truncate inputs
       const result = await this.sp.web.lists.getByTitle(RM_LISTS.DOCUMENT_TYPES).items.add({
-        Title: data.Title,
-        Description: data.Description,
+        Title: truncateToLength(data.Title, 255),
+        Description: truncateToLength(data.Description, 5000),
         Category: data.Category,
         IsRequired: data.IsRequired ?? false,
         RequiredForDepartments: data.RequiredForDepartments ? JSON.stringify(data.RequiredForDepartments) : null,
-        SortOrder: data.SortOrder ?? 0,
+        SortOrder: sanitizeNumberForOData(data.SortOrder) ?? 0,
         IsActive: data.IsActive ?? true,
       });
       return this.mapDocumentTypeFromSP(result);
@@ -110,7 +113,8 @@ export class OnboardingConfigService {
         filterParts.push(`IsActive eq ${filters.isActive ? 1 : 0}`);
       }
       if (filters?.category) {
-        filterParts.push(`Category eq '${filters.category}'`);
+        // Sanitize category to prevent OData injection
+        filterParts.push(`Category eq '${sanitizeForOData(filters.category)}'`);
       }
 
       let query = this.sp.web.lists.getByTitle(RM_LISTS.ASSET_TYPES).items
@@ -131,17 +135,18 @@ export class OnboardingConfigService {
 
   public async createAssetType(data: Partial<IAssetType>): Promise<IAssetType | null> {
     try {
+      // Sanitize and truncate inputs
       const result = await this.sp.web.lists.getByTitle(RM_LISTS.ASSET_TYPES).items.add({
-        Title: data.Title,
-        Description: data.Description,
+        Title: truncateToLength(data.Title, 255),
+        Description: truncateToLength(data.Description, 5000),
         Category: data.Category,
-        EstimatedCost: data.EstimatedCost,
+        EstimatedCost: data.EstimatedCost ? sanitizeNumberForOData(data.EstimatedCost) : undefined,
         IsReturnable: data.IsReturnable ?? true,
-        DefaultQuantity: data.DefaultQuantity ?? 1,
+        DefaultQuantity: sanitizeNumberForOData(data.DefaultQuantity) ?? 1,
         RequiresApproval: data.RequiresApproval ?? false,
-        ApprovalThreshold: data.ApprovalThreshold,
-        LeadTimeDays: data.LeadTimeDays,
-        SortOrder: data.SortOrder ?? 0,
+        ApprovalThreshold: data.ApprovalThreshold ? sanitizeNumberForOData(data.ApprovalThreshold) : undefined,
+        LeadTimeDays: data.LeadTimeDays ? sanitizeNumberForOData(data.LeadTimeDays) : undefined,
+        SortOrder: sanitizeNumberForOData(data.SortOrder) ?? 0,
         IsActive: data.IsActive ?? true,
       });
       return this.mapAssetTypeFromSP(result);
@@ -189,7 +194,8 @@ export class OnboardingConfigService {
         filterParts.push(`IsActive eq ${filters.isActive ? 1 : 0}`);
       }
       if (filters?.category) {
-        filterParts.push(`Category eq '${filters.category}'`);
+        // Sanitize category to prevent OData injection
+        filterParts.push(`Category eq '${sanitizeForOData(filters.category)}'`);
       }
 
       let query = this.sp.web.lists.getByTitle(RM_LISTS.SYSTEM_ACCESS_TYPES).items
@@ -210,17 +216,18 @@ export class OnboardingConfigService {
 
   public async createSystemAccessType(data: Partial<ISystemAccessType>): Promise<ISystemAccessType | null> {
     try {
+      // Sanitize and truncate inputs
       const result = await this.sp.web.lists.getByTitle(RM_LISTS.SYSTEM_ACCESS_TYPES).items.add({
-        Title: data.Title,
-        Description: data.Description,
+        Title: truncateToLength(data.Title, 255),
+        Description: truncateToLength(data.Description, 5000),
         Category: data.Category,
-        DefaultRole: data.DefaultRole,
+        DefaultRole: truncateToLength(data.DefaultRole, 255),
         AvailableRoles: data.AvailableRoles ? JSON.stringify(data.AvailableRoles) : null,
-        LicenseCostMonthly: data.LicenseCostMonthly,
-        ProvisioningInstructions: data.ProvisioningInstructions,
-        DeprovisioningInstructions: data.DeprovisioningInstructions,
+        LicenseCostMonthly: data.LicenseCostMonthly ? sanitizeNumberForOData(data.LicenseCostMonthly) : undefined,
+        ProvisioningInstructions: truncateToLength(data.ProvisioningInstructions, 5000),
+        DeprovisioningInstructions: truncateToLength(data.DeprovisioningInstructions, 5000),
         RequiresApproval: data.RequiresApproval ?? false,
-        SortOrder: data.SortOrder ?? 0,
+        SortOrder: sanitizeNumberForOData(data.SortOrder) ?? 0,
         IsActive: data.IsActive ?? true,
       });
       return this.mapSystemAccessTypeFromSP(result);
@@ -274,7 +281,8 @@ export class OnboardingConfigService {
         filterParts.push(`IsActive eq ${filters.isActive ? 1 : 0}`);
       }
       if (filters?.category) {
-        filterParts.push(`Category eq '${filters.category}'`);
+        // Sanitize category to prevent OData injection
+        filterParts.push(`Category eq '${sanitizeForOData(filters.category)}'`);
       }
 
       let query = this.sp.web.lists.getByTitle(RM_LISTS.TRAINING_COURSES).items
@@ -295,19 +303,20 @@ export class OnboardingConfigService {
 
   public async createTrainingCourse(data: Partial<ITrainingCourse>): Promise<ITrainingCourse | null> {
     try {
+      // Sanitize and truncate inputs
       const result = await this.sp.web.lists.getByTitle(RM_LISTS.TRAINING_COURSES).items.add({
-        Title: data.Title,
-        Description: data.Description,
+        Title: truncateToLength(data.Title, 255),
+        Description: truncateToLength(data.Description, 5000),
         Category: data.Category,
         DeliveryMethod: data.DeliveryMethod,
-        DurationHours: data.DurationHours,
+        DurationHours: data.DurationHours ? sanitizeNumberForOData(data.DurationHours) : undefined,
         IsMandatory: data.IsMandatory ?? false,
         MandatoryForDepartments: data.MandatoryForDepartments ? JSON.stringify(data.MandatoryForDepartments) : null,
-        ExpirationMonths: data.ExpirationMonths,
-        ContentUrl: data.ContentUrl,
-        Provider: data.Provider,
-        EstimatedCost: data.EstimatedCost,
-        SortOrder: data.SortOrder ?? 0,
+        ExpirationMonths: data.ExpirationMonths ? sanitizeNumberForOData(data.ExpirationMonths) : undefined,
+        ContentUrl: truncateToLength(data.ContentUrl, 500),
+        Provider: truncateToLength(data.Provider, 255),
+        EstimatedCost: data.EstimatedCost ? sanitizeNumberForOData(data.EstimatedCost) : undefined,
+        SortOrder: sanitizeNumberForOData(data.SortOrder) ?? 0,
         IsActive: data.IsActive ?? true,
       });
       return this.mapTrainingCourseFromSP(result);
@@ -365,7 +374,8 @@ export class OnboardingConfigService {
         filterParts.push(`IsActive eq ${filters.isActive ? 1 : 0}`);
       }
       if (filters?.department) {
-        filterParts.push(`Department eq '${filters.department}'`);
+        // Sanitize department to prevent OData injection
+        filterParts.push(`Department eq '${sanitizeForOData(filters.department)}'`);
       }
 
       let query = this.sp.web.lists.getByTitle(RM_LISTS.POLICY_PACKS).items
@@ -398,17 +408,18 @@ export class OnboardingConfigService {
 
   public async createPolicyPack(data: Partial<IPolicyPack>): Promise<IPolicyPack | null> {
     try {
+      // Sanitize and truncate inputs
       const result = await this.sp.web.lists.getByTitle(RM_LISTS.POLICY_PACKS).items.add({
-        Title: data.Title,
-        Description: data.Description,
-        Department: data.Department,
-        JobTitle: data.JobTitle,
+        Title: truncateToLength(data.Title, 255),
+        Description: truncateToLength(data.Description, 5000),
+        Department: truncateToLength(data.Department, 255),
+        JobTitle: truncateToLength(data.JobTitle, 255),
         DocumentTypeIds: data.DocumentTypeIds ? JSON.stringify(data.DocumentTypeIds) : '[]',
         AssetTypeIds: data.AssetTypeIds ? JSON.stringify(data.AssetTypeIds) : '[]',
         SystemAccessTypeIds: data.SystemAccessTypeIds ? JSON.stringify(data.SystemAccessTypeIds) : '[]',
         TrainingCourseIds: data.TrainingCourseIds ? JSON.stringify(data.TrainingCourseIds) : '[]',
         IsDefault: data.IsDefault ?? false,
-        SortOrder: data.SortOrder ?? 0,
+        SortOrder: sanitizeNumberForOData(data.SortOrder) ?? 0,
         IsActive: data.IsActive ?? true,
       });
       return this.mapPolicyPackFromSP(result);
@@ -513,12 +524,13 @@ export class OnboardingConfigService {
 
   public async createDepartment(data: Partial<IDepartment>): Promise<IDepartment | null> {
     try {
+      // Sanitize and truncate inputs
       const result = await this.sp.web.lists.getByTitle(RM_LISTS.DEPARTMENTS).items.add({
-        Title: data.Title,
-        Code: data.Code,
-        ManagerId: data.ManagerId,
-        DefaultPolicyPackId: data.DefaultPolicyPackId,
-        CostCenter: data.CostCenter,
+        Title: truncateToLength(data.Title, 255),
+        Code: truncateToLength(data.Code, 50),
+        ManagerId: data.ManagerId ? sanitizeNumberForOData(data.ManagerId) : undefined,
+        DefaultPolicyPackId: data.DefaultPolicyPackId ? sanitizeNumberForOData(data.DefaultPolicyPackId) : undefined,
+        CostCenter: truncateToLength(data.CostCenter, 100),
         IsActive: data.IsActive ?? true,
       });
       return this.mapDepartmentFromSP(result);

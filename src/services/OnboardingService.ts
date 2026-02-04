@@ -8,6 +8,7 @@ import '@pnp/sp/items';
 import '@pnp/sp/items/get-all';
 import { RM_LISTS } from '../constants/SharePointListNames';
 import { IOnboarding, IOnboardingTask, IOnboardingTemplate, OnboardingStatus, OnboardingTaskStatus } from '../models/IOnboarding';
+import { sanitizeForOData, sanitizeNumberForOData, truncateToLength } from '../utils/validation';
 
 export class OnboardingService {
   private sp: SPFI;
@@ -20,7 +21,10 @@ export class OnboardingService {
     try {
       const filterParts: string[] = [];
       if (filters?.status?.length) {
-        const statusFilters = filters.status.map(s => `Status eq '${s}'`).join(' or ');
+        // Sanitize status values to prevent OData injection
+        const statusFilters = filters.status
+          .map(s => `Status eq '${sanitizeForOData(s)}'`)
+          .join(' or ');
         filterParts.push(`(${statusFilters})`);
       }
 
@@ -64,6 +68,10 @@ export class OnboardingService {
 
   public async getOnboardingTasks(onboardingId: number): Promise<IOnboardingTask[]> {
     try {
+      // Sanitize ID to prevent injection (ensures it's a valid positive integer)
+      const safeId = sanitizeNumberForOData(onboardingId);
+      if (safeId <= 0) return [];
+
       const items = await this.sp.web.lists.getByTitle(RM_LISTS.ONBOARDING_TASKS).items
         .select(
           'Id', 'Title', 'OnboardingId', 'Description', 'Category', 'Status',
@@ -71,7 +79,7 @@ export class OnboardingService {
           'Priority', 'EstimatedHours', 'ActualHours', 'DocumentUrl',
           'SortOrder', 'Notes', 'Created', 'Modified'
         )
-        .filter(`OnboardingId eq ${onboardingId}`)
+        .filter(`OnboardingId eq ${safeId}`)
         .orderBy('SortOrder', true)
         .getAll();
       return items.map((item: any) => this.mapTaskFromSP(item));
@@ -83,21 +91,22 @@ export class OnboardingService {
 
   public async createOnboarding(data: Partial<IOnboarding>): Promise<IOnboarding | null> {
     try {
+      // Sanitize and truncate string inputs to prevent injection and field overflow
       const result = await this.sp.web.lists.getByTitle(RM_LISTS.ONBOARDING).items.add({
-        Title: data.CandidateName || '',
-        CandidateId: data.CandidateId,
-        CandidateName: data.CandidateName,
-        JobTitle: data.JobTitle,
-        Department: data.Department,
-        HiringManagerId: data.HiringManagerId,
+        Title: truncateToLength(data.CandidateName, 255) || '',
+        CandidateId: sanitizeNumberForOData(data.CandidateId),
+        CandidateName: truncateToLength(data.CandidateName, 255),
+        JobTitle: truncateToLength(data.JobTitle, 255),
+        Department: truncateToLength(data.Department, 255),
+        HiringManagerId: data.HiringManagerId ? sanitizeNumberForOData(data.HiringManagerId) : undefined,
         StartDate: data.StartDate,
         Status: data.Status || OnboardingStatus.NotStarted,
-        CompletionPercentage: data.CompletionPercentage || 0,
-        TotalTasks: data.TotalTasks || 0,
-        CompletedTasks: data.CompletedTasks || 0,
+        CompletionPercentage: sanitizeNumberForOData(data.CompletionPercentage) || 0,
+        TotalTasks: sanitizeNumberForOData(data.TotalTasks) || 0,
+        CompletedTasks: sanitizeNumberForOData(data.CompletedTasks) || 0,
         DueDate: data.DueDate,
-        AssignedToId: data.AssignedToId,
-        Notes: data.Notes,
+        AssignedToId: data.AssignedToId ? sanitizeNumberForOData(data.AssignedToId) : undefined,
+        Notes: truncateToLength(data.Notes, 5000),
       });
       return this.mapOnboardingFromSP(result);
     } catch (error) {
@@ -145,19 +154,20 @@ export class OnboardingService {
 
   public async createOnboardingTask(task: Partial<IOnboardingTask>): Promise<IOnboardingTask | null> {
     try {
+      // Sanitize and truncate inputs
       const result = await this.sp.web.lists.getByTitle(RM_LISTS.ONBOARDING_TASKS).items.add({
-        Title: task.Title,
-        OnboardingId: task.OnboardingId,
-        Description: task.Description,
+        Title: truncateToLength(task.Title, 255),
+        OnboardingId: sanitizeNumberForOData(task.OnboardingId),
+        Description: truncateToLength(task.Description, 5000),
         Category: task.Category,
         Status: task.Status || OnboardingTaskStatus.Pending,
-        AssignedToId: task.AssignedToId,
+        AssignedToId: task.AssignedToId ? sanitizeNumberForOData(task.AssignedToId) : undefined,
         DueDate: task.DueDate,
         Priority: task.Priority || 'Medium',
-        EstimatedHours: task.EstimatedHours,
-        DocumentUrl: task.DocumentUrl,
-        SortOrder: task.SortOrder || 0,
-        Notes: task.Notes,
+        EstimatedHours: task.EstimatedHours ? sanitizeNumberForOData(task.EstimatedHours) : undefined,
+        DocumentUrl: truncateToLength(task.DocumentUrl, 500),
+        SortOrder: sanitizeNumberForOData(task.SortOrder) || 0,
+        Notes: truncateToLength(task.Notes, 5000),
         // Task Dependencies
         DependsOnTaskIds: task.DependsOnTaskIds,           // JSON string of dependent task IDs
         BlockedUntilComplete: task.BlockedUntilComplete,   // Boolean flag
