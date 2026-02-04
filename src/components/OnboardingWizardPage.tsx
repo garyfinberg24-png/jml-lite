@@ -14,6 +14,7 @@ import { OnboardingConfigService } from '../services/OnboardingConfigService';
 import { GraphNotificationService, ITaskNotification as IEmailTaskNotification } from '../services/GraphNotificationService';
 import { TeamsNotificationService } from '../services/TeamsNotificationService';
 import { InAppNotificationService } from '../services/InAppNotificationService';
+import { WorkflowOrchestrator } from '../services/WorkflowOrchestrator';
 import { IOnboardingWizardData, OnboardingStatus, OnboardingTaskStatus } from '../models/IOnboarding';
 import { IDocumentType, IAssetType, ISystemAccessType, ITrainingCourse, IPolicyPack, IDepartment } from '../models/IOnboardingConfig';
 import styles from '../styles/JmlWizard.module.scss';
@@ -416,6 +417,29 @@ export const OnboardingWizardPage: React.FC<IProps> = ({ sp, context, onComplete
             console.warn('[OnboardingWizardPage] Teams onboarding notification failed:', err);
           });
         }
+
+        // ═══════════════════════════════════════════════════════════════
+        // TRIGGER WORKFLOW ORCHESTRATOR for Teams webhook notifications
+        // ═══════════════════════════════════════════════════════════════
+        const workflowOrchestrator = new WorkflowOrchestrator(sp, context, {
+          sendTeamsNotifications: true, // Enable Teams webhook notifications
+        });
+
+        // Fire-and-forget workflow start (sends Teams channel webhook)
+        workflowOrchestrator.startOnboardingWorkflow({
+          Id: onboarding.Id,
+          CandidateName: wizardData.candidateName || 'New Employee',
+          CandidateId: wizardData.candidateId || 0,
+          JobTitle: wizardData.jobTitle || '',
+          Department: wizardData.department || '',
+          StartDate: startDate,
+          Status: OnboardingStatus.InProgress,
+          CompletionPercentage: 0,
+          TotalTasks: totalTasks,
+          CompletedTasks: 0,
+        }).catch(err => {
+          console.warn('[OnboardingWizardPage] Workflow orchestrator notification failed:', err);
+        });
 
         console.log(`[OnboardingWizardPage] Notifications sent for ${createdTasks.filter(t => t.assigneeEmail).length} tasks`);
 

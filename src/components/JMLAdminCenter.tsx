@@ -9,17 +9,18 @@ import { TaskLibraryAdmin } from './TaskLibraryAdmin';
 import { ClassificationRulesAdmin } from './ClassificationRulesAdmin';
 import { ImportData } from './ImportData';
 import { NotificationSettings } from './NotificationSettings';
+import { TaskRemindersAdmin } from './TaskRemindersAdmin';
 
-interface IProps { sp: SPFI; }
+interface IProps { sp: SPFI; context?: any; }
 
-type AdminSection = 'task-library' | 'classification-rules' | 'onboarding-config' | 'mover-config' | 'offboarding-config' | 'import-data' | 'general' | 'notifications' | 'audit' | 'system';
+type AdminSection = 'task-library' | 'classification-rules' | 'onboarding-config' | 'mover-config' | 'offboarding-config' | 'import-data' | 'general' | 'notifications' | 'task-reminders' | 'audit' | 'system';
 
 // Theme colors
 const JOINER_COLOR = '#005BAA';
 const MOVER_COLOR = '#ea580c';
 const LEAVER_COLOR = '#d13438';
 
-export const JMLAdminCenter: React.FC<IProps> = ({ sp }) => {
+export const JMLAdminCenter: React.FC<IProps> = ({ sp, context }) => {
   const [activeSection, setActiveSection] = useState<AdminSection>('onboarding-config');
 
   const sections: { key: AdminSection; label: string; icon: string; color?: string; description?: string }[] = [
@@ -31,6 +32,7 @@ export const JMLAdminCenter: React.FC<IProps> = ({ sp }) => {
     { key: 'import-data', label: 'Import Data', icon: 'CloudUpload', color: '#217346', description: 'Bulk import from XLSX/CSV files' },
     { key: 'general', label: 'General Settings', icon: 'Settings', description: 'App-wide settings' },
     { key: 'notifications', label: 'Notifications', icon: 'Ringer', description: 'Email and Teams alerts' },
+    { key: 'task-reminders', label: 'Task Reminders', icon: 'Clock', color: '#d83b01', description: 'Overdue task checks and reminders' },
     { key: 'audit', label: 'Audit Log', icon: 'History', description: 'System activity trail' },
     { key: 'system', label: 'System Info', icon: 'Info', description: 'Version and diagnostics' },
   ];
@@ -72,6 +74,8 @@ export const JMLAdminCenter: React.FC<IProps> = ({ sp }) => {
         );
       case 'notifications':
         return <NotificationSettings sp={sp} />;
+      case 'task-reminders':
+        return <TaskRemindersAdmin sp={sp} context={context} />;
       case 'audit':
         return (
           <div style={{ background: '#ffffff', borderRadius: '8px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>

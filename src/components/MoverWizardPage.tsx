@@ -14,6 +14,7 @@ import { OnboardingConfigService } from '../services/OnboardingConfigService';
 import { GraphNotificationService } from '../services/GraphNotificationService';
 import { TeamsNotificationService } from '../services/TeamsNotificationService';
 import { InAppNotificationService } from '../services/InAppNotificationService';
+import { WorkflowOrchestrator } from '../services/WorkflowOrchestrator';
 import {
   MoverStatus, MoverType, MoverTaskCategory,
   MoverTaskStatus, SystemAccessAction, IEligibleEmployeeForMove
@@ -457,6 +458,33 @@ export const MoverWizardPage: React.FC<IProps> = ({ sp, context, onComplete, onC
             });
           }
         }
+
+        // ═══════════════════════════════════════════════════════════════
+        // TRIGGER WORKFLOW ORCHESTRATOR for Teams webhook notifications
+        // ═══════════════════════════════════════════════════════════════
+        const workflowOrchestrator = new WorkflowOrchestrator(sp, context, {
+          sendTeamsNotifications: true, // Enable Teams webhook notifications
+        });
+
+        // Fire-and-forget workflow start (sends Teams channel webhook)
+        workflowOrchestrator.startMoverWorkflow({
+          Id: mover.Id,
+          EmployeeId: selectedEmployeeId!,
+          EmployeeName: employeeName,
+          EmployeeEmail: employeeEmail || undefined,
+          CurrentJobTitle: currentJobTitle,
+          CurrentDepartment: currentDepartment || undefined,
+          NewJobTitle: newJobTitle,
+          NewDepartment: newDepartment || undefined,
+          MoverType: moverType,
+          EffectiveDate: effectiveDate!,
+          Status: MoverStatus.InProgress,
+          CompletionPercentage: 0,
+          TotalTasks: configuredTasks.filter(t => t.isSelected).length,
+          CompletedTasks: 0,
+        }).catch(err => {
+          console.warn('[MoverWizardPage] Workflow orchestrator notification failed:', err);
+        });
       }
 
       setCreatedMover({

@@ -14,6 +14,7 @@ import { OnboardingConfigService } from '../services/OnboardingConfigService';
 import { GraphNotificationService } from '../services/GraphNotificationService';
 import { TeamsNotificationService } from '../services/TeamsNotificationService';
 import { InAppNotificationService } from '../services/InAppNotificationService';
+import { WorkflowOrchestrator } from '../services/WorkflowOrchestrator';
 import {
   OffboardingStatus, OffboardingTaskCategory,
   OffboardingTaskStatus, TerminationType, AssetReturnStatus, IEligibleEmployee
@@ -495,6 +496,33 @@ export const OffboardingWizardPage: React.FC<IProps> = ({ sp, context, onComplet
               });
             }
           }
+
+          // ═══════════════════════════════════════════════════════════════
+          // TRIGGER WORKFLOW ORCHESTRATOR for Teams webhook notifications
+          // ═══════════════════════════════════════════════════════════════
+          const workflowOrchestrator = new WorkflowOrchestrator(sp, context, {
+            sendTeamsNotifications: true, // Enable Teams webhook notifications
+          });
+
+          // Fire-and-forget workflow start (sends Teams channel webhook)
+          workflowOrchestrator.startOffboardingWorkflow({
+            Id: offboarding.Id,
+            EmployeeId: selectedEmployeeId!,
+            EmployeeName: employeeName,
+            EmployeeEmail: employeeEmail,
+            JobTitle: jobTitle,
+            Department: department,
+            LastWorkingDate: lastWorkingDate!,
+            TerminationType: terminationType,
+            Status: OffboardingStatus.InProgress,
+            CompletionPercentage: 0,
+            TotalTasks: totalTasks,
+            CompletedTasks: 0,
+            ExitInterviewCompleted: false,
+            FinalPaymentProcessed: false,
+          }).catch(err => {
+            console.warn('[OffboardingWizardPage] Workflow orchestrator notification failed:', err);
+          });
         }
 
         setSubmitted(true);
