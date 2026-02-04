@@ -7,14 +7,21 @@ import { DatePicker } from '@fluentui/react/lib/DatePicker';
 // Toggle removed - using checkboxes in accordion pattern
 import { Icon } from '@fluentui/react/lib/Icon';
 import { JmlWizardLayout, JmlWizardSuccess, IJmlWizardStep, IJmlWizardTip, IJmlWizardChecklistItem, ISummaryPanel } from './JmlWizardLayout';
+import { IConfigurableTask } from './TaskConfigurationPanel';
+import { TaskConfigurationOverlay } from './TaskConfigurationOverlay';
 import { OnboardingService } from '../services/OnboardingService';
 import { OnboardingConfigService } from '../services/OnboardingConfigService';
+import { GraphNotificationService, ITaskNotification as IEmailTaskNotification } from '../services/GraphNotificationService';
+import { TeamsNotificationService } from '../services/TeamsNotificationService';
+import { InAppNotificationService } from '../services/InAppNotificationService';
 import { IOnboardingWizardData, OnboardingStatus, OnboardingTaskStatus } from '../models/IOnboarding';
 import { IDocumentType, IAssetType, ISystemAccessType, ITrainingCourse, IPolicyPack, IDepartment } from '../models/IOnboardingConfig';
 import styles from '../styles/JmlWizard.module.scss';
+import { WebPartContext } from '@microsoft/sp-webpart-base';
 
 interface IProps {
   sp: SPFI;
+  context?: WebPartContext;
   onComplete: () => void;
   onCancel: () => void;
 }
@@ -50,10 +57,11 @@ const STEPS: IJmlWizardStep[] = [
   { key: 'systems', label: 'System Access', icon: 'Permissions' },
   { key: 'equipment', label: 'Equipment', icon: 'Devices3' },
   { key: 'training', label: 'Training', icon: 'Education' },
+  { key: 'configure', label: 'Configure Tasks', icon: 'TaskManager' },
   { key: 'review', label: 'Review & Submit', icon: 'CheckList' },
 ];
 
-export const OnboardingWizardPage: React.FC<IProps> = ({ sp, onComplete, onCancel }) => {
+export const OnboardingWizardPage: React.FC<IProps> = ({ sp, context, onComplete, onCancel }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [wizardData, setWizardData] = useState<IOnboardingWizardData>({
     documents: [], systemAccess: [], equipment: [], training: []
@@ -71,6 +79,11 @@ export const OnboardingWizardPage: React.FC<IProps> = ({ sp, onComplete, onCance
   const [selectedSystems, setSelectedSystems] = useState<ISelectedSystem[]>([]);
   const [selectedAssets, setSelectedAssets] = useState<ISelectedAsset[]>([]);
   const [selectedTraining, setSelectedTraining] = useState<ISelectedTraining[]>([]);
+
+  // Task configuration state
+  const [showTaskConfig, setShowTaskConfig] = useState(false);
+  const [configuredTasks, setConfiguredTasks] = useState<IConfigurableTask[]>([]);
+  const [tasksConfirmed, setTasksConfirmed] = useState(false);
 
   // Accordion expand states for categorized lists
   const [expandedDocCategories, setExpandedDocCategories] = useState<Set<string>>(new Set(['HR']));
@@ -189,11 +202,11 @@ export const OnboardingWizardPage: React.FC<IProps> = ({ sp, onComplete, onCance
     try {
       const svc = new OnboardingService(sp);
 
-      const docTasks = selectedDocs.filter(d => d.required).length;
-      const sysTasks = selectedSystems.filter(s => s.requested).length;
-      const eqTasks = selectedAssets.filter(e => e.requested).length;
-      const trainTasks = selectedTraining.filter(t => t.mandatory).length;
-      const totalTasks = docTasks + sysTasks + eqTasks + trainTasks;
+      // Use configured tasks if available, otherwise build from selections
+      const tasksToCreate = tasksConfirmed && configuredTasks.length > 0
+        ? configuredTasks
+        : buildTasksFromSelections();
+      const totalTasks = tasksToCreate.length;
 
       const onboarding = await svc.createOnboarding({
         CandidateId: wizardData.candidateId,
@@ -209,53 +222,203 @@ export const OnboardingWizardPage: React.FC<IProps> = ({ sp, onComplete, onCance
       });
 
       if (onboarding?.Id) {
+        // Create tasks from the configured task list
         let sortOrder = 1;
+        const startDate = wizardData.startDate || new Date();
 
-        for (const doc of selectedDocs.filter(d => d.required)) {
-          await svc.createOnboardingTask({
-            Title: `Collect: ${doc.name}`,
+        // Track created tasks for notifications and dependency mapping
+        const createdTasks: Array<{
+          tempId: string | number;      // Original temp ID from configuredTasks
+          spId?: number;                // SharePoint ID after creation
+          title: string;
+          category: string;
+          dueDate: Date;
+          assigneeId?: number;
+          assigneeName?: string;
+          assigneeEmail?: string;
+          notifyAssigneeEmail?: boolean;
+          notifyTeamsChat?: boolean;
+          dependsOnTaskIds?: (string | number)[];  // Original dependency temp IDs
+          blockedUntilComplete?: boolean;
+        }> = [];
+
+        // PHASE 1: Create all tasks (without dependencies first)
+        for (const task of tasksToCreate) {
+          // Calculate due date based on offset
+          const dueDate = new Date(startDate);
+          if (task.offsetType === 'before-start') {
+            dueDate.setDate(dueDate.getDate() - Math.abs(task.daysOffset));
+          } else if (task.offsetType === 'after-start') {
+            dueDate.setDate(dueDate.getDate() + Math.abs(task.daysOffset));
+          }
+          // 'on-start' keeps the start date
+
+          // Map 'Critical' to 'High' since OnboardingTask doesn't support Critical
+          const mappedPriority = task.priority === 'Critical' ? 'High' : (task.priority || 'Medium');
+
+          // Determine initial status - blocked if has dependencies and blockedUntilComplete is true
+          const hasDependencies = task.dependsOnTaskIds && task.dependsOnTaskIds.length > 0;
+          const initialStatus = hasDependencies && task.blockedUntilComplete
+            ? OnboardingTaskStatus.Blocked
+            : OnboardingTaskStatus.Pending;
+
+          const createdTask = await svc.createOnboardingTask({
+            Title: task.title,
             OnboardingId: onboarding.Id,
-            Category: 'Documentation' as any,
-            Status: doc.received ? OnboardingTaskStatus.Completed : OnboardingTaskStatus.Pending,
-            Priority: 'High',
+            Category: task.category as any,
+            Status: initialStatus,
+            Priority: mappedPriority as 'Low' | 'Medium' | 'High',
             SortOrder: sortOrder++,
+            DueDate: dueDate,
+            AssignedToId: task.assigneeId || undefined,
+            Notes: task.instructions || undefined,
+            // Dependencies will be set in Phase 2 after all tasks are created
+            BlockedUntilComplete: task.blockedUntilComplete,
+          });
+
+          // Store task info for mapping and notifications
+          createdTasks.push({
+            tempId: task.id,
+            spId: createdTask?.Id,
+            title: task.title,
+            category: task.category,
+            dueDate: dueDate,
+            assigneeId: task.assigneeId,
+            assigneeName: task.assigneeName,
+            assigneeEmail: task.assigneeEmail,
+            notifyAssigneeEmail: task.notifyAssigneeEmail,
+            notifyTeamsChat: task.notifyTeamsChat,
+            dependsOnTaskIds: task.dependsOnTaskIds,
+            blockedUntilComplete: task.blockedUntilComplete,
           });
         }
 
-        for (const sys of selectedSystems.filter(s => s.requested)) {
-          await svc.createOnboardingTask({
-            Title: `Set up ${sys.name} (${sys.role})`,
-            OnboardingId: onboarding.Id,
-            Category: 'System Access' as any,
-            Status: OnboardingTaskStatus.Pending,
-            Priority: 'High',
-            SortOrder: sortOrder++,
-          });
+        // PHASE 2: Update tasks with dependencies (map temp IDs to SharePoint IDs)
+        // Build temp ID to SharePoint ID mapping
+        const idMapping = new Map<string | number, number>();
+        for (const ct of createdTasks) {
+          if (ct.spId) {
+            idMapping.set(ct.tempId, ct.spId);
+          }
         }
 
-        for (const eq of selectedAssets.filter(e => e.requested)) {
-          await svc.createOnboardingTask({
-            Title: `Provision ${eq.name}${eq.quantity > 1 ? ` x${eq.quantity}` : ''}`,
-            OnboardingId: onboarding.Id,
-            Category: 'Equipment' as any,
-            Status: OnboardingTaskStatus.Pending,
-            Priority: 'Medium',
-            SortOrder: sortOrder++,
-          });
-        }
+        // Update tasks that have dependencies
+        for (const ct of createdTasks) {
+          if (ct.dependsOnTaskIds && ct.dependsOnTaskIds.length > 0 && ct.spId) {
+            // Map temp IDs to SharePoint IDs
+            const mappedDepIds = ct.dependsOnTaskIds
+              .map(tempId => idMapping.get(tempId))
+              .filter((id): id is number => id !== undefined);
 
-        for (const tr of selectedTraining.filter(t => t.mandatory)) {
-          await svc.createOnboardingTask({
-            Title: tr.name,
-            OnboardingId: onboarding.Id,
-            Category: 'Training' as any,
-            Status: tr.scheduled ? OnboardingTaskStatus.InProgress : OnboardingTaskStatus.Pending,
-            Priority: 'Medium',
-            SortOrder: sortOrder++,
-          });
+            if (mappedDepIds.length > 0) {
+              // Update the task with dependency IDs (stored as JSON string)
+              await svc.updateOnboardingTask(ct.spId, {
+                DependsOnTaskIds: JSON.stringify(mappedDepIds),
+              });
+            }
+          }
         }
 
         await svc.recalculateProgress(onboarding.Id);
+
+        // ═══════════════════════════════════════════════════════════════
+        // SEND NOTIFICATIONS
+        // ═══════════════════════════════════════════════════════════════
+
+        // Initialize notification services
+        const graphNotificationService = new GraphNotificationService(sp, context);
+        const teamsNotificationService = new TeamsNotificationService(sp, context);
+
+        // Get current user email for in-app notifications
+        const currentUserEmail = context?.pageContext?.user?.email || '';
+        const inAppNotificationService = new InAppNotificationService(sp, currentUserEmail);
+
+        // Build site URL for action links
+        const siteUrl = context?.pageContext?.web?.absoluteUrl || '';
+        const actionUrl = siteUrl ? `${siteUrl}/SitePages/JML-Lite.aspx?view=onboarding` : undefined;
+
+        // Send notifications for each task with an assignee
+        for (const task of createdTasks) {
+          if (task.assigneeEmail) {
+            // 1. EMAIL NOTIFICATION (via Graph API)
+            if (task.notifyAssigneeEmail !== false) {
+              const emailNotification: IEmailTaskNotification = {
+                taskTitle: task.title,
+                taskCategory: task.category,
+                employeeName: wizardData.candidateName || 'New Employee',
+                processType: 'Onboarding',
+                dueDate: task.dueDate,
+                assignedTo: {
+                  email: task.assigneeEmail,
+                  displayName: task.assigneeName || task.assigneeEmail,
+                },
+                actionUrl: actionUrl,
+              };
+
+              // Fire-and-forget email notification
+              graphNotificationService.notifyTaskAssigned(emailNotification).catch(err => {
+                console.warn('[OnboardingWizardPage] Email notification failed:', err);
+              });
+            }
+
+            // 2. TEAMS NOTIFICATION
+            if (task.notifyTeamsChat !== false) {
+              const teamsNotification = {
+                taskId: 0, // We don't have the task ID here, use 0
+                taskTitle: task.title,
+                category: 'Onboarding' as const,
+                employeeName: wizardData.candidateName || 'New Employee',
+                assignedToEmail: task.assigneeEmail,
+                dueDate: task.dueDate,
+                priority: 'Medium' as const,
+                actionUrl: actionUrl,
+              };
+
+              // Fire-and-forget Teams notification
+              teamsNotificationService.sendTaskNotification(teamsNotification).catch(err => {
+                console.warn('[OnboardingWizardPage] Teams notification failed:', err);
+              });
+            }
+
+            // 3. IN-APP NOTIFICATION
+            // Always create in-app notification for task assignment
+            inAppNotificationService.notifyTaskAssigned(
+              task.assigneeEmail,
+              task.title,
+              wizardData.candidateName || 'New Employee',
+              'Onboarding',
+              onboarding.Id,
+              actionUrl
+            ).catch(err => {
+              console.warn('[OnboardingWizardPage] In-app notification failed:', err);
+            });
+          }
+        }
+
+        // Send onboarding started notification to the current user/manager
+        if (currentUserEmail) {
+          inAppNotificationService.notifyOnboardingStarted(
+            currentUserEmail,
+            wizardData.candidateName || 'New Employee',
+            startDate,
+            onboarding.Id,
+            actionUrl
+          ).catch(err => {
+            console.warn('[OnboardingWizardPage] Onboarding started notification failed:', err);
+          });
+
+          // Also send Teams notification about onboarding started
+          teamsNotificationService.notifyOnboardingStarted(
+            wizardData.candidateName || 'New Employee',
+            startDate,
+            currentUserEmail
+          ).catch(err => {
+            console.warn('[OnboardingWizardPage] Teams onboarding notification failed:', err);
+          });
+        }
+
+        console.log(`[OnboardingWizardPage] Notifications sent for ${createdTasks.filter(t => t.assigneeEmail).length} tasks`);
+
         setSubmitted(true);
       }
     } catch (err) {
@@ -308,12 +471,18 @@ export const OnboardingWizardPage: React.FC<IProps> = ({ sp, onComplete, onCance
           { icon: 'Devices3', title: 'Equipment', content: 'Select hardware and equipment to be provisioned for the employee.' },
           { icon: 'Add', title: 'Add More', content: 'Use the dropdown at the bottom to add additional equipment items.' },
         ];
-      case 5: // Training (was case 6)
+      case 5: // Training
         return [
           { icon: 'Education', title: 'Training', content: 'Mandatory training courses will create tasks that must be completed.' },
           { icon: 'Calendar', title: 'Scheduling', content: 'Mark courses as "Scheduled" if training dates have already been set.' },
         ];
-      case 6: // Review (was case 7)
+      case 6: // Configure Tasks
+        return [
+          { icon: 'TaskManager', title: 'Task Configuration', content: 'Review and customize the tasks that will be created for this onboarding.' },
+          { icon: 'People', title: 'Assign Owners', content: 'Assign specific people to each task and set due dates.' },
+          { icon: 'Calendar', title: 'Scheduling', content: 'Set due dates relative to the start date or as specific dates.' },
+        ];
+      case 7: // Review & Submit
         return [
           { icon: 'CheckList', title: 'Review Carefully', content: 'Review all selections before submitting. You can go back to make changes.' },
           { icon: 'Warning', title: 'Submit', content: 'Once submitted, the onboarding will be created with all tasks.' },
@@ -331,6 +500,7 @@ export const OnboardingWizardPage: React.FC<IProps> = ({ sp, onComplete, onCance
     { label: 'Systems selected', completed: selectedSystems.some(s => s.requested) },
     { label: 'Equipment assigned', completed: selectedAssets.some(a => a.requested) },
     { label: 'Training defined', completed: selectedTraining.some(t => t.mandatory) },
+    { label: 'Tasks configured', completed: tasksConfirmed },
   ];
 
   // Step content renderers
@@ -344,7 +514,8 @@ export const OnboardingWizardPage: React.FC<IProps> = ({ sp, onComplete, onCance
       case 3: return renderSystemsStep();
       case 4: return renderEquipmentStep();
       case 5: return renderTrainingStep();
-      case 6: return renderReviewStep();
+      case 6: return renderConfigureTasksStep();
+      case 7: return renderReviewStep();
       default: return <div />;
     }
   };
@@ -1010,6 +1181,291 @@ export const OnboardingWizardPage: React.FC<IProps> = ({ sp, onComplete, onCance
     );
   };
 
+  // Build tasks from selections for the Task Configuration Panel
+  const buildTasksFromSelections = (): IConfigurableTask[] => {
+    const tasks: IConfigurableTask[] = [];
+
+    // Document tasks
+    selectedDocs.filter(d => d.required).forEach(doc => {
+      tasks.push({
+        id: `doc-${doc.id}`,
+        title: `Collect: ${doc.name}`,
+        category: 'Documentation',
+        sourceType: 'document',
+        sourceId: doc.id,
+        assignmentType: 'role',
+        roleAssignment: 'HR Team',
+        daysOffset: -5,
+        offsetType: 'before-start',
+        priority: 'High',
+        requiresApproval: false,
+        sendReminder: true,
+        reminderDaysBefore: 2,
+        notifyOnComplete: true,
+        notifyAssigneeEmail: true,
+        notifyTeamsChat: false,
+        isSelected: true,
+        isConfigured: false,
+      });
+    });
+
+    // System access tasks
+    selectedSystems.filter(s => s.requested).forEach(sys => {
+      tasks.push({
+        id: `sys-${sys.id}`,
+        title: `Set up ${sys.name} (${sys.role})`,
+        category: 'System Access',
+        sourceType: 'system',
+        sourceId: sys.id,
+        assignmentType: 'role',
+        roleAssignment: 'IT Team',
+        daysOffset: -3,
+        offsetType: 'before-start',
+        priority: 'High',
+        requiresApproval: true,
+        approverRole: 'IT Admin',
+        sendReminder: true,
+        reminderDaysBefore: 2,
+        notifyOnComplete: true,
+        notifyAssigneeEmail: true,
+        notifyTeamsChat: true,
+        isSelected: true,
+        isConfigured: false,
+      });
+    });
+
+    // Equipment tasks
+    selectedAssets.filter(e => e.requested).forEach(asset => {
+      tasks.push({
+        id: `eq-${asset.id}`,
+        title: `Provision ${asset.name}${asset.quantity > 1 ? ` x${asset.quantity}` : ''}`,
+        category: 'Equipment',
+        sourceType: 'asset',
+        sourceId: asset.id,
+        assignmentType: 'role',
+        roleAssignment: 'IT Team',
+        daysOffset: -2,
+        offsetType: 'before-start',
+        priority: 'Medium',
+        requiresApproval: false,
+        sendReminder: true,
+        reminderDaysBefore: 1,
+        notifyOnComplete: true,
+        notifyAssigneeEmail: true,
+        notifyTeamsChat: false,
+        isSelected: true,
+        isConfigured: false,
+      });
+    });
+
+    // Training tasks
+    selectedTraining.filter(t => t.mandatory).forEach(tr => {
+      tasks.push({
+        id: `tr-${tr.id}`,
+        title: tr.name,
+        category: 'Training',
+        sourceType: 'training',
+        sourceId: tr.id,
+        assignmentType: 'manager',
+        daysOffset: 7,
+        offsetType: 'after-start',
+        priority: 'Medium',
+        requiresApproval: false,
+        sendReminder: true,
+        reminderDaysBefore: 3,
+        notifyOnComplete: true,
+        notifyAssigneeEmail: true,
+        notifyTeamsChat: false,
+        isSelected: true,
+        isConfigured: false,
+      });
+    });
+
+    return tasks;
+  };
+
+  // Handle opening the task configuration panel
+  const handleOpenTaskConfig = (): void => {
+    // Build tasks from current selections
+    const tasks = buildTasksFromSelections();
+    setConfiguredTasks(tasks);
+    setShowTaskConfig(true);
+  };
+
+  // Handle task configuration confirmation
+  const handleTasksConfirmed = (tasks: IConfigurableTask[]): void => {
+    setConfiguredTasks(tasks);
+    setTasksConfirmed(true);
+    setShowTaskConfig(false);
+  };
+
+  const renderConfigureTasksStep = (): JSX.Element => {
+    const totalTasks = buildTasksFromSelections().length;
+
+    return (
+      <>
+        <div className={styles.formCard}>
+          <div className={styles.formCardHeader}>
+            <div className={styles.formCardIcon}>
+              <Icon iconName="TaskManager" style={{ fontSize: 18 }} />
+            </div>
+            <div>
+              <h3 className={styles.formCardTitle}>Configure Tasks</h3>
+              <p className={styles.formCardDescription}>Review and customize the {totalTasks} tasks that will be created</p>
+            </div>
+          </div>
+
+          {totalTasks === 0 ? (
+            <div className={`${styles.infoBox} ${styles.infoBoxWarning}`}>
+              <Icon iconName="Warning" className={styles.infoBoxIcon} />
+              <div>
+                <strong>No tasks to configure</strong>
+                <p style={{ margin: '4px 0 0 0', fontSize: 12 }}>
+                  Go back and select documents, systems, equipment, or training to create tasks.
+                </p>
+              </div>
+            </div>
+          ) : tasksConfirmed ? (
+            <>
+              <div className={`${styles.infoBox} ${styles.infoBoxSuccess}`}>
+                <Icon iconName="CheckMark" className={styles.infoBoxIcon} />
+                <div>
+                  <strong>{configuredTasks.length} tasks configured</strong>
+                  <p style={{ margin: '4px 0 0 0', fontSize: 12 }}>
+                    Tasks have been reviewed and customized. Click below to make changes.
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ marginTop: 16 }}>
+                <button
+                  onClick={handleOpenTaskConfig}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '12px 20px',
+                    background: '#005BAA',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: 8,
+                    cursor: 'pointer',
+                    fontSize: 14,
+                    fontWeight: 500,
+                  }}
+                >
+                  <Icon iconName="Edit" style={{ fontSize: 16 }} />
+                  Edit Task Configuration
+                </button>
+              </div>
+
+              {/* Task summary */}
+              <div style={{ marginTop: 20 }}>
+                <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, color: '#323130' }}>Configured Tasks Summary</h4>
+                <div style={{ display: 'grid', gap: 8 }}>
+                  {configuredTasks.slice(0, 5).map(task => (
+                    <div key={task.id} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      padding: '10px 14px',
+                      background: '#f9f9f9',
+                      borderRadius: 8,
+                      border: '1px solid #edebe9',
+                    }}>
+                      <Icon iconName="CheckboxComposite" style={{ fontSize: 14, color: '#005BAA' }} />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 13, fontWeight: 500 }}>{task.title}</div>
+                        <div style={{ fontSize: 11, color: '#605e5c' }}>
+                          {task.category} • {task.assigneeName || task.roleAssignment || 'Unassigned'} • {task.daysOffset} days {task.offsetType === 'before-start' ? 'before' : task.offsetType === 'after-start' ? 'after' : 'on'} start
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {configuredTasks.length > 5 && (
+                    <div style={{ fontSize: 12, color: '#605e5c', padding: '8px 14px' }}>
+                      + {configuredTasks.length - 5} more tasks...
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className={`${styles.infoBox} ${styles.infoBoxInfo}`}>
+                <Icon iconName="Info" className={styles.infoBoxIcon} />
+                <div>
+                  <strong>Ready to configure {totalTasks} tasks</strong>
+                  <p style={{ margin: '4px 0 0 0', fontSize: 12 }}>
+                    Click the button below to open the task configuration panel where you can assign owners, set due dates, and customize each task.
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ marginTop: 20 }}>
+                <button
+                  onClick={handleOpenTaskConfig}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '14px 24px',
+                    background: 'linear-gradient(135deg, #005BAA 0%, #004A8F 100%)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: 8,
+                    cursor: 'pointer',
+                    fontSize: 15,
+                    fontWeight: 600,
+                    boxShadow: '0 2px 8px rgba(0,91,170,0.25)',
+                  }}
+                >
+                  <Icon iconName="TaskManager" style={{ fontSize: 18 }} />
+                  Configure {totalTasks} Tasks
+                </button>
+              </div>
+
+              {/* Preview of tasks to be created */}
+              <div style={{ marginTop: 24 }}>
+                <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, color: '#323130' }}>Tasks to be created:</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div style={{ padding: 12, background: '#f0f7ff', borderRadius: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Icon iconName="DocumentSet" style={{ fontSize: 16, color: '#005BAA' }} />
+                      <span style={{ fontWeight: 600 }}>{selectedDocs.filter(d => d.required).length}</span>
+                      <span style={{ fontSize: 12, color: '#605e5c' }}>Document tasks</span>
+                    </div>
+                  </div>
+                  <div style={{ padding: 12, background: '#f0f7ff', borderRadius: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Icon iconName="Permissions" style={{ fontSize: 16, color: '#005BAA' }} />
+                      <span style={{ fontWeight: 600 }}>{selectedSystems.filter(s => s.requested).length}</span>
+                      <span style={{ fontSize: 12, color: '#605e5c' }}>System tasks</span>
+                    </div>
+                  </div>
+                  <div style={{ padding: 12, background: '#f0f7ff', borderRadius: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Icon iconName="Devices3" style={{ fontSize: 16, color: '#005BAA' }} />
+                      <span style={{ fontWeight: 600 }}>{selectedAssets.filter(e => e.requested).length}</span>
+                      <span style={{ fontSize: 12, color: '#605e5c' }}>Equipment tasks</span>
+                    </div>
+                  </div>
+                  <div style={{ padding: 12, background: '#f0f7ff', borderRadius: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Icon iconName="Education" style={{ fontSize: 16, color: '#005BAA' }} />
+                      <span style={{ fontWeight: 600 }}>{selectedTraining.filter(t => t.mandatory).length}</span>
+                      <span style={{ fontSize: 12, color: '#605e5c' }}>Training tasks</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </>
+    );
+  };
+
   const renderReviewStep = (): JSX.Element => {
     const reqDocs = selectedDocs.filter(d => d.required);
     const systems = selectedSystems.filter(s => s.requested);
@@ -1192,30 +1648,45 @@ export const OnboardingWizardPage: React.FC<IProps> = ({ sp, onComplete, onCance
   const progressPercent = Math.round((currentStep / (STEPS.length - 1)) * 100);
 
   return (
-    <JmlWizardLayout
-      theme="joiner"
-      title="Onboarding"
-      subtitle="New Employee"
-      steps={STEPS}
-      currentStep={currentStep}
-      onStepClick={setCurrentStep}
-      loading={loadingConfig}
-      loadingText="Loading configuration..."
-      tips={getTips()}
-      checklist={getChecklist()}
-      progressPercent={progressPercent}
-      progressText={`Step ${currentStep + 1} of ${STEPS.length}`}
-      onBack={handleBack}
-      onCancel={onCancel}
-      onNext={handleNext}
-      onSubmit={handleSubmit}
-      nextDisabled={!canProceed()}
-      submitDisabled={submitting}
-      isLastStep={currentStep === STEPS.length - 1}
-      isSubmitting={submitting}
-      submitLabel="Start Onboarding"
-    >
-      {renderStepContent()}
-    </JmlWizardLayout>
+    <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: '100vh' }}>
+      <JmlWizardLayout
+        theme="joiner"
+        title="Onboarding"
+        subtitle="New Employee"
+        steps={STEPS}
+        currentStep={currentStep}
+        onStepClick={setCurrentStep}
+        loading={loadingConfig}
+        loadingText="Loading configuration..."
+        tips={getTips()}
+        checklist={getChecklist()}
+        progressPercent={progressPercent}
+        progressText={`Step ${currentStep + 1} of ${STEPS.length}`}
+        onBack={handleBack}
+        onCancel={onCancel}
+        onNext={handleNext}
+        onSubmit={handleSubmit}
+        nextDisabled={!canProceed()}
+        submitDisabled={submitting}
+        isLastStep={currentStep === STEPS.length - 1}
+        isSubmitting={submitting}
+        submitLabel="Start Onboarding"
+      >
+        {renderStepContent()}
+      </JmlWizardLayout>
+
+      {/* Task Configuration Overlay (Option B: Full Overlay) */}
+      <TaskConfigurationOverlay
+        sp={sp}
+        context={context}
+        isOpen={showTaskConfig}
+        tasks={configuredTasks.length > 0 ? configuredTasks : buildTasksFromSelections()}
+        startDate={wizardData.startDate || new Date()}
+        employeeName={wizardData.candidateName || 'New Employee'}
+        processType="onboarding"
+        onBack={() => setShowTaskConfig(false)}
+        onConfirm={handleTasksConfirmed}
+      />
+    </div>
   );
 };

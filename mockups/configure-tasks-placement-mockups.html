@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configure Tasks - Placement Mockups</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f5f5f5;
+            padding: 40px;
+            color: #323130;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #005BAA;
+        }
+
+        .intro {
+            font-size: 14px;
+            color: #605e5c;
+            margin-bottom: 40px;
+            max-width: 800px;
+        }
+
+        .mockup-section {
+            margin-bottom: 60px;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .mockup-section h2 {
+            font-size: 20px;
+            margin-bottom: 8px;
+            color: #323130;
+        }
+
+        .mockup-section .description {
+            font-size: 13px;
+            color: #605e5c;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #edebe9;
+        }
+
+        .pros-cons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .pros, .cons {
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .pros {
+            background: #e6ffed;
+            border: 1px solid #86efac;
+        }
+
+        .cons {
+            background: #fef2f2;
+            border: 1px solid #fca5a5;
+        }
+
+        .pros h4, .cons h4 {
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .pros h4 { color: #047857; }
+        .cons h4 { color: #dc2626; }
+
+        .pros ul, .cons ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .pros li::before { content: "✓ "; color: #047857; }
+        .cons li::before { content: "✗ "; color: #dc2626; }
+
+        .mockup-frame {
+            border: 2px solid #e1dfdd;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #faf9f8;
+        }
+
+        /* =========================================== */
+        /* WIZARD LAYOUT COMPONENTS                    */
+        /* =========================================== */
+
+        .wizard-container {
+            display: flex;
+            height: 600px;
+            background: #fff;
+        }
+
+        /* Sidebar */
+        .wizard-sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #005BAA 0%, #004A8F 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .sidebar-header p {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-top: 4px;
+        }
+
+        .sidebar-steps {
+            flex: 1;
+            padding: 16px 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-step {
+            display: flex;
+            align-items: center;
+            padding: 12px 24px;
+            gap: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .sidebar-step:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .sidebar-step.active {
+            background: rgba(255,255,255,0.15);
+            border-left: 3px solid white;
+        }
+
+        .sidebar-step.completed .step-number {
+            background: #10b981;
+        }
+
+        .step-number {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .step-label {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        /* Main Content */
+        .wizard-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .content-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #edebe9;
+            background: #faf9f8;
+        }
+
+        .content-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #323130;
+        }
+
+        .content-header p {
+            font-size: 13px;
+            color: #605e5c;
+            margin-top: 4px;
+        }
+
+        .content-body {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .content-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #edebe9;
+            display: flex;
+            justify-content: space-between;
+            background: #fff;
+        }
+
+        /* Tips Panel */
+        .wizard-tips {
+            width: 280px;
+            background: #f9f9f9;
+            border-left: 1px solid #edebe9;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .tips-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #005BAA;
+            margin-bottom: 16px;
+        }
+
+        .tip-card {
+            background: white;
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 12px;
+            border: 1px solid #edebe9;
+        }
+
+        .tip-card h4 {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tip-card p {
+            font-size: 12px;
+            color: #605e5c;
+            line-height: 1.5;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #005BAA 0%, #004A8F 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: white;
+            border: 1px solid #8a8886;
+            color: #323130;
+        }
+
+        .btn-large {
+            padding: 14px 28px;
+            font-size: 15px;
+        }
+
+        /* =========================================== */
+        /* CONFIGURE TASKS SPECIFIC STYLES            */
+        /* =========================================== */
+
+        .configure-tasks-trigger {
+            background: #f0f7ff;
+            border: 2px dashed #005BAA;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .configure-tasks-trigger h3 {
+            font-size: 18px;
+            color: #005BAA;
+            margin-bottom: 8px;
+        }
+
+        .configure-tasks-trigger p {
+            font-size: 13px;
+            color: #605e5c;
+            margin-bottom: 20px;
+        }
+
+        /* Split panel layout */
+        .split-panel {
+            display: flex;
+            height: 100%;
+        }
+
+        .task-list-panel {
+            width: 360px;
+            border-right: 1px solid #edebe9;
+            display: flex;
+            flex-direction: column;
+            background: #fff;
+        }
+
+        .task-list-header {
+            padding: 16px;
+            background: #faf9f8;
+            border-bottom: 1px solid #edebe9;
+        }
+
+        .task-list-header h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .filter-chips {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .chip {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            cursor: pointer;
+            border: 1px solid #e1dfdd;
+            background: white;
+        }
+
+        .chip.active {
+            background: #005BAA;
+            color: white;
+            border-color: #005BAA;
+        }
+
+        .task-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .task-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid #edebe9;
+            cursor: pointer;
+        }
+
+        .task-item:hover {
+            background: #faf9f8;
+        }
+
+        .task-item.selected {
+            background: #f3f2f1;
+            border-left: 3px solid #005BAA;
+        }
+
+        .task-item-title {
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .task-code {
+            font-size: 10px;
+            font-weight: 600;
+            color: #5c5c5c;
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Consolas', monospace;
+        }
+
+        .task-item-meta {
+            display: flex;
+            gap: 8px;
+            font-size: 11px;
+        }
+
+        .category-badge {
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 500;
+        }
+
+        .category-badge.documentation { background: #e6f4ea; color: #137333; }
+        .category-badge.system-access { background: #e8f0fe; color: #1967d2; }
+        .category-badge.equipment { background: #fef7e0; color: #b06000; }
+        .category-badge.training { background: #fce8e6; color: #c5221f; }
+
+        .task-config-panel {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .config-section {
+            margin-bottom: 24px;
+        }
+
+        .config-section-header {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #005BAA;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        .form-field {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .form-field label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #323130;
+        }
+
+        .form-field input, .form-field select {
+            padding: 8px 12px;
+            border: 1px solid #8a8886;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        /* Panel Footer */
+        .panel-footer {
+            padding: 16px 20px;
+            border-top: 1px solid #edebe9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fff;
+        }
+
+        .footer-info {
+            font-size: 13px;
+            color: #605e5c;
+        }
+
+        /* Overlay styles */
+        .overlay-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 10;
+        }
+
+        .overlay-panel {
+            position: absolute;
+            inset: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .overlay-header {
+            padding: 20px 24px;
+            background: linear-gradient(135deg, #005BAA 0%, #004A8F 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .overlay-header-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .overlay-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .overlay-header p {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .overlay-body {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Inline expansion */
+        .inline-expanded {
+            background: #fff;
+            border: 2px solid #005BAA;
+            border-radius: 12px;
+            margin: -12px;
+            box-shadow: 0 8px 24px rgba(0,91,170,0.15);
+        }
+
+        .inline-header {
+            padding: 16px 20px;
+            background: linear-gradient(135deg, #005BAA 0%, #004A8F 100%);
+            color: white;
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .inline-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .inline-header .close-btn {
+            margin-left: auto;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        /* Replace entire content */
+        .replace-content {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .replace-header {
+            padding: 20px 24px;
+            background: linear-gradient(135deg, #005BAA 0%, #004A8F 100%);
+            color: white;
+        }
+
+        .replace-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .replace-header p {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+
+        /* Recommendation badge */
+        .recommendation {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-left: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Configure Tasks - Placement Options</h1>
+    <p class="intro">
+        These mockups show different ways to integrate the Configure Tasks interface into the Onboarding Wizard.
+        Currently it opens as a separate panel. Here are alternatives that make it feel more seamless.
+    </p>
+
+    <!-- ============================================== -->
+    <!-- OPTION A: Current Implementation (Panel)       -->
+    <!-- ============================================== -->
+    <div class="mockup-section">
+        <h2>Option A: Current Implementation (Slide-out Panel)</h2>
+        <p class="description">
+            Current behavior: User clicks "Configure Tasks" button, which opens a large slide-out panel from the right.
+            The wizard remains visible but dimmed in the background.
+        </p>
+
+        <div class="pros-cons">
+            <div class="pros">
+                <h4>Pros</h4>
+                <ul>
+                    <li>Already implemented</li>
+                    <li>Fluent UI standard pattern</li>
+                    <li>Can be dismissed easily</li>
+                </ul>
+            </div>
+            <div class="cons">
+                <h4>Cons</h4>
+                <ul>
+                    <li>Feels disconnected from wizard flow</li>
+                    <li>Context switch - user leaves the wizard mentally</li>
+                    <li>Inconsistent with other wizard steps</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="mockup-frame">
+            <div class="wizard-container" style="position: relative;">
+                <!-- Dimmed wizard in background -->
+                <div class="wizard-sidebar" style="opacity: 0.5;">
+                    <div class="sidebar-header">
+                        <h3>Onboarding</h3>
+                        <p>New Employee</p>
+                    </div>
+                    <div class="sidebar-steps">
+                        <div class="sidebar-step completed"><span class="step-number">✓</span><span class="step-label">Select Candidate</span></div>
+                        <div class="sidebar-step completed"><span class="step-number">✓</span><span class="step-label">Employee Details</span></div>
+                        <div class="sidebar-step completed"><span class="step-number">✓</span><span class="step-label">Documents</span></div>
+                        <div class="sidebar-step completed"><span class="step-number">✓</span><span class="step-label">System Access</span></div>
+                        <div class="sidebar-step completed"><span class="step-number">✓</span><span class="step-label">Equipment</span></div>
+                        <div class="sidebar-step completed"><span class="step-number">✓</span><span class="step-label">Training</span></div>
+                        <div class="sidebar-step active"><span class="step-number">7</span><span class="step-label">Configure Tasks</span></div>
+                        <div class="sidebar-step"><span class="step-number">8</span><span class="step-label">Review & Submit</span></div>
+                    </div>
+                </div>
+
+                <div class="wizard-content" style="opacity: 0.5;">
+                    <div class="content-header">
+                        <h2>Configure Tasks</h2>
+                        <p>Review and customize the 25 tasks that will be created</p>
+                    </div>
+                    <div class="content-body">
+                        <div class="configure-tasks-trigger">
+                            <h3>🔧 Configure Tasks</h3>
+                            <p>Click to open the task configuration panel</p>
+                            <button class="btn btn-primary btn-large">Configure 25 Tasks</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slide-out Panel -->
+                <div style="position: absolute; right: 0; top: 0; bottom: 0; width: 70%; background: white; box-shadow: -8px 0 24px rgba(0,0,0,0.15); display: flex; flex-direction: column;">
+                    <div style="padding: 20px 24px; background: linear-gradient(135deg, #005BAA 0%, #004A8F 100%); color: white; display: flex; align-items: center; gap: 16px;">
+                        <div style="width: 40px; height: 40px; background: rgba(255,255,255,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center;">🔧</div>
+                        <div>
+                            <h3 style="font-size: 18px; font-weight: 600;">Configure Tasks</h3>
+                            <p style="font-size: 13px; opacity: 0.9;">4 of 25 tasks configured • Sarah Chen</p>
+                        </div>
+                    </div>
+                    <div style="flex: 1; display: flex;">
+                        <div class="task-list-panel">
+                            <div class="task-list-header">
+                                <h4>Selected Tasks (25) <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 11px;">Bulk Edit</button></h4>
+                                <div class="filter-chips">
+                                    <span class="chip active">All</span>
+                                    <span class="chip">Documentation</span>
+                                    <span class="chip">System Access</span>
+                                    <span class="chip">Equipment</span>
+                                </div>
+                            </div>
+                            <div class="task-list">
+                                <div class="task-item selected">
+                                    <div class="task-item-title"><span class="task-code">DOC-001</span> Collect ID Document / Passport</div>
+                                    <div class="task-item-meta"><span class="category-badge documentation">Documentation</span></div>
+                                </div>
+                                <div class="task-item">
+                                    <div class="task-item-title"><span class="task-code">DOC-002</span> Collect Tax Number (IRD / TFN)</div>
+                                    <div class="task-item-meta"><span class="category-badge documentation">Documentation</span></div>
+                                </div>
+                                <div class="task-item">
+                                    <div class="task-item-title"><span class="task-code">SYS-001</span> Set up Microsoft 365</div>
+                                    <div class="task-item-meta"><span class="category-badge system-access">System Access</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="task-config-panel">
+                            <div style="margin-bottom: 20px;">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="width: 36px; height: 36px; background: #e6f4ea; border-radius: 8px; display: flex; align-items: center; justify-content: center;">📄</div>
+                                    <div>
+                                        <div style="font-size: 16px; font-weight: 600;">Collect ID Document / Passport</div>
+                                        <span class="category-badge documentation">Documentation</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="config-section">
+                                <div class="config-section-header">👤 Assignment</div>
+                                <div class="form-row">
+                                    <div class="form-field">
+                                        <label>Assignment Type</label>
+                                        <select><option>Role/Team</option></select>
+                                    </div>
+                                    <div class="form-field">
+                                        <label>Assign to Team/Role</label>
+                                        <select><option>HR Team</option></select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="config-section">
+                                <div class="config-section-header">🕐 Timing & Duration</div>
+                                <div class="form-row">
+                                    <div class="form-field">
+                                        <label>Due Date Timing</label>
+                                        <select><option>Days before start date</option></select>
+                                    </div>
+                                    <div class="form-field">
+                                        <label>Days</label>
+                                        <input type="number" value="5">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-footer">
+                        <div class="footer-info">✓ 4 configured (21 using defaults)</div>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn btn-secondary">Cancel</button>
+                            <button class="btn btn-primary">Confirm Tasks</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- OPTION B: Full Overlay (Same Dimensions)       -->
+    <!-- ============================================== -->
+    <div class="mockup-section">
+        <h2>Option B: Full Overlay (Exact Same Dimensions) <span class="recommendation">Recommended</span></h2>
+        <p class="description">
+            Configure Tasks opens as an overlay that exactly matches the wizard dimensions.
+            It appears to "replace" the wizard content while maintaining the same footprint.
+            The sidebar shows a special "Configure Tasks" state with a back button.
+        </p>
+
+        <div class="pros-cons">
+            <div class="pros">
+                <h4>Pros</h4>
+                <ul>
+                    <li>Same visual footprint - feels integrated</li>
+                    <li>Clear back navigation to return</li>
+                    <li>Maintains context within wizard flow</li>
+                    <li>More screen real estate for task config</li>
+                </ul>
+            </div>
+            <div class="cons">
+                <h4>Cons</h4>
+                <ul>
+                    <li>Slightly more complex implementation</li>
+                    <li>User can't see wizard state while configuring</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="mockup-frame">
+            <div class="wizard-container" style="position: relative;">
+                <!-- Overlay that matches wizard dimensions exactly -->
+                <div class="wizard-sidebar" style="background: linear-gradient(180deg, #004A8F 0%, #003d75 100%);">
+                    <div class="sidebar-header">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                            <button style="background: rgba(255,255,255,0.15); border: none; color: white; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;">← Back to Wizard</button>
+                        </div>
+                        <h3>Configure Tasks</h3>
+                        <p>Sarah Chen • Onboarding</p>
+                    </div>
+                    <div class="sidebar-steps">
+                        <div style="padding: 16px 24px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                            <div style="font-size: 11px; text-transform: uppercase; opacity: 0.7; margin-bottom: 8px;">Task Summary</div>
+                            <div style="font-size: 24px; font-weight: 700;">25</div>
+                            <div style="font-size: 12px; opacity: 0.8;">Total Tasks</div>
+                        </div>
+                        <div style="padding: 16px 24px;">
+                            <div style="font-size: 11px; text-transform: uppercase; opacity: 0.7; margin-bottom: 12px;">By Category</div>
+                            <div style="display: flex; flex-direction: column; gap: 8px;">
+                                <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                                    <span>📄 Documentation</span><span style="background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 10px;">8</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                                    <span>🔐 System Access</span><span style="background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 10px;">6</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                                    <span>💻 Equipment</span><span style="background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 10px;">5</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                                    <span>🎓 Training</span><span style="background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 10px;">6</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="padding: 16px 24px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: auto;">
+                            <div style="font-size: 11px; text-transform: uppercase; opacity: 0.7; margin-bottom: 8px;">Progress</div>
+                            <div style="background: rgba(255,255,255,0.2); border-radius: 4px; height: 8px; overflow: hidden;">
+                                <div style="background: #10b981; height: 100%; width: 16%;"></div>
+                            </div>
+                            <div style="font-size: 11px; margin-top: 6px; opacity: 0.8;">4 of 25 configured</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="wizard-content">
+                    <div class="content-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h2>Configure Tasks</h2>
+                            <p>Assign owners, set due dates, and customize notifications</p>
+                        </div>
+                        <div class="filter-chips">
+                            <span class="chip active">All</span>
+                            <span class="chip">Documentation</span>
+                            <span class="chip">System Access</span>
+                            <span class="chip">Equipment</span>
+                            <span class="chip">Training</span>
+                        </div>
+                    </div>
+                    <div class="content-body" style="padding: 0;">
+                        <div class="split-panel" style="height: 100%;">
+                            <div class="task-list-panel" style="width: 320px;">
+                                <div style="padding: 12px 16px; border-bottom: 1px solid #edebe9;">
+                                    <input type="text" placeholder="🔍 Filter tasks..." style="width: 100%; padding: 8px 12px; border: 1px solid #e1dfdd; border-radius: 6px; font-size: 13px;">
+                                </div>
+                                <div class="task-list">
+                                    <div class="task-item selected">
+                                        <div class="task-item-title"><span class="task-code">DOC-001</span> Collect ID Document / Passport <span style="color: #10b981;">✓</span></div>
+                                        <div class="task-item-meta"><span class="category-badge documentation">Documentation</span> <span style="color: #605e5c;">HR Team • -5 days</span></div>
+                                    </div>
+                                    <div class="task-item">
+                                        <div class="task-item-title"><span class="task-code">DOC-002</span> Collect Tax Number</div>
+                                        <div class="task-item-meta"><span class="category-badge documentation">Documentation</span></div>
+                                    </div>
+                                    <div class="task-item">
+                                        <div class="task-item-title"><span class="task-code">DOC-003</span> Collect Bank Account Details</div>
+                                        <div class="task-item-meta"><span class="category-badge documentation">Documentation</span></div>
+                                    </div>
+                                    <div class="task-item">
+                                        <div class="task-item-title"><span class="task-code">SYS-001</span> Set up Microsoft 365</div>
+                                        <div class="task-item-meta"><span class="category-badge system-access">System Access</span></div>
+                                    </div>
+                                    <div class="task-item">
+                                        <div class="task-item-title"><span class="task-code">SYS-002</span> Set up SharePoint Access</div>
+                                        <div class="task-item-meta"><span class="category-badge system-access">System Access</span></div>
+                                    </div>
+                                    <div class="task-item">
+                                        <div class="task-item-title"><span class="task-code">HRD-001</span> Provision Laptop</div>
+                                        <div class="task-item-meta"><span class="category-badge equipment">Equipment</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="task-config-panel">
+                                <div style="margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #edebe9;">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <div style="width: 44px; height: 44px; background: #e6f4ea; border: 2px solid #34a853; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px;">📄</div>
+                                        <div style="flex: 1;">
+                                            <div style="display: flex; align-items: center; gap: 8px;">
+                                                <span class="task-code" style="font-size: 11px;">DOC-001</span>
+                                                <span style="font-size: 17px; font-weight: 600;">Collect ID Document / Passport</span>
+                                            </div>
+                                            <span class="category-badge documentation" style="margin-top: 6px; display: inline-block;">Documentation</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="config-section">
+                                    <div class="config-section-header">👤 Assignment</div>
+                                    <div class="form-row">
+                                        <div class="form-field">
+                                            <label>Assignment Type</label>
+                                            <select><option>Role/Team</option><option>Specific Person</option><option>Hiring Manager</option></select>
+                                        </div>
+                                        <div class="form-field">
+                                            <label>Assign to Team/Role</label>
+                                            <select><option>HR Team</option><option>IT Team</option><option>Facilities</option></select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="config-section">
+                                    <div class="config-section-header">🕐 Timing & Duration</div>
+                                    <div class="form-row">
+                                        <div class="form-field">
+                                            <label>Due Date Timing</label>
+                                            <select><option>Days before start date</option><option>On start date</option><option>Days after start date</option></select>
+                                        </div>
+                                        <div class="form-field">
+                                            <label>Days</label>
+                                            <input type="number" value="5">
+                                        </div>
+                                    </div>
+                                    <div style="background: #f3f2f1; padding: 12px; border-radius: 6px; font-size: 13px; display: flex; align-items: center; gap: 8px;">
+                                        📅 <span>Due: <strong>Feb 10, 2026</strong> (5 days before Sarah starts)</span>
+                                    </div>
+                                </div>
+                                <div class="config-section">
+                                    <div class="config-section-header">🔔 Notifications</div>
+                                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13px;"><input type="checkbox" checked> Send email to assignee</label>
+                                        <label style="display: flex; align-items: center; gap: 8px; font-size: 13px;"><input type="checkbox"> Send Teams chat notification</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="content-footer">
+                        <div style="font-size: 13px; color: #605e5c;">✓ 4 configured <span style="color: #d97706;">(21 using defaults)</span></div>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn btn-secondary">Cancel</button>
+                            <button class="btn btn-primary">Confirm Tasks</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- OPTION C: Inline Expansion                     -->
+    <!-- ============================================== -->
+    <div class="mockup-section">
+        <h2>Option C: Inline Expansion (Accordion Style)</h2>
+        <p class="description">
+            The task list and configuration expand inline within the wizard step content area.
+            No overlays or panels - everything stays in place. Works well for simpler configurations.
+        </p>
+
+        <div class="pros-cons">
+            <div class="pros">
+                <h4>Pros</h4>
+                <ul>
+                    <li>No context switch at all</li>
+                    <li>Sidebar and tips remain visible</li>
+                    <li>Feels like a natural wizard step</li>
+                </ul>
+            </div>
+            <div class="cons">
+                <h4>Cons</h4>
+                <ul>
+                    <li>Limited horizontal space for split view</li>
+                    <li>May feel cramped with many tasks</li>
+                    <li>Scrolling can be confusing</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="mockup-frame">
+            <div class="wizard-container">
+                <div class="wizard-sidebar">
+                    <div class="sidebar-header">
+                        <h3>Onboarding</h3>
+                        <p>New Employee</p>
+                    </div>
+                    <div class="sidebar-steps">
+                        <div class="sidebar-step completed"><span class="step-number">✓</span><span class="step-label">Select Candidate</span></div>
+                        <div class="sidebar-step completed"><span class="step-number">✓</span><span class="step-label">Employee Details</span></div>
+                        <div class="sidebar-step completed"><span class="step-number">✓</span><span class="step-label">Documents</span></div>
+                        <div class="sidebar-step completed"><span class="step-number">✓</span><span class="step-label">System Access</span></div>
+                        <div class="sidebar-step completed"><span class="step-number">✓</span><span class="step-label">Equipment</span></div>
+                        <div class="sidebar-step completed"><span class="step-number">✓</span><span class="step-label">Training</span></div>
+                        <div class="sidebar-step active"><span class="step-number">7</span><span class="step-label">Configure Tasks</span></div>
+                        <div class="sidebar-step"><span class="step-number">8</span><span class="step-label">Review & Submit</span></div>
+                    </div>
+                </div>
+
+                <div class="wizard-content">
+                    <div class="content-header">
+                        <h2>Configure Tasks</h2>
+                        <p>Review and customize the 25 tasks that will be created</p>
+                    </div>
+                    <div class="content-body" style="padding: 16px;">
+                        <div class="inline-expanded">
+                            <div class="inline-header">
+                                <span style="font-size: 18px;">🔧</span>
+                                <h3>Task Configuration</h3>
+                                <span style="font-size: 13px; opacity: 0.9; margin-left: 8px;">4 of 25 configured</span>
+                                <button class="close-btn">✕</button>
+                            </div>
+                            <div style="display: flex; height: 350px;">
+                                <div style="width: 280px; border-right: 1px solid #edebe9; overflow-y: auto;">
+                                    <div style="padding: 12px; border-bottom: 1px solid #edebe9; background: #faf9f8;">
+                                        <input type="text" placeholder="🔍 Filter..." style="width: 100%; padding: 6px 10px; border: 1px solid #e1dfdd; border-radius: 4px; font-size: 12px;">
+                                    </div>
+                                    <div class="task-item selected" style="padding: 10px 12px;">
+                                        <div class="task-item-title" style="font-size: 12px;"><span class="task-code">DOC-001</span> Collect ID Document</div>
+                                        <div class="task-item-meta"><span class="category-badge documentation" style="font-size: 9px;">Documentation</span></div>
+                                    </div>
+                                    <div class="task-item" style="padding: 10px 12px;">
+                                        <div class="task-item-title" style="font-size: 12px;"><span class="task-code">DOC-002</span> Collect Tax Number</div>
+                                        <div class="task-item-meta"><span class="category-badge documentation" style="font-size: 9px;">Documentation</span></div>
+                                    </div>
+                                    <div class="task-item" style="padding: 10px 12px;">
+                                        <div class="task-item-title" style="font-size: 12px;"><span class="task-code">SYS-001</span> Set up Microsoft 365</div>
+                                        <div class="task-item-meta"><span class="category-badge system-access" style="font-size: 9px;">System Access</span></div>
+                                    </div>
+                                </div>
+                                <div style="flex: 1; padding: 16px; overflow-y: auto;">
+                                    <div class="config-section">
+                                        <div class="config-section-header" style="font-size: 11px;">👤 Assignment</div>
+                                        <div class="form-row" style="gap: 12px;">
+                                            <div class="form-field">
+                                                <label style="font-size: 11px;">Type</label>
+                                                <select style="padding: 6px 8px; font-size: 12px;"><option>Role/Team</option></select>
+                                            </div>
+                                            <div class="form-field">
+                                                <label style="font-size: 11px;">Team</label>
+                                                <select style="padding: 6px 8px; font-size: 12px;"><option>HR Team</option></select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="config-section">
+                                        <div class="config-section-header" style="font-size: 11px;">🕐 Timing</div>
+                                        <div class="form-row" style="gap: 12px;">
+                                            <div class="form-field">
+                                                <label style="font-size: 11px;">Due</label>
+                                                <select style="padding: 6px 8px; font-size: 12px;"><option>Before start</option></select>
+                                            </div>
+                                            <div class="form-field">
+                                                <label style="font-size: 11px;">Days</label>
+                                                <input type="number" value="5" style="padding: 6px 8px; font-size: 12px;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="padding: 12px 16px; border-top: 1px solid #edebe9; display: flex; justify-content: flex-end; gap: 8px;">
+                                <button class="btn btn-secondary" style="padding: 6px 14px; font-size: 12px;">Cancel</button>
+                                <button class="btn btn-primary" style="padding: 6px 14px; font-size: 12px;">Confirm Tasks</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="content-footer">
+                        <button class="btn btn-secondary">Back</button>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn btn-secondary">Cancel</button>
+                            <button class="btn btn-primary">Next</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="wizard-tips">
+                    <div class="tips-title">Tips</div>
+                    <div class="tip-card">
+                        <h4>🔧 Task Configuration</h4>
+                        <p>Review and customize the tasks that will be created for this onboarding.</p>
+                    </div>
+                    <div class="tip-card">
+                        <h4>👥 Assign Owners</h4>
+                        <p>Assign specific people to each task and set due dates.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- OPTION D: Replace Content (No Panel)          -->
+    <!-- ============================================== -->
+    <div class="mockup-section">
+        <h2>Option D: Replace Wizard Content Directly</h2>
+        <p class="description">
+            When user clicks Configure Tasks, the wizard content area is directly replaced with the task configuration UI.
+            The wizard sidebar remains but shows a modified state. Simplest "in-place" solution.
+        </p>
+
+        <div class="pros-cons">
+            <div class="pros">
+                <h4>Pros</h4>
+                <ul>
+                    <li>Simplest implementation</li>
+                    <li>No overlay or panel management</li>
+                    <li>Wizard sidebar provides navigation context</li>
+                </ul>
+            </div>
+            <div class="cons">
+                <h4>Cons</h4>
+                <ul>
+                    <li>Tips panel may not be relevant</li>
+                    <li>Less visually distinct from wizard steps</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="mockup-frame">
+            <div class="wizard-container">
+                <div class="wizard-sidebar">
+                    <div class="sidebar-header">
+                        <h3>Onboarding</h3>
+                        <p>New Employee</p>
+                    </div>
+                    <div class="sidebar-steps">
+                        <div class="sidebar-step completed"><span class="step-number">✓</span><span class="step-label">Select Candidate</span></div>
+                        <div class="sidebar-step completed"><span class="step-number">✓</span><span class="step-label">Employee Details</span></div>
+                        <div class="sidebar-step completed"><span class="step-number">✓</span><span class="step-label">Documents</span></div>
+                        <div class="sidebar-step completed"><span class="step-number">✓</span><span class="step-label">System Access</span></div>
+                        <div class="sidebar-step completed"><span class="step-number">✓</span><span class="step-label">Equipment</span></div>
+                        <div class="sidebar-step completed"><span class="step-number">✓</span><span class="step-label">Training</span></div>
+                        <div class="sidebar-step active" style="background: rgba(255,255,255,0.2);">
+                            <span class="step-number" style="background: #10b981;">🔧</span>
+                            <span class="step-label">Configure Tasks</span>
+                        </div>
+                        <div class="sidebar-step"><span class="step-number">8</span><span class="step-label">Review & Submit</span></div>
+                    </div>
+                </div>
+
+                <div class="wizard-content" style="display: flex; flex-direction: column;">
+                    <div class="replace-header">
+                        <h2>🔧 Configure Tasks</h2>
+                        <p>Assign owners, set due dates, and customize notifications for 25 tasks</p>
+                    </div>
+                    <div style="flex: 1; display: flex; overflow: hidden;">
+                        <div class="task-list-panel">
+                            <div class="task-list-header">
+                                <h4>Tasks (25)</h4>
+                                <div class="filter-chips">
+                                    <span class="chip active">All</span>
+                                    <span class="chip">Docs</span>
+                                    <span class="chip">Systems</span>
+                                    <span class="chip">Equip</span>
+                                </div>
+                            </div>
+                            <div class="task-list">
+                                <div class="task-item selected">
+                                    <div class="task-item-title"><span class="task-code">DOC-001</span> Collect ID Document</div>
+                                    <div class="task-item-meta"><span class="category-badge documentation">Documentation</span></div>
+                                </div>
+                                <div class="task-item">
+                                    <div class="task-item-title"><span class="task-code">DOC-002</span> Collect Tax Number</div>
+                                    <div class="task-item-meta"><span class="category-badge documentation">Documentation</span></div>
+                                </div>
+                                <div class="task-item">
+                                    <div class="task-item-title"><span class="task-code">SYS-001</span> Set up Microsoft 365</div>
+                                    <div class="task-item-meta"><span class="category-badge system-access">System Access</span></div>
+                                </div>
+                                <div class="task-item">
+                                    <div class="task-item-title"><span class="task-code">HRD-001</span> Provision Laptop</div>
+                                    <div class="task-item-meta"><span class="category-badge equipment">Equipment</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="task-config-panel">
+                            <div style="margin-bottom: 20px;">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="width: 40px; height: 40px; background: #e6f4ea; border-radius: 8px; display: flex; align-items: center; justify-content: center;">📄</div>
+                                    <div>
+                                        <div style="font-size: 16px; font-weight: 600;"><span class="task-code">DOC-001</span> Collect ID Document / Passport</div>
+                                        <span class="category-badge documentation">Documentation</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="config-section">
+                                <div class="config-section-header">👤 Assignment</div>
+                                <div class="form-row">
+                                    <div class="form-field"><label>Type</label><select><option>Role/Team</option></select></div>
+                                    <div class="form-field"><label>Team</label><select><option>HR Team</option></select></div>
+                                </div>
+                            </div>
+                            <div class="config-section">
+                                <div class="config-section-header">🕐 Timing</div>
+                                <div class="form-row">
+                                    <div class="form-field"><label>Due</label><select><option>Before start</option></select></div>
+                                    <div class="form-field"><label>Days</label><input type="number" value="5"></div>
+                                </div>
+                            </div>
+                            <div class="config-section">
+                                <div class="config-section-header">🔔 Notifications</div>
+                                <label style="display: flex; align-items: center; gap: 8px; font-size: 13px;"><input type="checkbox" checked> Send email to assignee</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="content-footer">
+                        <div style="font-size: 13px; color: #605e5c;">✓ 4 configured</div>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn btn-secondary">Back to Wizard</button>
+                            <button class="btn btn-primary">Confirm & Continue</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-top: 40px; padding: 24px; background: #e8f0fe; border-radius: 12px; border: 1px solid #4285f4;">
+        <h3 style="color: #1967d2; margin-bottom: 12px;">📋 Summary & Recommendation</h3>
+        <p style="font-size: 14px; line-height: 1.6; color: #323130;">
+            <strong>Recommended: Option B (Full Overlay with Same Dimensions)</strong><br><br>
+            This option provides the best balance of:
+        </p>
+        <ul style="font-size: 14px; line-height: 1.8; color: #323130; margin-top: 12px; padding-left: 20px;">
+            <li>Visual consistency with the wizard (same footprint)</li>
+            <li>Clear navigation with "Back to Wizard" button</li>
+            <li>Full screen real estate for task configuration</li>
+            <li>Task codes prominently displayed (DOC-001, SYS-001, etc.)</li>
+            <li>Summary sidebar showing category breakdown and progress</li>
+        </ul>
+    </div>
+</body>
+</html>

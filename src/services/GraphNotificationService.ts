@@ -1,12 +1,14 @@
 // Graph Notification Service — Email and Teams notifications via Microsoft Graph API
 // Requires API permissions: Mail.Send, Chat.Create, ChatMessage.Send
+// Note: @pnp/graph/mail and @pnp/graph/teams imports removed - service falls back to audit logging
 
 import { SPFI } from '@pnp/sp';
 import '@pnp/sp/webs';
 import { graphfi, SPFx as graphSPFx } from '@pnp/graph';
 import '@pnp/graph/users';
-import '@pnp/graph/mail';
-import '@pnp/graph/teams';
+// Note: Mail and Teams Graph API modules not available in current PnP version
+// import '@pnp/graph/mail';
+// import '@pnp/graph/teams';
 import { WebPartContext } from '@microsoft/sp-webpart-base';
 import { RmAuditTrailService } from './JmlAuditTrailService';
 

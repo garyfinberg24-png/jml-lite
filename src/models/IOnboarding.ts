@@ -64,6 +64,9 @@ export interface IOnboardingTask {
   DocumentUrl?: string;
   SortOrder: number;
   Notes?: string;
+  // Task Dependencies - stored as JSON string of task IDs
+  DependsOnTaskIds?: string;       // JSON array of task IDs this task depends on (e.g., "[1,2,3]")
+  BlockedUntilComplete?: boolean;  // Whether task is blocked until all dependencies complete
   Created?: Date;
   Modified?: Date;
 }

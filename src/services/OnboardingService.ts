@@ -158,6 +158,9 @@ export class OnboardingService {
         DocumentUrl: task.DocumentUrl,
         SortOrder: task.SortOrder || 0,
         Notes: task.Notes,
+        // Task Dependencies
+        DependsOnTaskIds: task.DependsOnTaskIds,           // JSON string of dependent task IDs
+        BlockedUntilComplete: task.BlockedUntilComplete,   // Boolean flag
       });
       return this.mapTaskFromSP(result);
     } catch (error) {
@@ -172,7 +175,8 @@ export class OnboardingService {
       const fields = [
         'Title', 'Description', 'Category', 'Status', 'AssignedToId',
         'DueDate', 'CompletedDate', 'CompletedById', 'Priority',
-        'EstimatedHours', 'ActualHours', 'DocumentUrl', 'SortOrder', 'Notes'
+        'EstimatedHours', 'ActualHours', 'DocumentUrl', 'SortOrder', 'Notes',
+        'DependsOnTaskIds', 'BlockedUntilComplete'  // Task dependency fields
       ];
       fields.forEach(f => {
         if ((updates as any)[f] !== undefined) {
@@ -291,6 +295,9 @@ export class OnboardingService {
       DocumentUrl: item.DocumentUrl,
       SortOrder: item.SortOrder || 0,
       Notes: item.Notes,
+      // Task Dependencies
+      DependsOnTaskIds: item.DependsOnTaskIds,           // JSON string of dependent task IDs
+      BlockedUntilComplete: item.BlockedUntilComplete,   // Boolean flag
       Created: item.Created ? new Date(item.Created) : undefined,
       Modified: item.Modified ? new Date(item.Modified) : undefined,
     };

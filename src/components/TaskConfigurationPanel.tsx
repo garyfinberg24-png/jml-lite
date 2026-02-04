@@ -58,6 +58,10 @@ export interface IConfigurableTask {
   instructions?: string;
   isSelected: boolean;
   isConfigured: boolean;
+
+  // Task Dependencies
+  dependsOnTaskIds?: (string | number)[];  // Array of task IDs this task depends on
+  blockedUntilComplete?: boolean;           // Whether task is blocked until all dependencies complete
 }
 
 // Props

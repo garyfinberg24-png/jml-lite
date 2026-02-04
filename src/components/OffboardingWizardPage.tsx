@@ -1,14 +1,19 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
 import { SPFI } from '@pnp/sp';
+import { WebPartContext } from '@microsoft/sp-webpart-base';
 import { TextField } from '@fluentui/react/lib/TextField';
 import { Dropdown, IDropdownOption } from '@fluentui/react/lib/Dropdown';
 import { DatePicker } from '@fluentui/react/lib/DatePicker';
 import { Toggle } from '@fluentui/react/lib/Toggle';
 import { Icon } from '@fluentui/react/lib/Icon';
 import { JmlWizardLayout, JmlWizardSuccess, IJmlWizardStep, IJmlWizardTip, IJmlWizardChecklistItem, ISummaryPanel } from './JmlWizardLayout';
+import { TaskConfigurationOverlay, IConfigurableTask } from './TaskConfigurationOverlay';
 import { OffboardingService } from '../services/OffboardingService';
 import { OnboardingConfigService } from '../services/OnboardingConfigService';
+import { GraphNotificationService } from '../services/GraphNotificationService';
+import { TeamsNotificationService } from '../services/TeamsNotificationService';
+import { InAppNotificationService } from '../services/InAppNotificationService';
 import {
   OffboardingStatus, OffboardingTaskCategory,
   OffboardingTaskStatus, TerminationType, AssetReturnStatus, IEligibleEmployee
@@ -18,6 +23,7 @@ import styles from '../styles/JmlWizard.module.scss';
 
 interface IProps {
   sp: SPFI;
+  context?: WebPartContext;
   onComplete: () => void;
   onCancel: () => void;
 }
@@ -53,6 +59,7 @@ const STEPS: IJmlWizardStep[] = [
   { key: 'systems', label: 'System Access', icon: 'Permissions' },
   { key: 'interview', label: 'Exit Interview', icon: 'CannedChat' },
   { key: 'knowledge', label: 'Knowledge Transfer', icon: 'BookAnswers' },
+  { key: 'tasks', label: 'Configure Tasks', icon: 'TaskManager' },
   { key: 'review', label: 'Review & Submit', icon: 'CheckList' },
 ];
 
@@ -65,13 +72,18 @@ const TERMINATION_OPTIONS: IDropdownOption[] = [
   { key: TerminationType.Other, text: 'Other' },
 ];
 
-export const OffboardingWizardPage: React.FC<IProps> = ({ sp, onComplete, onCancel }) => {
+export const OffboardingWizardPage: React.FC<IProps> = ({ sp, context, onComplete, onCancel }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [employees, setEmployees] = useState<IEligibleEmployee[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
+
+  // Task configuration state
+  const [showTaskConfig, setShowTaskConfig] = useState(false);
+  const [configuredTasks, setConfiguredTasks] = useState<IConfigurableTask[]>([]);
+  const [tasksConfirmed, setTasksConfirmed] = useState(false);
 
   // Wizard data
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | null>(null);
@@ -150,7 +162,176 @@ export const OffboardingWizardPage: React.FC<IProps> = ({ sp, onComplete, onCanc
   const canProceed = (): boolean => {
     if (currentStep === 0) return !!selectedEmployeeId;
     if (currentStep === 1) return !!lastWorkingDate && !!terminationType;
+    if (currentStep === 6) return tasksConfirmed; // Must confirm tasks before review
     return true;
+  };
+
+  // Build tasks from selections for TaskConfigurationOverlay
+  const buildTasksFromSelections = (): IConfigurableTask[] => {
+    const tasks: IConfigurableTask[] = [];
+    let taskIdCounter = 1;
+
+    // Asset return tasks
+    const selectedAssets = assetsToReturn.filter(a => a.selected);
+    for (const asset of selectedAssets) {
+      tasks.push({
+        id: `asset-${taskIdCounter++}`,
+        title: `Return: ${asset.assetName}${asset.assetTag ? ` (${asset.assetTag})` : ''}`,
+        category: 'Equipment',
+        sourceType: 'asset',
+        sourceId: asset.assetTypeId,
+        assignmentType: 'role',
+        roleAssignment: asset.category === 'Hardware' ? 'IT Team' : 'Facilities',
+        daysOffset: 0,
+        offsetType: 'on-start',
+        priority: 'High',
+        requiresApproval: false,
+        sendReminder: true,
+        reminderDaysBefore: 2,
+        notifyOnComplete: true,
+        notifyAssigneeEmail: true,
+        notifyTeamsChat: false,
+        instructions: asset.requiresDataWipe ? 'Data wipe required before reissuing.' : undefined,
+        isSelected: true,
+        isConfigured: false,
+      });
+    }
+
+    // System revocation tasks
+    const selectedSystems = systemsToRevoke.filter(s => s.selected);
+    for (const sys of selectedSystems) {
+      tasks.push({
+        id: `sys-${taskIdCounter++}`,
+        title: `Revoke access: ${sys.systemName}`,
+        category: 'System Access',
+        sourceType: 'system',
+        sourceId: sys.systemAccessTypeId,
+        assignmentType: 'role',
+        roleAssignment: 'IT Team',
+        daysOffset: 0,
+        offsetType: 'on-start',
+        priority: 'High',
+        requiresApproval: false,
+        sendReminder: true,
+        reminderDaysBefore: 1,
+        notifyOnComplete: true,
+        notifyAssigneeEmail: true,
+        notifyTeamsChat: false,
+        isSelected: true,
+        isConfigured: false,
+      });
+    }
+
+    // Exit interview task
+    if (exitInterviewDate) {
+      tasks.push({
+        id: `interview-${taskIdCounter++}`,
+        title: 'Conduct exit interview',
+        category: 'General',
+        sourceType: 'custom',
+        assignmentType: 'role',
+        roleAssignment: 'HR Team',
+        daysOffset: 0,
+        offsetType: 'before-start',
+        priority: 'Medium',
+        requiresApproval: false,
+        sendReminder: true,
+        reminderDaysBefore: 2,
+        notifyOnComplete: true,
+        notifyAssigneeEmail: true,
+        notifyTeamsChat: false,
+        instructions: exitInterviewNotes || undefined,
+        isSelected: true,
+        isConfigured: false,
+      });
+    }
+
+    // Knowledge transfer tasks
+    const ktTasks = knowledgeTransfer.filter(k => k.description.trim());
+    for (const kt of ktTasks) {
+      tasks.push({
+        id: `kt-${taskIdCounter++}`,
+        title: `Knowledge transfer: ${kt.description}`,
+        category: 'General',
+        sourceType: 'custom',
+        assignmentType: kt.assignedTo ? 'specific' : 'role',
+        assigneeName: kt.assignedTo,
+        roleAssignment: kt.assignedTo ? undefined : 'Department Head',
+        daysOffset: 3,
+        offsetType: 'before-start',
+        priority: 'Medium',
+        requiresApproval: false,
+        sendReminder: true,
+        reminderDaysBefore: 2,
+        notifyOnComplete: true,
+        notifyAssigneeEmail: true,
+        notifyTeamsChat: false,
+        isSelected: true,
+        isConfigured: false,
+      });
+    }
+
+    // Standard offboarding tasks
+    tasks.push({
+      id: `std-${taskIdCounter++}`,
+      title: 'Process final payment',
+      category: 'General',
+      sourceType: 'custom',
+      assignmentType: 'role',
+      roleAssignment: 'Finance',
+      daysOffset: 0,
+      offsetType: 'on-start',
+      priority: 'High',
+      requiresApproval: false,
+      sendReminder: true,
+      reminderDaysBefore: 1,
+      notifyOnComplete: true,
+      notifyAssigneeEmail: true,
+      notifyTeamsChat: false,
+      isSelected: true,
+      isConfigured: false,
+    });
+
+    tasks.push({
+      id: `std-${taskIdCounter++}`,
+      title: 'Complete exit documentation',
+      category: 'Documentation',
+      sourceType: 'custom',
+      assignmentType: 'role',
+      roleAssignment: 'HR Team',
+      daysOffset: 0,
+      offsetType: 'on-start',
+      priority: 'Medium',
+      requiresApproval: false,
+      sendReminder: true,
+      reminderDaysBefore: 1,
+      notifyOnComplete: true,
+      notifyAssigneeEmail: true,
+      notifyTeamsChat: false,
+      isSelected: true,
+      isConfigured: false,
+    });
+
+    return tasks;
+  };
+
+  // Handle opening task configuration
+  const handleOpenTaskConfig = (): void => {
+    const tasks = buildTasksFromSelections();
+    setConfiguredTasks(tasks);
+    setShowTaskConfig(true);
+  };
+
+  // Handle task configuration confirmation
+  const handleTaskConfigConfirm = (tasks: IConfigurableTask[]): void => {
+    setConfiguredTasks(tasks);
+    setTasksConfirmed(true);
+    setShowTaskConfig(false);
+  };
+
+  // Handle going back from task config
+  const handleTaskConfigBack = (): void => {
+    setShowTaskConfig(false);
   };
 
   const handleSubmit = async (): Promise<void> => {
@@ -159,11 +340,7 @@ export const OffboardingWizardPage: React.FC<IProps> = ({ sp, onComplete, onCanc
     try {
       const svc = new OffboardingService(sp);
 
-      const assetTasks = assetsToReturn.filter(a => a.selected).length;
-      const systemTasks = systemsToRevoke.filter(s => s.selected).length;
-      const ktTasks = knowledgeTransfer.filter(k => k.description.trim()).length;
-      const exitTask = exitInterviewDate ? 1 : 0;
-      const totalTasks = assetTasks + systemTasks + ktTasks + exitTask + 2;
+      const totalTasks = configuredTasks.filter(t => t.isSelected).length;
 
       const offboarding = await svc.createOffboarding({
         EmployeeId: selectedEmployeeId!,
@@ -186,8 +363,7 @@ export const OffboardingWizardPage: React.FC<IProps> = ({ sp, onComplete, onCanc
       });
 
       if (offboarding?.Id) {
-        let sortOrder = 1;
-
+        // Create asset return records
         for (const asset of assetsToReturn.filter(a => a.selected)) {
           await svc.createAssetReturn({
             OffboardingId: offboarding.Id,
@@ -199,74 +375,128 @@ export const OffboardingWizardPage: React.FC<IProps> = ({ sp, onComplete, onCanc
             RequiresDataWipe: asset.requiresDataWipe,
             DataWipeCompleted: false,
           });
-
-          await svc.createOffboardingTask({
-            Title: `Return: ${asset.assetName}${asset.assetTag ? ` (${asset.assetTag})` : ''}`,
-            OffboardingId: offboarding.Id,
-            Category: OffboardingTaskCategory.AssetReturn,
-            Status: OffboardingTaskStatus.Pending,
-            Priority: 'High',
-            SortOrder: sortOrder++,
-          });
         }
 
-        for (const sys of systemsToRevoke.filter(s => s.selected)) {
-          await svc.createOffboardingTask({
-            Title: `Revoke access: ${sys.systemName}`,
+        // Map category from IConfigurableTask to OffboardingTaskCategory
+        const mapCategory = (cat: string, title: string): OffboardingTaskCategory => {
+          if (cat === 'Equipment') return OffboardingTaskCategory.AssetReturn;
+          if (cat === 'System Access') return OffboardingTaskCategory.SystemAccess;
+          if (cat === 'Documentation') return OffboardingTaskCategory.Documentation;
+          if (title.toLowerCase().includes('interview')) return OffboardingTaskCategory.ExitInterview;
+          if (title.toLowerCase().includes('knowledge')) return OffboardingTaskCategory.KnowledgeTransfer;
+          if (title.toLowerCase().includes('payment') || title.toLowerCase().includes('final pay')) return OffboardingTaskCategory.FinalPay;
+          return OffboardingTaskCategory.Documentation;
+        };
+
+        // Calculate due date from task configuration
+        const calculateDueDate = (task: IConfigurableTask): Date => {
+          const date = new Date(lastWorkingDate!);
+          if (task.offsetType === 'before-start') {
+            date.setDate(date.getDate() - Math.abs(task.daysOffset));
+          } else if (task.offsetType === 'after-start') {
+            date.setDate(date.getDate() + Math.abs(task.daysOffset));
+          }
+          return date;
+        };
+
+        // Create tasks from configured tasks
+        const createdTasks: Array<{ id: number; task: IConfigurableTask }> = [];
+        let sortOrder = 1;
+
+        for (const task of configuredTasks.filter(t => t.isSelected)) {
+          // Map priority - some interfaces only support Low/Medium/High
+          const taskPriority: 'Low' | 'Medium' | 'High' = task.priority === 'Critical' ? 'High' : task.priority;
+
+          const createdTask = await svc.createOffboardingTask({
+            Title: task.title,
             OffboardingId: offboarding.Id,
-            Category: OffboardingTaskCategory.SystemAccess,
+            Category: mapCategory(task.category, task.title),
             Status: OffboardingTaskStatus.Pending,
-            Priority: 'High',
+            Priority: taskPriority,
             SortOrder: sortOrder++,
-            RelatedSystemAccessId: sys.systemAccessTypeId,
+            DueDate: calculateDueDate(task),
+            AssignedToId: task.assigneeId,
+            Notes: task.instructions ? `${task.instructions}\n\nAssigned to: ${task.assigneeName || task.roleAssignment || 'Unassigned'}` : `Assigned to: ${task.assigneeName || task.roleAssignment || 'Unassigned'}`,
+            RelatedSystemAccessId: task.sourceType === 'system' ? task.sourceId : undefined,
           });
+
+          if (createdTask?.Id) {
+            createdTasks.push({ id: createdTask.Id, task });
+          }
         }
-
-        if (exitInterviewDate) {
-          await svc.createOffboardingTask({
-            Title: 'Conduct exit interview',
-            OffboardingId: offboarding.Id,
-            Category: OffboardingTaskCategory.ExitInterview,
-            Status: OffboardingTaskStatus.Pending,
-            Priority: 'Medium',
-            DueDate: exitInterviewDate,
-            SortOrder: sortOrder++,
-            Notes: exitInterviewNotes,
-          });
-        }
-
-        for (const kt of knowledgeTransfer.filter(k => k.description.trim())) {
-          await svc.createOffboardingTask({
-            Title: `Knowledge transfer: ${kt.description}`,
-            OffboardingId: offboarding.Id,
-            Category: OffboardingTaskCategory.KnowledgeTransfer,
-            Status: OffboardingTaskStatus.Pending,
-            Priority: 'Medium',
-            DueDate: kt.dueDate,
-            SortOrder: sortOrder++,
-          });
-        }
-
-        await svc.createOffboardingTask({
-          Title: 'Process final payment',
-          OffboardingId: offboarding.Id,
-          Category: OffboardingTaskCategory.FinalPay,
-          Status: OffboardingTaskStatus.Pending,
-          Priority: 'High',
-          DueDate: lastWorkingDate,
-          SortOrder: sortOrder++,
-        });
-
-        await svc.createOffboardingTask({
-          Title: 'Complete exit documentation',
-          OffboardingId: offboarding.Id,
-          Category: OffboardingTaskCategory.Documentation,
-          Status: OffboardingTaskStatus.Pending,
-          Priority: 'Medium',
-          SortOrder: sortOrder++,
-        });
 
         await svc.recalculateProgress(offboarding.Id);
+
+        // ═══════════════════════════════════════════════════════════════════════════════
+        // SEND NOTIFICATIONS (fire-and-forget to avoid blocking submission)
+        // ═══════════════════════════════════════════════════════════════════════════════
+        if (context) {
+          const currentUserEmail = context.pageContext?.user?.email || '';
+          const graphNotificationService = new GraphNotificationService(sp, context);
+          const teamsNotificationService = new TeamsNotificationService(sp, context);
+          const inAppNotificationService = new InAppNotificationService(sp, currentUserEmail);
+
+          for (const { id: taskId, task } of createdTasks) {
+            if (task.assigneeEmail) {
+              const dueDate = calculateDueDate(task);
+              const actionUrl = `${window.location.origin}${window.location.pathname}?view=offboarding&id=${offboarding.Id}`;
+
+              // Map priority - ITaskNotification doesn't support 'Critical'
+              const mappedPriority: 'Low' | 'Medium' | 'High' = task.priority === 'Critical' ? 'High' : task.priority;
+
+              // 1. EMAIL NOTIFICATION via Graph API
+              if (task.notifyAssigneeEmail !== false) {
+                const emailNotification = {
+                  taskTitle: task.title,
+                  taskCategory: task.category,
+                  employeeName: employeeName,
+                  processType: 'Offboarding' as const,
+                  dueDate: dueDate,
+                  assignedTo: {
+                    email: task.assigneeEmail,
+                    displayName: task.assigneeName || task.assigneeEmail,
+                  },
+                  actionUrl: actionUrl,
+                };
+
+                graphNotificationService.notifyTaskAssigned(emailNotification).catch(err => {
+                  console.warn('[OffboardingWizardPage] Email notification failed (non-blocking):', err);
+                });
+              }
+
+              // 2. TEAMS NOTIFICATION
+              if (task.notifyTeamsChat) {
+                const teamsNotification = {
+                  taskId: taskId,
+                  taskTitle: task.title,
+                  category: 'Offboarding' as const,
+                  employeeName: employeeName,
+                  assignedToEmail: task.assigneeEmail,
+                  dueDate: dueDate,
+                  priority: mappedPriority,
+                  actionUrl: actionUrl,
+                };
+
+                teamsNotificationService.sendTaskNotification(teamsNotification).catch(err => {
+                  console.warn('[OffboardingWizardPage] Teams notification failed (non-blocking):', err);
+                });
+              }
+
+              // 3. IN-APP NOTIFICATION
+              inAppNotificationService.notifyTaskAssigned(
+                task.assigneeEmail,
+                task.title,
+                employeeName,
+                'Offboarding',
+                taskId,
+                actionUrl
+              ).catch(err => {
+                console.warn('[OffboardingWizardPage] In-app notification failed (non-blocking):', err);
+              });
+            }
+          }
+        }
+
         setSubmitted(true);
       }
     } catch (err) {
@@ -310,8 +540,13 @@ export const OffboardingWizardPage: React.FC<IProps> = ({ sp, onComplete, onCanc
         ];
       case 6:
         return [
+          { icon: 'TaskManager', title: 'Configure Tasks', content: 'Customize task assignments, due dates, and notification settings.' },
+          { icon: 'Contact', title: 'Assignees', content: 'Assign tasks to specific people or teams for accountability.' },
+        ];
+      case 7:
+        return [
           { icon: 'CheckList', title: 'Final Review', content: 'Verify all details before creating the offboarding record.' },
-          { icon: 'Warning', title: 'Tasks', content: 'Standard tasks for final pay and documentation will be created automatically.' },
+          { icon: 'Warning', title: 'Tasks', content: 'Tasks will be created with your configured settings.' },
         ];
       default:
         return [];
@@ -325,6 +560,7 @@ export const OffboardingWizardPage: React.FC<IProps> = ({ sp, onComplete, onCanc
     { label: 'Systems reviewed', completed: currentStep > 3 },
     { label: 'Exit interview scheduled', completed: !!exitInterviewDate },
     { label: 'Knowledge transfer planned', completed: knowledgeTransfer.some(k => k.description.trim()) },
+    { label: 'Tasks configured', completed: tasksConfirmed },
   ];
 
   const renderStepContent = (): JSX.Element => {
@@ -335,7 +571,8 @@ export const OffboardingWizardPage: React.FC<IProps> = ({ sp, onComplete, onCanc
       case 3: return renderSystemsStep();
       case 4: return renderInterviewStep();
       case 5: return renderKnowledgeStep();
-      case 6: return renderReviewStep();
+      case 6: return renderTasksStep();
+      case 7: return renderReviewStep();
       default: return <div />;
     }
   };
@@ -786,6 +1023,102 @@ export const OffboardingWizardPage: React.FC<IProps> = ({ sp, onComplete, onCanc
     </div>
   );
 
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // TASKS STEP - Configure Tasks with overlay
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  const renderTasksStep = (): JSX.Element => {
+    const selectedAssets = assetsToReturn.filter(a => a.selected);
+    const selectedSystems = systemsToRevoke.filter(s => s.selected);
+    const ktTasks = knowledgeTransfer.filter(k => k.description.trim());
+    const totalTasks = selectedAssets.length + selectedSystems.length + ktTasks.length + (exitInterviewDate ? 1 : 0) + 2;
+
+    return (
+      <div className={styles.formCard}>
+        <div className={styles.formCardHeader}>
+          <div className={styles.formCardIcon} style={{ background: '#fef2f2' }}>
+            <Icon iconName="TaskManager" style={{ fontSize: 18, color: '#d13438' }} />
+          </div>
+          <div>
+            <h3 className={styles.formCardTitle}>Configure Tasks</h3>
+            <p className={styles.formCardDescription}>
+              Review and customize offboarding tasks before submission
+            </p>
+          </div>
+        </div>
+
+        <div className={`${styles.infoBox} ${styles.infoBoxInfo}`} style={{ marginBottom: 20 }}>
+          <Icon iconName="Info" className={styles.infoBoxIcon} />
+          <div>
+            Based on your selections, <strong>{totalTasks} tasks</strong> will be created for this offboarding.
+            Configure task assignments, due dates, and notifications before proceeding.
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12, marginBottom: 20 }}>
+          <div style={{ padding: 12, background: '#fef7e0', borderRadius: 8, textAlign: 'center' }}>
+            <div style={{ fontSize: 20, fontWeight: 600, color: '#b06000' }}>{selectedAssets.length}</div>
+            <div style={{ fontSize: 11, color: '#5f6368' }}>Asset Returns</div>
+          </div>
+          <div style={{ padding: 12, background: '#e8f0fe', borderRadius: 8, textAlign: 'center' }}>
+            <div style={{ fontSize: 20, fontWeight: 600, color: '#1967d2' }}>{selectedSystems.length}</div>
+            <div style={{ fontSize: 11, color: '#5f6368' }}>System Access</div>
+          </div>
+          <div style={{ padding: 12, background: '#f3e8fd', borderRadius: 8, textAlign: 'center' }}>
+            <div style={{ fontSize: 20, fontWeight: 600, color: '#7627bb' }}>{ktTasks.length + (exitInterviewDate ? 1 : 0)}</div>
+            <div style={{ fontSize: 11, color: '#5f6368' }}>KT & Interview</div>
+          </div>
+          <div style={{ padding: 12, background: '#e8eaed', borderRadius: 8, textAlign: 'center' }}>
+            <div style={{ fontSize: 20, fontWeight: 600, color: '#5f6368' }}>2</div>
+            <div style={{ fontSize: 11, color: '#5f6368' }}>Standard Tasks</div>
+          </div>
+        </div>
+
+        {tasksConfirmed ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 16, background: '#dcfce7', borderRadius: 8 }}>
+            <Icon iconName="CheckMark" style={{ fontSize: 20, color: '#10b981' }} />
+            <div>
+              <div style={{ fontWeight: 600, color: '#166534' }}>Tasks Configured</div>
+              <div style={{ fontSize: 13, color: '#15803d' }}>
+                {configuredTasks.filter(t => t.isConfigured).length} of {configuredTasks.length} tasks customized
+              </div>
+            </div>
+            <button
+              onClick={handleOpenTaskConfig}
+              className={styles.btnSecondary}
+              style={{ marginLeft: 'auto' }}
+            >
+              <Icon iconName="Edit" style={{ fontSize: 12, marginRight: 6 }} />
+              Edit Tasks
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={handleOpenTaskConfig}
+            className={styles.btnPrimary}
+            style={{
+              width: '100%',
+              padding: '14px 20px',
+              fontSize: 15,
+              background: 'linear-gradient(135deg, #d13438 0%, #a52828 100%)',
+              border: 'none',
+              borderRadius: 8,
+              color: 'white',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+            }}
+          >
+            <Icon iconName="TaskManager" style={{ fontSize: 16 }} />
+            Configure Tasks
+          </button>
+        )}
+      </div>
+    );
+  };
+
   const renderReviewStep = (): JSX.Element => {
     const selectedAssets = assetsToReturn.filter(a => a.selected);
     const selectedSystems = systemsToRevoke.filter(s => s.selected);
@@ -887,6 +1220,29 @@ export const OffboardingWizardPage: React.FC<IProps> = ({ sp, onComplete, onCanc
           </div>
         )}
 
+        {/* Configured Tasks Summary */}
+        <div className={styles.formCard}>
+          <div className={styles.formCardHeader}>
+            <div className={styles.formCardIcon} style={{ background: '#fef2f2' }}>
+              <Icon iconName="TaskManager" style={{ fontSize: 18, color: '#d13438' }} />
+            </div>
+            <div>
+              <h3 className={styles.formCardTitle}>Configured Tasks ({configuredTasks.filter(t => t.isSelected).length})</h3>
+            </div>
+          </div>
+          {configuredTasks.filter(t => t.isSelected).slice(0, 5).map((task, i) => (
+            <div key={i} style={{ padding: '6px 0', fontSize: 13, color: '#605e5c', display: 'flex', justifyContent: 'space-between' }}>
+              <span>• {task.taskCode && <span style={{ fontFamily: 'monospace', marginRight: 8 }}>{task.taskCode}</span>}{task.title}</span>
+              <span style={{ color: '#8a8886' }}>{task.roleAssignment || task.assigneeName}</span>
+            </div>
+          ))}
+          {configuredTasks.filter(t => t.isSelected).length > 5 && (
+            <div style={{ padding: '6px 0', fontSize: 13, color: '#d13438', fontStyle: 'italic' }}>
+              + {configuredTasks.filter(t => t.isSelected).length - 5} more tasks...
+            </div>
+          )}
+        </div>
+
         {error && (
           <div className={`${styles.infoBox} ${styles.infoBoxError}`}>
             <Icon iconName="Error" className={styles.infoBoxIcon} />
@@ -930,10 +1286,10 @@ export const OffboardingWizardPage: React.FC<IProps> = ({ sp, onComplete, onCanc
         title="Offboarding Created Successfully!"
         subtitle={`${employeeName} • ${jobTitle} • ${department} • Last Day: ${lastWorkingDate?.toLocaleDateString()}`}
         stats={[
+          { value: configuredTasks.filter(t => t.isSelected).length, label: 'Total Tasks' },
           { value: selectedAssets.length, label: 'Assets' },
           { value: selectedSystems.length, label: 'Systems' },
           { value: transfers.length, label: 'Transfers' },
-          { value: exitInterviewDate ? 1 : 0, label: 'Interview' },
         ]}
         summaryPanels={summaryPanels}
         primaryAction={{ icon: 'UserRemove', tooltip: 'Offboard Another Employee', onClick: () => { setSubmitted(false); setCurrentStep(0); } }}
@@ -945,30 +1301,45 @@ export const OffboardingWizardPage: React.FC<IProps> = ({ sp, onComplete, onCanc
   const progressPercent = Math.round((currentStep / (STEPS.length - 1)) * 100);
 
   return (
-    <JmlWizardLayout
-      theme="leaver"
-      title="Offboarding"
-      subtitle="Employee Exit"
-      steps={STEPS}
-      currentStep={currentStep}
-      onStepClick={setCurrentStep}
-      loading={loadingData}
-      loadingText="Loading employee data..."
-      tips={getTips()}
-      checklist={getChecklist()}
-      progressPercent={progressPercent}
-      progressText={`Step ${currentStep + 1} of ${STEPS.length}`}
-      onBack={() => setCurrentStep(s => s - 1)}
-      onCancel={onCancel}
-      onNext={() => setCurrentStep(s => s + 1)}
-      onSubmit={handleSubmit}
-      nextDisabled={!canProceed()}
-      submitDisabled={submitting}
-      isLastStep={currentStep === STEPS.length - 1}
-      isSubmitting={submitting}
-      submitLabel="Start Offboarding"
-    >
-      {renderStepContent()}
-    </JmlWizardLayout>
+    <div style={{ position: 'relative' }}>
+      <JmlWizardLayout
+        theme="leaver"
+        title="Offboarding"
+        subtitle="Employee Exit"
+        steps={STEPS}
+        currentStep={currentStep}
+        onStepClick={setCurrentStep}
+        loading={loadingData}
+        loadingText="Loading employee data..."
+        tips={getTips()}
+        checklist={getChecklist()}
+        progressPercent={progressPercent}
+        progressText={`Step ${currentStep + 1} of ${STEPS.length}`}
+        onBack={() => setCurrentStep(s => s - 1)}
+        onCancel={onCancel}
+        onNext={() => setCurrentStep(s => s + 1)}
+        onSubmit={handleSubmit}
+        nextDisabled={!canProceed()}
+        submitDisabled={submitting}
+        isLastStep={currentStep === STEPS.length - 1}
+        isSubmitting={submitting}
+        submitLabel="Start Offboarding"
+      >
+        {renderStepContent()}
+      </JmlWizardLayout>
+
+      {/* Task Configuration Overlay - replaces wizard when open */}
+      <TaskConfigurationOverlay
+        sp={sp}
+        context={context}
+        isOpen={showTaskConfig}
+        tasks={configuredTasks}
+        startDate={lastWorkingDate}
+        employeeName={employeeName}
+        processType="offboarding"
+        onBack={handleTaskConfigBack}
+        onConfirm={handleTaskConfigConfirm}
+      />
+    </div>
   );
 };

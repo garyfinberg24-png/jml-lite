@@ -1335,3 +1335,591 @@
 :global(.ms-Checkbox-checkbox) {
   border-radius: 2px !important;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   TASK CONFIGURATION OVERLAY STYLES
+   Full-page overlay that replaces wizard content (Option B implementation)
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.taskConfigOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  display: flex;
+  background: #f5f5f5;
+}
+
+/* ─── Left Sidebar ─── */
+.taskConfigSidebar {
+  width: 280px;
+  flex-shrink: 0;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.taskConfigSidebarHeader {
+  padding: 20px 20px 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.taskConfigBackBtn {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-bottom: 16px;
+}
+
+.taskConfigBackBtn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.taskConfigSidebarTitle {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+}
+
+.taskConfigSidebarSubtitle {
+  font-size: 12px;
+  opacity: 0.85;
+  margin: 0;
+}
+
+/* ─── Task Summary ─── */
+.taskConfigSummary {
+  padding: 20px;
+  text-align: center;
+}
+
+.taskConfigSummaryTotal {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.taskConfigSummaryNumber {
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.taskConfigSummaryLabel {
+  font-size: 12px;
+  opacity: 0.85;
+  margin-top: 4px;
+}
+
+/* ─── Category Breakdown ─── */
+.taskConfigCategories {
+  padding: 0 20px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.taskConfigCategoriesTitle {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.7;
+  margin-bottom: 12px;
+}
+
+.taskConfigCategoryItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.taskConfigCategoryCount {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ─── Progress ─── */
+.taskConfigProgress {
+  padding: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.taskConfigProgressLabel {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.7;
+  margin-bottom: 8px;
+}
+
+.taskConfigProgressBar {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.taskConfigProgressFill {
+  height: 100%;
+  background: white;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.taskConfigProgressText {
+  font-size: 12px;
+  opacity: 0.85;
+  margin-top: 8px;
+}
+
+/* ─── Center Content Area ─── */
+.taskConfigCenter {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: #f5f5f5;
+}
+
+/* ─── Header ─── */
+.taskConfigHeader {
+  background: white;
+  padding: 16px 24px;
+  border-bottom: 1px solid #edebe9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.taskConfigHeaderLeft {
+  flex-shrink: 0;
+}
+
+.taskConfigTitle {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  color: #1a1a1a;
+}
+
+.taskConfigSubtitle {
+  font-size: 13px;
+  color: #605e5c;
+  margin: 0;
+}
+
+.taskConfigHeaderRight {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ─── Filter Chips ─── */
+.taskConfigFilterChips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.taskConfigChip {
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid #e1dfdd;
+  background: white;
+  color: #323130;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.taskConfigChip:hover {
+  background: #f3f2f1;
+}
+
+.taskConfigChipActive {
+  color: white;
+  border-color: transparent;
+}
+
+/* ─── Split Content Area ─── */
+.taskConfigContent {
+  flex: 1;
+  display: flex;
+  gap: 0;
+  overflow: hidden;
+}
+
+/* ─── Task List Panel ─── */
+.taskConfigListPanel {
+  width: 380px;
+  flex-shrink: 0;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #edebe9;
+}
+
+.taskConfigListHeader {
+  padding: 16px;
+  border-bottom: 1px solid #edebe9;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.taskConfigListActions {
+  display: flex;
+  gap: 8px;
+}
+
+.taskConfigBulkBtn {
+  display: flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid #e1dfdd;
+  background: white;
+  color: #323130;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.taskConfigBulkBtn:hover {
+  background: #f3f2f1;
+}
+
+.taskConfigBulkBtnActive {
+  background: #005BAA;
+  color: white;
+  border-color: #005BAA;
+}
+
+.taskConfigBulkActions {
+  padding: 12px 16px;
+  background: #f3f2f1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #edebe9;
+}
+
+.taskConfigBulkCount {
+  font-size: 13px;
+  font-weight: 500;
+  color: #323130;
+}
+
+.taskConfigBulkSelect {
+  padding: 8px 16px;
+  background: #faf9f8;
+  border-bottom: 1px solid #edebe9;
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+}
+
+.taskConfigBulkSelect button {
+  background: none;
+  border: none;
+  color: #005BAA;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.taskConfigBulkSelect button:hover {
+  text-decoration: underline;
+}
+
+/* ─── Task List ─── */
+.taskConfigList {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.taskConfigListEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #8a8886;
+  font-size: 14px;
+}
+
+/* ─── Task Item ─── */
+.taskConfigItem {
+  display: flex;
+  align-items: flex-start;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f3f2f1;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border-left: 3px solid transparent;
+}
+
+.taskConfigItem:hover {
+  background: #faf9f8;
+}
+
+.taskConfigItemSelected {
+  background: #f0f7ff;
+  border-left-color: #005BAA;
+}
+
+.taskConfigItemContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.taskConfigItemTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.taskConfigTaskCode {
+  display: inline-block;
+  padding: 2px 6px;
+  background: #e1dfdd;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: 'Consolas', 'Courier New', monospace;
+  color: #605e5c;
+}
+
+.taskConfigItemName {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1a1a1a;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.taskConfigItemMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.taskConfigCategoryBadge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 500;
+  border: 1px solid;
+}
+
+.taskConfigItemAssignment {
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+  color: #605e5c;
+}
+
+.taskConfigItemTiming {
+  font-size: 11px;
+  color: #8a8886;
+}
+
+/* ─── Task Detail Panel ─── */
+.taskConfigDetailPanel {
+  flex: 1;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.taskConfigDetailEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #8a8886;
+  font-size: 14px;
+}
+
+.taskConfigDetail {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+/* ─── Task Detail Header ─── */
+.taskConfigDetailHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #edebe9;
+}
+
+.taskConfigDetailIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid;
+  flex-shrink: 0;
+}
+
+.taskConfigDetailInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.taskConfigDetailTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ─── Sections ─── */
+.taskConfigSection {
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #f3f2f1;
+}
+
+.taskConfigSection:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.taskConfigSectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.taskConfigFormRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.taskConfigDueDate {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: #f0f7ff;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #323130;
+}
+
+.taskConfigDueDateNote {
+  color: #605e5c;
+  font-weight: normal;
+}
+
+.taskConfigToggles {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ─── Footer ─── */
+.taskConfigFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: white;
+  border-top: 1px solid #edebe9;
+  flex-shrink: 0;
+}
+
+.taskConfigFooterLeft {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  color: #323130;
+}
+
+.taskConfigFooterDefaults {
+  color: #8a8886;
+  margin-left: 6px;
+}
+
+.taskConfigFooterRight {
+  display: flex;
+  gap: 12px;
+}
+
+.taskConfigBtnSecondary {
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid #e1dfdd;
+  background: white;
+  color: #323130;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.taskConfigBtnSecondary:hover {
+  background: #f3f2f1;
+}
+
+.taskConfigBtnPrimary {
+  padding: 10px 24px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  color: white;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 6px rgba(0, 91, 170, 0.2);
+}
+
+.taskConfigBtnPrimary:hover {
+  opacity: 0.95;
+  box-shadow: 0 4px 12px rgba(0, 91, 170, 0.3);
+}

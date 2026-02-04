@@ -1,5 +1,28 @@
 # JML Lite - Claude Code Context
 
+## ⚠️ CRITICAL: PROJECT BOUNDARIES (READ FIRST)
+
+```text
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  WORKING FOLDER: C:\Projects\SPFx\RecruitmentManager\jml-lite                ║
+║                                                                              ║
+║  This is the ONLY folder Claude should EVER access for this project.        ║
+║  The parent folder name "RecruitmentManager" is misleading - ignore it.     ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+```
+
+### 🚫 FORBIDDEN PATHS - NEVER ACCESS THESE
+
+| Path | Why Forbidden |
+| ---- | ------------- |
+| `C:\Projects\SPFx\RecruitmentManager\` | Parent folder - contains unrelated projects |
+| `C:\Projects\SPFx\RecruitmentManager\recruitment-manager\` | Separate Recruitment Manager app |
+| `C:\Projects\SPFx\jml-lite\` | Outdated/different copy - NOT our project |
+
+**If the user asks you to reference another project for comparison, they will EXPLICITLY tell you.**
+
+---
+
 ## Instructions for Claude
 
 1. **Always read CLAUDE.md before you do anything**
@@ -7,6 +30,7 @@
 3. **Be systematic in your planning, and execution**
 4. **After you complete a task, always validate the result**
 5. **We are working in https://mf7m.sharepoint.com/sites/JMLLite**
+6. **NEVER access folders outside `C:\Projects\SPFx\RecruitmentManager\jml-lite\`**
 
 ## Project Overview
 
@@ -174,6 +198,12 @@ gulp clean && gulp bundle --ship && gulp package-solution --ship
 3. Audit logging is fire-and-forget (never throws)
 4. PnP/SP v3: Use `Promise.all()` for batch operations (no `createBatch`)
 
+### PowerShell Scripts
+
+1. **Do NOT include `Connect-PnPOnline` or `Disconnect-PnPOnline`** in scripts — the user will already be connected to the SharePoint site before running any scripts
+2. Scripts assume the PnP PowerShell context is already established
+3. Focus on the actual operations (list creation, field provisioning, etc.)
+
 ### Role Hierarchy
 - **User** (Level 0): Dashboard, My Onboarding, Search, Help
 - **Manager** (Level 1): + Onboarding, Transfers, Offboarding, Approvals, Analytics
@@ -277,5 +307,202 @@ SP Groups: `JML Admin`, `JML Manager`
 - Plus 60+ new/modified files
 
 ### Build Status
+
 - Last successful build: 2026-02-04
 - Package: `sharepoint/solution/jml-lite.sppkg`
+
+---
+
+## Session Recovery Guide (For New Claude Agents)
+
+When starting a new session and the user says "continue" or "pick up where we left off":
+
+### Step 1: Check Session State Above
+
+The "Session State" section contains current work status, known issues, and pending features.
+
+### Step 2: Ask the User These Questions
+
+1. **Which component were you working on?** (e.g., OnboardingWizard, MoverTracker, Dashboard)
+2. **What specific task needs to be done?** (e.g., "fix validation on step 3", "add new field")
+3. **What's currently broken or incomplete?** (e.g., "form doesn't save", "styling is wrong")
+
+### Step 3: Read Relevant Files
+
+Don't ask the user to explain code - read the files directly:
+
+```text
+Key entry points:
+- src/webparts/dwxJmlLite/DwxJmlLiteWebPart.ts (main webpart)
+- src/webparts/dwxJmlLite/components/DwxJmlLite.tsx (main router)
+- src/webparts/dwxJmlLite/components/JML/ (all JML components)
+- src/webparts/dwxJmlLite/services/ (all services)
+```
+
+### Tips for Efficient Context Building
+
+- **Don't ask users to paste large code blocks** - read files yourself
+- **Don't attach large images** - keep mockups under 1MB or describe in text
+- **Keep prompts focused** - "fix X in Y file" is better than long explanations
+- **Use this CLAUDE.md** - it has the full architecture and conventions
+
+### Quick Commands for Context
+
+```bash
+# See project structure
+ls -la C:/Projects/SPFx/RecruitmentManager/jml-lite/src/webparts/dwxJmlLite/components/JML/
+
+# Check recent changes
+cd C:/Projects/SPFx/RecruitmentManager/jml-lite && git log --oneline -10
+
+# Find a component
+grep -r "ComponentName" C:/Projects/SPFx/RecruitmentManager/jml-lite/src/
+```
+
+---
+
+## Work Log (Update This Section Daily)
+
+Track what was worked on each session so new agents can pick up quickly.
+
+| Date | What Was Done | Next Steps |
+| ---- | ------------- | ---------- |
+| 2026-02-04 | Updated CLAUDE.md with session recovery guide | Continue feature development |
+| 2026-02-04 | Task Configuration Panel, Notification System, Document Service | Test Step 7 visibility, document uploads |
+| 2026-02-03 | Initial v1.1.0 release with 60+ new files | Deploy and test on SharePoint |
+
+**To update:** Add a new row at the top with today's date when starting a session.
+
+---
+
+## UI Mockups Reference
+
+All mockups are in: `C:\Projects\SPFx\RecruitmentManager\jml-lite\mockups\`
+
+| Mockup File | Purpose |
+| ----------- | ------- |
+| `onboarding-wizard-interactive.html` | Full wizard flow reference |
+| `categorized-wizard-lists.html` | Task categorization UI |
+| `configure-tasks-placement-mockups.html` | Step 7 task configuration |
+| `dashboard-illustration-mockup.html` | Isometric 3D cards design |
+| `dashboard-v1-hero-cards.html` through `v5` | Dashboard design iterations |
+
+**To view:** Open HTML files directly in browser - they're self-contained.
+
+---
+
+## Common Errors & Fixes
+
+### SCSS/Styling Issues
+
+| Problem | Solution |
+| ------- | -------- |
+| Fluent UI styles not applying | Use `:global(.ms-ClassName)` wrapper |
+| Fluent v9 borders not overriding | Add `!important` to border properties |
+| Panel header showing | Add `.ms-Panel-headerText { display: none }` |
+| DialogBody layout broken | Add `display: flex` override |
+| Module CSS not found | NEVER use `.module.css` - always `.module.scss` |
+
+### PnP/SP Issues
+
+| Problem | Solution |
+| ------- | -------- |
+| Batch operations fail | PnP v3 removed `createBatch()` - use `Promise.all()` |
+| SPFI not initialized | Call `getSP()` singleton, ensure context passed |
+| List not found | Check `JML_LISTS` constants match actual list names |
+
+### Build Issues
+
+| Problem | Solution |
+| ------- | -------- |
+| TypeScript errors on build | Run `gulp clean` first, then rebuild |
+| Package won't deploy | Check `sharepoint/solution/` for `.sppkg` file |
+| "Module not found" | Check import paths use correct casing |
+
+---
+
+## Test & Validation Commands
+
+```bash
+# Build for development (with source maps)
+cd C:/Projects/SPFx/RecruitmentManager/jml-lite && gulp build
+
+# Build for production
+cd C:/Projects/SPFx/RecruitmentManager/jml-lite && gulp clean && gulp bundle --ship && gulp package-solution --ship
+
+# Serve locally (requires workbench)
+cd C:/Projects/SPFx/RecruitmentManager/jml-lite && gulp serve
+
+# Check TypeScript errors only (no build)
+cd C:/Projects/SPFx/RecruitmentManager/jml-lite && npx tsc --noEmit
+
+# Find TODO comments in code
+grep -r "TODO" C:/Projects/SPFx/RecruitmentManager/jml-lite/src/ --include="*.ts" --include="*.tsx"
+```
+
+---
+
+## Deployment Checklist
+
+### Pre-Deployment
+
+- [ ] `gulp clean && gulp bundle --ship` succeeds
+- [ ] `gulp package-solution --ship` creates `.sppkg`
+- [ ] No TypeScript errors (`npx tsc --noEmit`)
+- [ ] Test locally in workbench if possible
+
+### Deploy to SharePoint
+
+1. Go to: [App Catalog](https://mf7m.sharepoint.com/sites/appcatalog)
+2. Upload: `sharepoint/solution/jml-lite.sppkg`
+3. Check "Make this solution available to all sites" if tenant-wide
+4. Click Deploy
+5. Go to: [JML Lite Site](https://mf7m.sharepoint.com/sites/JMLLite)
+6. Add the webpart to a page to test
+
+### Post-Deployment Validation
+
+- [ ] Webpart loads without errors
+- [ ] Navigation works (all views accessible)
+- [ ] Data loads from SharePoint lists
+- [ ] Forms save correctly
+- [ ] Role-based filtering works (User/Manager/Admin)
+
+---
+
+## Key File Locations Quick Reference
+
+```text
+PROJECT ROOT: C:\Projects\SPFx\RecruitmentManager\jml-lite\
+
+src/
+├── webparts/dwxJmlLite/
+│   ├── DwxJmlLiteWebPart.ts          # Main webpart entry
+│   ├── components/
+│   │   ├── DwxJmlLite.tsx            # Main router component
+│   │   ├── JML/                       # All JML components
+│   │   │   ├── Onboarding/           # Joiner components
+│   │   │   ├── Mover/                # Transfer components
+│   │   │   ├── Offboarding/          # Leaver components
+│   │   │   ├── Shared/               # Shared components
+│   │   │   └── Admin/                # Admin components
+│   │   └── Common/                    # Common UI components
+│   ├── services/                      # All services
+│   │   ├── OnboardingService.ts
+│   │   ├── MoverService.ts
+│   │   ├── OffboardingService.ts
+│   │   ├── DocumentService.ts
+│   │   └── ...
+│   └── models/                        # TypeScript interfaces
+│       └── IJmlModels.ts
+├── styles/                            # Global styles
+└── assets/                            # Images, icons
+
+scripts/
+└── Deploy-JMLLists.ps1               # PowerShell to create SP lists
+
+mockups/                               # HTML mockup files
+
+sharepoint/solution/
+└── jml-lite.sppkg                    # Deployable package
+```

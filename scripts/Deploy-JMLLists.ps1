@@ -70,6 +70,8 @@ Ensure-Field "JML_OnboardingTasks" "ActualHours" "Number"
 Ensure-Field "JML_OnboardingTasks" "DocumentUrl" "Text"
 Ensure-Field "JML_OnboardingTasks" "SortOrder" "Number"
 Ensure-Field "JML_OnboardingTasks" "Notes" "Note"
+Ensure-Field "JML_OnboardingTasks" "DependsOnTaskIds" "Note"
+Ensure-Field "JML_OnboardingTasks" "BlockedUntilComplete" "Boolean"
 
 # ══════════════════════════════════════════════════════════════════
 # JML_OnboardingTemplates — Reusable onboarding task templates

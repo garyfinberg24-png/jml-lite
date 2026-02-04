@@ -1,6 +1,7 @@
 // Teams Notification Service — Push notifications for tasks and approvals
 // Uses Microsoft Graph API to send notifications to MS Teams users
 // Requires API permissions: ChatMessage.Send, User.Read.All
+// Note: @pnp/graph/chats import removed - service falls back to webhook/audit logging
 
 import { SPFI } from '@pnp/sp';
 import '@pnp/sp/webs';
@@ -8,8 +9,9 @@ import '@pnp/sp/lists';
 import '@pnp/sp/items';
 import { graphfi, SPFx as graphSPFx } from '@pnp/graph';
 import '@pnp/graph/users';
-import '@pnp/graph/teams';
-import '@pnp/graph/chats';
+// Note: Teams and Chats Graph API modules not available in current PnP version
+// import '@pnp/graph/teams';
+// import '@pnp/graph/chats';
 import { JML_LISTS } from '../constants/SharePointListNames';
 
 export interface ITeamsNotification {

@@ -1,14 +1,19 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
 import { SPFI } from '@pnp/sp';
+import { WebPartContext } from '@microsoft/sp-webpart-base';
 import { TextField } from '@fluentui/react/lib/TextField';
 import { Dropdown, IDropdownOption } from '@fluentui/react/lib/Dropdown';
 import { DatePicker } from '@fluentui/react/lib/DatePicker';
 // Toggle removed - using checkboxes in accordion pattern
 import { Icon } from '@fluentui/react/lib/Icon';
 import { JmlWizardLayout, JmlWizardSuccess, IJmlWizardStep, IJmlWizardTip, IJmlWizardChecklistItem, ISummaryPanel } from './JmlWizardLayout';
+import { TaskConfigurationOverlay, IConfigurableTask } from './TaskConfigurationOverlay';
 import { MoverService } from '../services/MoverService';
 import { OnboardingConfigService } from '../services/OnboardingConfigService';
+import { GraphNotificationService } from '../services/GraphNotificationService';
+import { TeamsNotificationService } from '../services/TeamsNotificationService';
+import { InAppNotificationService } from '../services/InAppNotificationService';
 import {
   MoverStatus, MoverType, MoverTaskCategory,
   MoverTaskStatus, SystemAccessAction, IEligibleEmployeeForMove
@@ -18,6 +23,7 @@ import styles from '../styles/JmlWizard.module.scss';
 
 interface IProps {
   sp: SPFI;
+  context?: WebPartContext;
   onComplete: () => void;
   onCancel: () => void;
 }
@@ -28,6 +34,7 @@ const STEPS: IJmlWizardStep[] = [
   { key: 'new', label: 'New Position', icon: 'MoveToFolder' },
   { key: 'systems', label: 'System Access', icon: 'Permissions' },
   { key: 'training', label: 'Training', icon: 'Education' },
+  { key: 'tasks', label: 'Configure Tasks', icon: 'TaskManager' },
   { key: 'review', label: 'Review & Submit', icon: 'CheckList' },
 ];
 
@@ -49,13 +56,18 @@ const SYSTEM_ACTION_OPTIONS: IDropdownOption[] = [
   { key: SystemAccessAction.Modify, text: 'Modify Role' },
 ];
 
-export const MoverWizardPage: React.FC<IProps> = ({ sp, onComplete, onCancel }) => {
+export const MoverWizardPage: React.FC<IProps> = ({ sp, context, onComplete, onCancel }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [employees, setEmployees] = useState<IEligibleEmployeeForMove[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
+
+  // Task configuration state
+  const [showTaskConfig, setShowTaskConfig] = useState(false);
+  const [configuredTasks, setConfiguredTasks] = useState<IConfigurableTask[]>([]);
+  const [tasksConfirmed, setTasksConfirmed] = useState(false);
 
   // Wizard data
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | null>(null);
@@ -167,9 +179,117 @@ export const MoverWizardPage: React.FC<IProps> = ({ sp, onComplete, onCancel }) 
       case 2: return newJobTitle.trim() !== '' && effectiveDate !== undefined;
       case 3: return true;
       case 4: return true;
-      case 5: return true;
+      case 5: return tasksConfirmed; // Must confirm tasks before review
+      case 6: return true;
       default: return false;
     }
+  };
+
+  // Build tasks from selections for TaskConfigurationOverlay
+  const buildTasksFromSelections = (): IConfigurableTask[] => {
+    const tasks: IConfigurableTask[] = [];
+    let taskIdCounter = 1;
+
+    // System access change tasks
+    const selectedSystems = systemAccessChanges.filter(s => s.selected && s.action !== SystemAccessAction.NoChange);
+    for (const sys of selectedSystems) {
+      tasks.push({
+        id: `sys-${taskIdCounter++}`,
+        title: `${sys.action} - ${sys.systemName}${sys.newRole ? ` (→ ${sys.newRole})` : ''}`,
+        category: 'System Access',
+        sourceType: 'system',
+        sourceId: sys.systemAccessTypeId,
+        assignmentType: 'role',
+        roleAssignment: 'IT Team',
+        daysOffset: 0,
+        offsetType: 'on-start',
+        priority: 'High',
+        requiresApproval: false,
+        sendReminder: true,
+        reminderDaysBefore: 1,
+        notifyOnComplete: true,
+        notifyAssigneeEmail: true,
+        notifyTeamsChat: false,
+        isSelected: true,
+        isConfigured: false,
+      });
+    }
+
+    // Training tasks
+    const selectedTraining = trainingRequired.filter(t => t.selected);
+    for (const training of selectedTraining) {
+      tasks.push({
+        id: `trn-${taskIdCounter++}`,
+        title: `Complete: ${training.courseName}`,
+        category: 'Training',
+        sourceType: 'training',
+        sourceId: training.trainingCourseId,
+        assignmentType: 'manager',
+        daysOffset: 7,
+        offsetType: 'after-start',
+        priority: 'Medium',
+        requiresApproval: false,
+        sendReminder: true,
+        reminderDaysBefore: 2,
+        notifyOnComplete: true,
+        notifyAssigneeEmail: true,
+        notifyTeamsChat: false,
+        isSelected: true,
+        isConfigured: false,
+      });
+    }
+
+    // Standard transfer tasks
+    const standardTasks = [
+      { title: 'Update organizational chart', category: 'Documentation' as const, priority: 'Medium' as const, role: 'HR Team' },
+      { title: 'Update internal directory', category: 'Documentation' as const, priority: 'Medium' as const, role: 'HR Team' },
+      { title: 'Team introduction meeting', category: 'Orientation' as const, priority: 'High' as const, role: 'Department Head' },
+      { title: 'Knowledge transfer sessions', category: 'General' as const, priority: 'High' as const, role: 'Department Head' },
+      { title: 'Update payroll/HR records', category: 'Documentation' as const, priority: 'High' as const, role: 'HR Team' },
+    ];
+
+    for (const task of standardTasks) {
+      tasks.push({
+        id: `std-${taskIdCounter++}`,
+        title: task.title,
+        category: task.category,
+        sourceType: 'custom',
+        assignmentType: 'role',
+        roleAssignment: task.role,
+        daysOffset: 0,
+        offsetType: 'on-start',
+        priority: task.priority,
+        requiresApproval: false,
+        sendReminder: true,
+        reminderDaysBefore: 1,
+        notifyOnComplete: true,
+        notifyAssigneeEmail: true,
+        notifyTeamsChat: false,
+        isSelected: true,
+        isConfigured: false,
+      });
+    }
+
+    return tasks;
+  };
+
+  // Handle opening task configuration
+  const handleOpenTaskConfig = (): void => {
+    const tasks = buildTasksFromSelections();
+    setConfiguredTasks(tasks);
+    setShowTaskConfig(true);
+  };
+
+  // Handle task configuration confirmation
+  const handleTaskConfigConfirm = (tasks: IConfigurableTask[]): void => {
+    setConfiguredTasks(tasks);
+    setTasksConfirmed(true);
+    setShowTaskConfig(false);
+  };
+
+  // Handle going back from task config
+  const handleTaskConfigBack = (): void => {
+    setShowTaskConfig(false);
   };
 
   const handleSubmit = async (): Promise<void> => {
@@ -205,6 +325,7 @@ export const MoverWizardPage: React.FC<IProps> = ({ sp, onComplete, onCancel }) 
         throw new Error('Failed to create mover record');
       }
 
+      // Create system access records
       const selectedSystems = systemAccessChanges.filter(s => s.selected && s.action !== SystemAccessAction.NoChange);
       for (const sys of selectedSystems) {
         await svc.createMoverSystemAccess({
@@ -216,52 +337,127 @@ export const MoverWizardPage: React.FC<IProps> = ({ sp, onComplete, onCancel }) 
           NewRole: sys.newRole,
           Status: MoverTaskStatus.Pending,
         });
-
-        await svc.createMoverTask({
-          MoverId: mover.Id,
-          Title: `${sys.action} - ${sys.systemName}`,
-          Category: MoverTaskCategory.SystemAccess,
-          Status: MoverTaskStatus.Pending,
-          Priority: 'High',
-          SortOrder: 10,
-          RelatedSystemAccessId: sys.systemAccessTypeId,
-          SystemAccessAction: sys.action,
-        });
       }
 
-      const selectedTraining = trainingRequired.filter(t => t.selected);
-      let sortOrder = 20;
-      for (const training of selectedTraining) {
-        await svc.createMoverTask({
-          MoverId: mover.Id,
-          Title: `Complete: ${training.courseName}`,
-          Category: MoverTaskCategory.Training,
-          Status: MoverTaskStatus.Pending,
-          Priority: 'Medium',
-          SortOrder: sortOrder++,
-        });
-      }
+      // Map category from IConfigurableTask to MoverTaskCategory
+      const mapCategory = (cat: string): MoverTaskCategory => {
+        switch (cat) {
+          case 'System Access': return MoverTaskCategory.SystemAccess;
+          case 'Training': return MoverTaskCategory.Training;
+          case 'Documentation': return MoverTaskCategory.Documentation;
+          case 'Orientation': return MoverTaskCategory.Orientation;
+          default: return MoverTaskCategory.KnowledgeTransfer;
+        }
+      };
 
-      const standardTasks = [
-        { title: 'Update organizational chart', category: MoverTaskCategory.Documentation, priority: 'Medium' as const },
-        { title: 'Update internal directory', category: MoverTaskCategory.Documentation, priority: 'Medium' as const },
-        { title: 'Team introduction meeting', category: MoverTaskCategory.Orientation, priority: 'High' as const },
-        { title: 'Knowledge transfer sessions', category: MoverTaskCategory.KnowledgeTransfer, priority: 'High' as const },
-        { title: 'Update payroll/HR records', category: MoverTaskCategory.Documentation, priority: 'High' as const },
-      ];
+      // Calculate due date from task configuration
+      const calculateDueDate = (task: IConfigurableTask): Date => {
+        const date = new Date(effectiveDate!);
+        if (task.offsetType === 'before-start') {
+          date.setDate(date.getDate() - Math.abs(task.daysOffset));
+        } else if (task.offsetType === 'after-start') {
+          date.setDate(date.getDate() + Math.abs(task.daysOffset));
+        }
+        return date;
+      };
 
-      for (const task of standardTasks) {
-        await svc.createMoverTask({
+      // Create tasks from configured tasks
+      const createdTasks: Array<{ id: number; task: IConfigurableTask }> = [];
+      let sortOrder = 1;
+
+      for (const task of configuredTasks.filter(t => t.isSelected)) {
+        // Map priority - some interfaces only support Low/Medium/High
+        const taskPriority: 'Low' | 'Medium' | 'High' = task.priority === 'Critical' ? 'High' : task.priority;
+
+        const createdTask = await svc.createMoverTask({
           MoverId: mover.Id,
           Title: task.title,
-          Category: task.category,
+          Category: mapCategory(task.category),
           Status: MoverTaskStatus.Pending,
-          Priority: task.priority,
+          Priority: taskPriority,
           SortOrder: sortOrder++,
+          DueDate: calculateDueDate(task),
+          AssignedToId: task.assigneeId,
+          Notes: task.instructions ? `${task.instructions}\n\nAssigned to: ${task.assigneeName || task.roleAssignment || 'Unassigned'}` : `Assigned to: ${task.assigneeName || task.roleAssignment || 'Unassigned'}`,
+          RelatedSystemAccessId: task.sourceType === 'system' ? task.sourceId : undefined,
         });
+
+        if (createdTask?.Id) {
+          createdTasks.push({ id: createdTask.Id, task });
+        }
       }
 
       await svc.recalculateProgress(mover.Id);
+
+      // ═══════════════════════════════════════════════════════════════════════════════
+      // SEND NOTIFICATIONS (fire-and-forget to avoid blocking submission)
+      // ═══════════════════════════════════════════════════════════════════════════════
+      if (context) {
+        const currentUserEmail = context.pageContext?.user?.email || '';
+        const graphNotificationService = new GraphNotificationService(sp, context);
+        const teamsNotificationService = new TeamsNotificationService(sp, context);
+        const inAppNotificationService = new InAppNotificationService(sp, currentUserEmail);
+
+        for (const { id: taskId, task } of createdTasks) {
+          if (task.assigneeEmail) {
+            const dueDate = calculateDueDate(task);
+            const actionUrl = `${window.location.origin}${window.location.pathname}?view=movers&id=${mover.Id}`;
+
+            // Map priority - ITaskNotification doesn't support 'Critical'
+            const mappedPriority: 'Low' | 'Medium' | 'High' = task.priority === 'Critical' ? 'High' : task.priority;
+
+            // 1. EMAIL NOTIFICATION via Graph API
+            if (task.notifyAssigneeEmail !== false) {
+              const emailNotification = {
+                taskTitle: task.title,
+                taskCategory: task.category,
+                employeeName: employeeName,
+                processType: 'Transfer' as const,
+                dueDate: dueDate,
+                assignedTo: {
+                  email: task.assigneeEmail,
+                  displayName: task.assigneeName || task.assigneeEmail,
+                },
+                actionUrl: actionUrl,
+              };
+
+              graphNotificationService.notifyTaskAssigned(emailNotification).catch(err => {
+                console.warn('[MoverWizardPage] Email notification failed (non-blocking):', err);
+              });
+            }
+
+            // 2. TEAMS NOTIFICATION
+            if (task.notifyTeamsChat) {
+              const teamsNotification = {
+                taskId: taskId,
+                taskTitle: task.title,
+                category: 'Mover' as const,
+                employeeName: employeeName,
+                assignedToEmail: task.assigneeEmail,
+                dueDate: dueDate,
+                priority: mappedPriority,
+                actionUrl: actionUrl,
+              };
+
+              teamsNotificationService.sendTaskNotification(teamsNotification).catch(err => {
+                console.warn('[MoverWizardPage] Teams notification failed (non-blocking):', err);
+              });
+            }
+
+            // 3. IN-APP NOTIFICATION
+            inAppNotificationService.notifyTaskAssigned(
+              task.assigneeEmail,
+              task.title,
+              employeeName,
+              'Transfer',
+              taskId,
+              actionUrl
+            ).catch(err => {
+              console.warn('[MoverWizardPage] In-app notification failed (non-blocking):', err);
+            });
+          }
+        }
+      }
 
       setCreatedMover({
         name: employeeName,
@@ -305,8 +501,13 @@ export const MoverWizardPage: React.FC<IProps> = ({ sp, onComplete, onCancel }) 
         ];
       case 5:
         return [
+          { icon: 'TaskManager', title: 'Configure Tasks', content: 'Customize task assignments, due dates, and notification settings.' },
+          { icon: 'Contact', title: 'Assignees', content: 'Assign tasks to specific people or teams for accountability.' },
+        ];
+      case 6:
+        return [
           { icon: 'CheckList', title: 'Review', content: 'Review all transfer details before submitting.' },
-          { icon: 'Warning', title: 'Important', content: 'Standard transfer tasks will be created automatically.' },
+          { icon: 'Warning', title: 'Important', content: 'Tasks will be created with your configured settings.' },
         ];
       default:
         return [];
@@ -319,6 +520,7 @@ export const MoverWizardPage: React.FC<IProps> = ({ sp, onComplete, onCancel }) 
     { label: 'New position defined', completed: newJobTitle.trim() !== '' && effectiveDate !== undefined },
     { label: 'System access reviewed', completed: currentStep > 3 },
     { label: 'Training considered', completed: currentStep > 4 },
+    { label: 'Tasks configured', completed: tasksConfirmed },
   ];
 
   const renderStepContent = (): JSX.Element => {
@@ -328,7 +530,8 @@ export const MoverWizardPage: React.FC<IProps> = ({ sp, onComplete, onCancel }) 
       case 2: return renderNewPositionStep();
       case 3: return renderSystemAccessStep();
       case 4: return renderTrainingStep();
-      case 5: return renderReviewStep();
+      case 5: return renderTasksStep();
+      case 6: return renderReviewStep();
       default: return <div />;
     }
   };
@@ -719,6 +922,97 @@ export const MoverWizardPage: React.FC<IProps> = ({ sp, onComplete, onCancel }) 
     );
   };
 
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // TASKS STEP - Configure Tasks with overlay
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  const renderTasksStep = (): JSX.Element => {
+    const selectedSystems = systemAccessChanges.filter(s => s.selected && s.action !== SystemAccessAction.NoChange);
+    const selectedTrainingItems = trainingRequired.filter(t => t.selected);
+    const totalTasks = selectedSystems.length + selectedTrainingItems.length + 5; // 5 standard tasks
+
+    return (
+      <div className={styles.formCard}>
+        <div className={styles.formCardHeader}>
+          <div className={styles.formCardIcon} style={{ background: '#fff7ed' }}>
+            <Icon iconName="TaskManager" style={{ fontSize: 18, color: '#ea580c' }} />
+          </div>
+          <div>
+            <h3 className={styles.formCardTitle}>Configure Tasks</h3>
+            <p className={styles.formCardDescription}>
+              Review and customize transfer tasks before submission
+            </p>
+          </div>
+        </div>
+
+        <div className={`${styles.infoBox} ${styles.infoBoxInfo}`} style={{ marginBottom: 20 }}>
+          <Icon iconName="Info" className={styles.infoBoxIcon} />
+          <div>
+            Based on your selections, <strong>{totalTasks} tasks</strong> will be created for this transfer.
+            Configure task assignments, due dates, and notifications before proceeding.
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 20 }}>
+          <div style={{ padding: 16, background: '#e8f0fe', borderRadius: 8, textAlign: 'center' }}>
+            <div style={{ fontSize: 24, fontWeight: 600, color: '#1967d2' }}>{selectedSystems.length}</div>
+            <div style={{ fontSize: 12, color: '#5f6368' }}>System Access Tasks</div>
+          </div>
+          <div style={{ padding: 16, background: '#fce8e6', borderRadius: 8, textAlign: 'center' }}>
+            <div style={{ fontSize: 24, fontWeight: 600, color: '#c5221f' }}>{selectedTrainingItems.length}</div>
+            <div style={{ fontSize: 12, color: '#5f6368' }}>Training Tasks</div>
+          </div>
+          <div style={{ padding: 16, background: '#f3e8fd', borderRadius: 8, textAlign: 'center' }}>
+            <div style={{ fontSize: 24, fontWeight: 600, color: '#7627bb' }}>5</div>
+            <div style={{ fontSize: 12, color: '#5f6368' }}>Standard Tasks</div>
+          </div>
+        </div>
+
+        {tasksConfirmed ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 16, background: '#dcfce7', borderRadius: 8 }}>
+            <Icon iconName="CheckMark" style={{ fontSize: 20, color: '#10b981' }} />
+            <div>
+              <div style={{ fontWeight: 600, color: '#166534' }}>Tasks Configured</div>
+              <div style={{ fontSize: 13, color: '#15803d' }}>
+                {configuredTasks.filter(t => t.isConfigured).length} of {configuredTasks.length} tasks customized
+              </div>
+            </div>
+            <button
+              onClick={handleOpenTaskConfig}
+              className={styles.btnSecondary}
+              style={{ marginLeft: 'auto' }}
+            >
+              <Icon iconName="Edit" style={{ fontSize: 12, marginRight: 6 }} />
+              Edit Tasks
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={handleOpenTaskConfig}
+            className={styles.btnPrimary}
+            style={{
+              width: '100%',
+              padding: '14px 20px',
+              fontSize: 15,
+              background: 'linear-gradient(135deg, #ea580c 0%, #c2410c 100%)',
+              border: 'none',
+              borderRadius: 8,
+              color: 'white',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+            }}
+          >
+            <Icon iconName="TaskManager" style={{ fontSize: 16 }} />
+            Configure Tasks
+          </button>
+        )}
+      </div>
+    );
+  };
+
   const renderReviewStep = (): JSX.Element => {
     const selectedSystems = systemAccessChanges.filter(s => s.selected && s.action !== SystemAccessAction.NoChange);
     const selectedTrainingItems = trainingRequired.filter(t => t.selected);
@@ -802,6 +1096,29 @@ export const MoverWizardPage: React.FC<IProps> = ({ sp, onComplete, onCancel }) 
           </div>
         )}
 
+        {/* Configured Tasks Summary */}
+        <div className={styles.formCard}>
+          <div className={styles.formCardHeader}>
+            <div className={styles.formCardIcon} style={{ background: '#fff7ed' }}>
+              <Icon iconName="TaskManager" style={{ fontSize: 18, color: '#ea580c' }} />
+            </div>
+            <div>
+              <h3 className={styles.formCardTitle}>Configured Tasks ({configuredTasks.filter(t => t.isSelected).length})</h3>
+            </div>
+          </div>
+          {configuredTasks.filter(t => t.isSelected).slice(0, 5).map((task, i) => (
+            <div key={i} style={{ padding: '6px 0', fontSize: 13, color: '#605e5c', display: 'flex', justifyContent: 'space-between' }}>
+              <span>• {task.taskCode && <span style={{ fontFamily: 'monospace', marginRight: 8 }}>{task.taskCode}</span>}{task.title}</span>
+              <span style={{ color: '#8a8886' }}>{task.roleAssignment || task.assigneeName}</span>
+            </div>
+          ))}
+          {configuredTasks.filter(t => t.isSelected).length > 5 && (
+            <div style={{ padding: '6px 0', fontSize: 13, color: '#ea580c', fontStyle: 'italic' }}>
+              + {configuredTasks.filter(t => t.isSelected).length - 5} more tasks...
+            </div>
+          )}
+        </div>
+
         <div className={styles.formCard}>
           <TextField
             label="Additional Notes"
@@ -855,9 +1172,9 @@ export const MoverWizardPage: React.FC<IProps> = ({ sp, onComplete, onCancel }) 
         title="Transfer Initiated!"
         subtitle={`${createdMover.name} • ${createdMover.type} • Effective ${createdMover.effectiveDate.toLocaleDateString()}`}
         stats={[
+          { value: configuredTasks.filter(t => t.isSelected).length, label: 'Total Tasks' },
           { value: systemChanges.length, label: 'System Changes' },
           { value: trainingItems.length, label: 'Training Items' },
-          { value: 5, label: 'Standard Tasks' },
           { value: 'In Progress', label: 'Status' },
         ]}
         summaryPanels={summaryPanels}
@@ -870,30 +1187,45 @@ export const MoverWizardPage: React.FC<IProps> = ({ sp, onComplete, onCancel }) 
   const progressPercent = Math.round((currentStep / (STEPS.length - 1)) * 100);
 
   return (
-    <JmlWizardLayout
-      theme="mover"
-      title="Transfer"
-      subtitle="Internal Move"
-      steps={STEPS}
-      currentStep={currentStep}
-      onStepClick={setCurrentStep}
-      loading={loadingData}
-      loadingText="Loading employee data..."
-      tips={getTips()}
-      checklist={getChecklist()}
-      progressPercent={progressPercent}
-      progressText={`Step ${currentStep + 1} of ${STEPS.length}`}
-      onBack={() => setCurrentStep(s => s - 1)}
-      onCancel={onCancel}
-      onNext={() => setCurrentStep(s => s + 1)}
-      onSubmit={handleSubmit}
-      nextDisabled={!canProceed()}
-      submitDisabled={submitting}
-      isLastStep={currentStep === STEPS.length - 1}
-      isSubmitting={submitting}
-      submitLabel="Create Transfer"
-    >
-      {renderStepContent()}
-    </JmlWizardLayout>
+    <div style={{ position: 'relative' }}>
+      <JmlWizardLayout
+        theme="mover"
+        title="Transfer"
+        subtitle="Internal Move"
+        steps={STEPS}
+        currentStep={currentStep}
+        onStepClick={setCurrentStep}
+        loading={loadingData}
+        loadingText="Loading employee data..."
+        tips={getTips()}
+        checklist={getChecklist()}
+        progressPercent={progressPercent}
+        progressText={`Step ${currentStep + 1} of ${STEPS.length}`}
+        onBack={() => setCurrentStep(s => s - 1)}
+        onCancel={onCancel}
+        onNext={() => setCurrentStep(s => s + 1)}
+        onSubmit={handleSubmit}
+        nextDisabled={!canProceed()}
+        submitDisabled={submitting}
+        isLastStep={currentStep === STEPS.length - 1}
+        isSubmitting={submitting}
+        submitLabel="Create Transfer"
+      >
+        {renderStepContent()}
+      </JmlWizardLayout>
+
+      {/* Task Configuration Overlay - replaces wizard when open */}
+      <TaskConfigurationOverlay
+        sp={sp}
+        context={context}
+        isOpen={showTaskConfig}
+        tasks={configuredTasks}
+        startDate={effectiveDate}
+        employeeName={employeeName}
+        processType="mover"
+        onBack={handleTaskConfigBack}
+        onConfirm={handleTaskConfigConfirm}
+      />
+    </div>
   );
 };
