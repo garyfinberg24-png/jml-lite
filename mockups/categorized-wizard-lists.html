@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Categorized Wizard Lists - Mockup Variations</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f5f5f5;
+      padding: 40px;
+      color: #323130;
+    }
+    h1 { font-size: 28px; font-weight: 600; margin-bottom: 8px; color: #1a1a1a; }
+    .page-subtitle { color: #605e5c; margin-bottom: 40px; font-size: 14px; }
+    .section { margin-bottom: 60px; }
+    .section-header {
+      background: linear-gradient(135deg, #005BAA 0%, #004A8F 100%);
+      color: #fff;
+      padding: 16px 24px;
+      border-radius: 12px 12px 0 0;
+      margin-bottom: 0;
+    }
+    .section-header h2 { font-size: 18px; font-weight: 600; margin: 0 0 4px 0; }
+    .section-header p { font-size: 12px; opacity: 0.85; margin: 0; }
+    .mockup-container {
+      background: #ffffff;
+      border-radius: 0 0 12px 12px;
+      padding: 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      border: 1px solid #e0e0e0;
+      border-top: none;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════════════
+       VARIATION 1: Collapsible Category Sections (Accordion)
+       ═══════════════════════════════════════════════════════════════════════════════ */
+    .accordion-list { display: flex; flex-direction: column; gap: 8px; }
+    .accordion-category {
+      border: 1px solid #edebe9;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .accordion-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: #faf9f8;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .accordion-header:hover { background: #f3f2f1; }
+    .accordion-header-left { display: flex; align-items: center; gap: 12px; }
+    .accordion-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+    .accordion-icon.hr { background: #e0f2fe; color: #0369a1; }
+    .accordion-icon.it { background: #fef3c7; color: #d97706; }
+    .accordion-icon.compliance { background: #fce7f3; color: #be185d; }
+    .accordion-icon.facilities { background: #d1fae5; color: #059669; }
+    .accordion-title { font-weight: 600; font-size: 14px; }
+    .accordion-badge {
+      background: #e5e5e5;
+      color: #605e5c;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .accordion-chevron { font-size: 12px; color: #8a8886; transition: transform 0.2s ease; }
+    .accordion-content { padding: 0 16px 16px 60px; }
+    .accordion-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid #f3f2f1;
+      font-size: 13px;
+    }
+    .accordion-item:last-child { border-bottom: none; }
+    .accordion-checkbox {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #8a8886;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      flex-shrink: 0;
+    }
+    .accordion-checkbox.checked {
+      background: #059669;
+      border-color: #059669;
+      color: #fff;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════════════
+       VARIATION 2: Tabbed Category View
+       ═══════════════════════════════════════════════════════════════════════════════ */
+    .tabs-container { display: flex; flex-direction: column; }
+    .tabs-nav {
+      display: flex;
+      border-bottom: 1px solid #edebe9;
+      gap: 0;
+    }
+    .tab-btn {
+      padding: 12px 20px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      color: #605e5c;
+      border-bottom: 3px solid transparent;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.15s ease;
+    }
+    .tab-btn:hover { color: #323130; background: #faf9f8; }
+    .tab-btn.active {
+      color: #005BAA;
+      border-bottom-color: #005BAA;
+      font-weight: 600;
+    }
+    .tab-badge {
+      background: #edebe9;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+    .tab-btn.active .tab-badge { background: #005BAA; color: #fff; }
+    .tab-content { padding: 20px 0; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .tab-list { display: flex; flex-direction: column; gap: 4px; }
+    .tab-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      transition: background 0.15s ease;
+    }
+    .tab-item:hover { background: #faf9f8; }
+
+    /* ═══════════════════════════════════════════════════════════════════════════════
+       VARIATION 3: Grouped Cards (2-Column Grid)
+       ═══════════════════════════════════════════════════════════════════════════════ */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    .category-card {
+      background: #ffffff;
+      border: 1px solid #edebe9;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      background: #faf9f8;
+      border-bottom: 1px solid #edebe9;
+    }
+    .card-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+    .card-header-text h4 { font-size: 14px; font-weight: 600; margin: 0; }
+    .card-header-text span { font-size: 11px; color: #8a8886; }
+    .card-progress {
+      height: 4px;
+      background: #edebe9;
+      margin: 0 16px;
+      border-radius: 2px;
+      margin-top: 12px;
+    }
+    .card-progress-bar {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+    .card-list { padding: 12px 16px 16px; }
+    .card-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 0;
+      font-size: 12px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════════════
+       VARIATION 4: Inline Category Headers (Flat List with Dividers)
+       ═══════════════════════════════════════════════════════════════════════════════ */
+    .flat-list { display: flex; flex-direction: column; gap: 0; }
+    .flat-category-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 0 8px 0;
+      border-bottom: 2px solid;
+      margin-top: 16px;
+    }
+    .flat-category-header:first-child { margin-top: 0; }
+    .flat-category-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+    .flat-category-title { font-weight: 600; font-size: 13px; }
+    .flat-category-count { margin-left: auto; font-size: 11px; color: #8a8886; }
+    .flat-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0 10px 34px;
+      border-bottom: 1px solid #f3f2f1;
+      font-size: 13px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════════════
+       VARIATION 5: Kanban-Style Columns (for larger screens)
+       ═══════════════════════════════════════════════════════════════════════════════ */
+    .kanban-container {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    .kanban-column {
+      background: #faf9f8;
+      border-radius: 10px;
+      padding: 16px;
+      min-height: 300px;
+    }
+    .kanban-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid;
+    }
+    .kanban-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+    .kanban-title { font-weight: 600; font-size: 13px; }
+    .kanban-count {
+      margin-left: auto;
+      background: #e5e5e5;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .kanban-items { display: flex; flex-direction: column; gap: 8px; }
+    .kanban-item {
+      background: #ffffff;
+      border: 1px solid #edebe9;
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .kanban-item:hover {
+      border-color: #c8c6c4;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════════════
+       VARIATION 6: Success Screen - 3x2 Summary Grid
+       ═══════════════════════════════════════════════════════════════════════════════ */
+    .success-container {
+      text-align: center;
+      padding: 20px;
+    }
+    .success-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+    .success-icon {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #005BAA 0%, #004A8Fcc 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 32px;
+    }
+    .success-title { font-size: 24px; font-weight: 600; margin: 0 0 4px 0; text-align: left; }
+    .success-subtitle { font-size: 14px; color: #605e5c; margin: 0; text-align: left; }
+    .success-panels-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .success-panel {
+      background: #ffffff;
+      border: 1px solid #edebe9;
+      border-radius: 10px;
+      padding: 16px;
+      text-align: left;
+    }
+    .success-panel-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-bottom: 12px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid #f3f2f1;
+    }
+    .success-panel-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: rgba(0, 91, 170, 0.1);
+      color: #005BAA;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+    .success-panel-title { font-size: 14px; font-weight: 600; }
+    .success-panel-count { margin-left: auto; font-size: 12px; color: #8a8886; }
+    .success-panel-list { max-height: 150px; overflow-y: auto; }
+    .success-panel-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 0;
+      font-size: 13px;
+      border-bottom: 1px solid #f9f9f9;
+    }
+    .success-panel-item:last-child { border-bottom: none; }
+    .success-panel-item-icon {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #059669;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+    }
+
+    /* Color utility classes */
+    .hr-border { border-color: #0369a1; }
+    .it-border { border-color: #d97706; }
+    .compliance-border { border-color: #be185d; }
+    .facilities-border { border-color: #059669; }
+    .hr-bg { background: #0369a1; }
+    .it-bg { background: #d97706; }
+    .compliance-bg { background: #be185d; }
+    .facilities-bg { background: #059669; }
+  </style>
+</head>
+<body>
+  <h1>Categorized Wizard Lists — Design Variations</h1>
+  <p class="page-subtitle">Mockups for organizing onboarding, mover, and offboarding wizard checklists by category</p>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════════════
+       VARIATION 1: Collapsible Accordion
+       ═══════════════════════════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <h2>Variation 1: Collapsible Accordion</h2>
+      <p>Categories expand/collapse to reduce visual clutter. Good for many items per category.</p>
+    </div>
+    <div class="mockup-container">
+      <div class="accordion-list">
+        <div class="accordion-category">
+          <div class="accordion-header">
+            <div class="accordion-header-left">
+              <div class="accordion-icon hr">👤</div>
+              <span class="accordion-title">HR & Onboarding</span>
+              <span class="accordion-badge">5 items</span>
+            </div>
+            <span class="accordion-chevron">▼</span>
+          </div>
+          <div class="accordion-content">
+            <div class="accordion-item">
+              <div class="accordion-checkbox checked">✓</div>
+              <span>Employment Contract</span>
+            </div>
+            <div class="accordion-item">
+              <div class="accordion-checkbox checked">✓</div>
+              <span>Tax Forms (W-4)</span>
+            </div>
+            <div class="accordion-item">
+              <div class="accordion-checkbox"></div>
+              <span>Emergency Contact Form</span>
+            </div>
+            <div class="accordion-item">
+              <div class="accordion-checkbox"></div>
+              <span>Direct Deposit Form</span>
+            </div>
+            <div class="accordion-item">
+              <div class="accordion-checkbox"></div>
+              <span>Benefits Enrollment</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-category">
+          <div class="accordion-header">
+            <div class="accordion-header-left">
+              <div class="accordion-icon it">💻</div>
+              <span class="accordion-title">IT & Systems</span>
+              <span class="accordion-badge">4 items</span>
+            </div>
+            <span class="accordion-chevron">▼</span>
+          </div>
+          <div class="accordion-content">
+            <div class="accordion-item">
+              <div class="accordion-checkbox checked">✓</div>
+              <span>Microsoft 365 Access</span>
+            </div>
+            <div class="accordion-item">
+              <div class="accordion-checkbox"></div>
+              <span>SharePoint Permissions</span>
+            </div>
+            <div class="accordion-item">
+              <div class="accordion-checkbox"></div>
+              <span>Laptop Setup</span>
+            </div>
+            <div class="accordion-item">
+              <div class="accordion-checkbox"></div>
+              <span>VPN Configuration</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-category">
+          <div class="accordion-header">
+            <div class="accordion-header-left">
+              <div class="accordion-icon compliance">📋</div>
+              <span class="accordion-title">Compliance & Training</span>
+              <span class="accordion-badge">3 items</span>
+            </div>
+            <span class="accordion-chevron">▶</span>
+          </div>
+        </div>
+
+        <div class="accordion-category">
+          <div class="accordion-header">
+            <div class="accordion-header-left">
+              <div class="accordion-icon facilities">🏢</div>
+              <span class="accordion-title">Facilities & Access</span>
+              <span class="accordion-badge">2 items</span>
+            </div>
+            <span class="accordion-chevron">▶</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════════════
+       VARIATION 2: Tabbed Category View
+       ═══════════════════════════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <h2>Variation 2: Tabbed Categories</h2>
+      <p>Categories as tabs — one category visible at a time. Clean for focused workflow.</p>
+    </div>
+    <div class="mockup-container">
+      <div class="tabs-container">
+        <div class="tabs-nav">
+          <button class="tab-btn active">
+            👤 HR & Onboarding
+            <span class="tab-badge">2/5</span>
+          </button>
+          <button class="tab-btn">
+            💻 IT & Systems
+            <span class="tab-badge">1/4</span>
+          </button>
+          <button class="tab-btn">
+            📋 Compliance
+            <span class="tab-badge">0/3</span>
+          </button>
+          <button class="tab-btn">
+            🏢 Facilities
+            <span class="tab-badge">0/2</span>
+          </button>
+        </div>
+        <div class="tab-content">
+          <div class="tab-panel active">
+            <div class="tab-list">
+              <div class="tab-item">
+                <div class="accordion-checkbox checked">✓</div>
+                <span>Employment Contract</span>
+              </div>
+              <div class="tab-item">
+                <div class="accordion-checkbox checked">✓</div>
+                <span>Tax Forms (W-4)</span>
+              </div>
+              <div class="tab-item">
+                <div class="accordion-checkbox"></div>
+                <span>Emergency Contact Form</span>
+              </div>
+              <div class="tab-item">
+                <div class="accordion-checkbox"></div>
+                <span>Direct Deposit Form</span>
+              </div>
+              <div class="tab-item">
+                <div class="accordion-checkbox"></div>
+                <span>Benefits Enrollment</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════════════
+       VARIATION 3: 2-Column Card Grid
+       ═══════════════════════════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <h2>Variation 3: 2-Column Card Grid</h2>
+      <p>Categories as cards in a grid. Shows all categories at once with progress indicators.</p>
+    </div>
+    <div class="mockup-container">
+      <div class="cards-grid">
+        <div class="category-card">
+          <div class="card-header">
+            <div class="card-icon hr-bg" style="background: #e0f2fe; color: #0369a1;">👤</div>
+            <div class="card-header-text">
+              <h4>HR & Onboarding</h4>
+              <span>2 of 5 completed</span>
+            </div>
+          </div>
+          <div class="card-progress">
+            <div class="card-progress-bar" style="width: 40%; background: #0369a1;"></div>
+          </div>
+          <div class="card-list">
+            <div class="card-item">
+              <div class="accordion-checkbox checked" style="width: 16px; height: 16px;">✓</div>
+              <span>Employment Contract</span>
+            </div>
+            <div class="card-item">
+              <div class="accordion-checkbox checked" style="width: 16px; height: 16px;">✓</div>
+              <span>Tax Forms (W-4)</span>
+            </div>
+            <div class="card-item">
+              <div class="accordion-checkbox" style="width: 16px; height: 16px;"></div>
+              <span>Emergency Contact Form</span>
+            </div>
+            <div class="card-item">
+              <div class="accordion-checkbox" style="width: 16px; height: 16px;"></div>
+              <span>Direct Deposit Form</span>
+            </div>
+            <div class="card-item">
+              <div class="accordion-checkbox" style="width: 16px; height: 16px;"></div>
+              <span>Benefits Enrollment</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="category-card">
+          <div class="card-header">
+            <div class="card-icon" style="background: #fef3c7; color: #d97706;">💻</div>
+            <div class="card-header-text">
+              <h4>IT & Systems</h4>
+              <span>1 of 4 completed</span>
+            </div>
+          </div>
+          <div class="card-progress">
+            <div class="card-progress-bar" style="width: 25%; background: #d97706;"></div>
+          </div>
+          <div class="card-list">
+            <div class="card-item">
+              <div class="accordion-checkbox checked" style="width: 16px; height: 16px;">✓</div>
+              <span>Microsoft 365 Access</span>
+            </div>
+            <div class="card-item">
+              <div class="accordion-checkbox" style="width: 16px; height: 16px;"></div>
+              <span>SharePoint Permissions</span>
+            </div>
+            <div class="card-item">
+              <div class="accordion-checkbox" style="width: 16px; height: 16px;"></div>
+              <span>Laptop Setup</span>
+            </div>
+            <div class="card-item">
+              <div class="accordion-checkbox" style="width: 16px; height: 16px;"></div>
+              <span>VPN Configuration</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="category-card">
+          <div class="card-header">
+            <div class="card-icon" style="background: #fce7f3; color: #be185d;">📋</div>
+            <div class="card-header-text">
+              <h4>Compliance & Training</h4>
+              <span>0 of 3 completed</span>
+            </div>
+          </div>
+          <div class="card-progress">
+            <div class="card-progress-bar" style="width: 0%; background: #be185d;"></div>
+          </div>
+          <div class="card-list">
+            <div class="card-item">
+              <div class="accordion-checkbox" style="width: 16px; height: 16px;"></div>
+              <span>Security Awareness Training</span>
+            </div>
+            <div class="card-item">
+              <div class="accordion-checkbox" style="width: 16px; height: 16px;"></div>
+              <span>Code of Conduct</span>
+            </div>
+            <div class="card-item">
+              <div class="accordion-checkbox" style="width: 16px; height: 16px;"></div>
+              <span>Data Privacy Training</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="category-card">
+          <div class="card-header">
+            <div class="card-icon" style="background: #d1fae5; color: #059669;">🏢</div>
+            <div class="card-header-text">
+              <h4>Facilities & Access</h4>
+              <span>0 of 2 completed</span>
+            </div>
+          </div>
+          <div class="card-progress">
+            <div class="card-progress-bar" style="width: 0%; background: #059669;"></div>
+          </div>
+          <div class="card-list">
+            <div class="card-item">
+              <div class="accordion-checkbox" style="width: 16px; height: 16px;"></div>
+              <span>Building Access Card</span>
+            </div>
+            <div class="card-item">
+              <div class="accordion-checkbox" style="width: 16px; height: 16px;"></div>
+              <span>Parking Pass</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════════════
+       VARIATION 4: Flat List with Category Dividers
+       ═══════════════════════════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <h2>Variation 4: Flat List with Category Dividers</h2>
+      <p>Continuous scrolling list with inline category headers. Simple and familiar.</p>
+    </div>
+    <div class="mockup-container">
+      <div class="flat-list">
+        <div class="flat-category-header hr-border">
+          <div class="flat-category-icon" style="background: #e0f2fe; color: #0369a1;">👤</div>
+          <span class="flat-category-title">HR & Onboarding</span>
+          <span class="flat-category-count">2/5 completed</span>
+        </div>
+        <div class="flat-item">
+          <div class="accordion-checkbox checked">✓</div>
+          <span>Employment Contract</span>
+        </div>
+        <div class="flat-item">
+          <div class="accordion-checkbox checked">✓</div>
+          <span>Tax Forms (W-4)</span>
+        </div>
+        <div class="flat-item">
+          <div class="accordion-checkbox"></div>
+          <span>Emergency Contact Form</span>
+        </div>
+        <div class="flat-item">
+          <div class="accordion-checkbox"></div>
+          <span>Direct Deposit Form</span>
+        </div>
+        <div class="flat-item">
+          <div class="accordion-checkbox"></div>
+          <span>Benefits Enrollment</span>
+        </div>
+
+        <div class="flat-category-header it-border">
+          <div class="flat-category-icon" style="background: #fef3c7; color: #d97706;">💻</div>
+          <span class="flat-category-title">IT & Systems</span>
+          <span class="flat-category-count">1/4 completed</span>
+        </div>
+        <div class="flat-item">
+          <div class="accordion-checkbox checked">✓</div>
+          <span>Microsoft 365 Access</span>
+        </div>
+        <div class="flat-item">
+          <div class="accordion-checkbox"></div>
+          <span>SharePoint Permissions</span>
+        </div>
+        <div class="flat-item">
+          <div class="accordion-checkbox"></div>
+          <span>Laptop Setup</span>
+        </div>
+        <div class="flat-item">
+          <div class="accordion-checkbox"></div>
+          <span>VPN Configuration</span>
+        </div>
+
+        <div class="flat-category-header compliance-border">
+          <div class="flat-category-icon" style="background: #fce7f3; color: #be185d;">📋</div>
+          <span class="flat-category-title">Compliance & Training</span>
+          <span class="flat-category-count">0/3 completed</span>
+        </div>
+        <div class="flat-item">
+          <div class="accordion-checkbox"></div>
+          <span>Security Awareness Training</span>
+        </div>
+        <div class="flat-item">
+          <div class="accordion-checkbox"></div>
+          <span>Code of Conduct</span>
+        </div>
+        <div class="flat-item">
+          <div class="accordion-checkbox"></div>
+          <span>Data Privacy Training</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════════════
+       VARIATION 5: Kanban-Style Columns
+       ═══════════════════════════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <h2>Variation 5: Kanban-Style Columns</h2>
+      <p>Side-by-side columns for each category. Best on wide screens. Drag-and-drop potential.</p>
+    </div>
+    <div class="mockup-container">
+      <div class="kanban-container">
+        <div class="kanban-column">
+          <div class="kanban-header hr-border">
+            <div class="kanban-icon" style="background: #e0f2fe; color: #0369a1;">👤</div>
+            <span class="kanban-title">HR</span>
+            <span class="kanban-count">2/5</span>
+          </div>
+          <div class="kanban-items">
+            <div class="kanban-item">
+              <div class="accordion-checkbox checked" style="width: 14px; height: 14px;">✓</div>
+              <span>Employment Contract</span>
+            </div>
+            <div class="kanban-item">
+              <div class="accordion-checkbox checked" style="width: 14px; height: 14px;">✓</div>
+              <span>Tax Forms</span>
+            </div>
+            <div class="kanban-item">
+              <div class="accordion-checkbox" style="width: 14px; height: 14px;"></div>
+              <span>Emergency Contact</span>
+            </div>
+            <div class="kanban-item">
+              <div class="accordion-checkbox" style="width: 14px; height: 14px;"></div>
+              <span>Direct Deposit</span>
+            </div>
+            <div class="kanban-item">
+              <div class="accordion-checkbox" style="width: 14px; height: 14px;"></div>
+              <span>Benefits</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="kanban-column">
+          <div class="kanban-header it-border">
+            <div class="kanban-icon" style="background: #fef3c7; color: #d97706;">💻</div>
+            <span class="kanban-title">IT</span>
+            <span class="kanban-count">1/4</span>
+          </div>
+          <div class="kanban-items">
+            <div class="kanban-item">
+              <div class="accordion-checkbox checked" style="width: 14px; height: 14px;">✓</div>
+              <span>Microsoft 365</span>
+            </div>
+            <div class="kanban-item">
+              <div class="accordion-checkbox" style="width: 14px; height: 14px;"></div>
+              <span>SharePoint</span>
+            </div>
+            <div class="kanban-item">
+              <div class="accordion-checkbox" style="width: 14px; height: 14px;"></div>
+              <span>Laptop Setup</span>
+            </div>
+            <div class="kanban-item">
+              <div class="accordion-checkbox" style="width: 14px; height: 14px;"></div>
+              <span>VPN Config</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="kanban-column">
+          <div class="kanban-header compliance-border">
+            <div class="kanban-icon" style="background: #fce7f3; color: #be185d;">📋</div>
+            <span class="kanban-title">Compliance</span>
+            <span class="kanban-count">0/3</span>
+          </div>
+          <div class="kanban-items">
+            <div class="kanban-item">
+              <div class="accordion-checkbox" style="width: 14px; height: 14px;"></div>
+              <span>Security Training</span>
+            </div>
+            <div class="kanban-item">
+              <div class="accordion-checkbox" style="width: 14px; height: 14px;"></div>
+              <span>Code of Conduct</span>
+            </div>
+            <div class="kanban-item">
+              <div class="accordion-checkbox" style="width: 14px; height: 14px;"></div>
+              <span>Data Privacy</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="kanban-column">
+          <div class="kanban-header facilities-border">
+            <div class="kanban-icon" style="background: #d1fae5; color: #059669;">🏢</div>
+            <span class="kanban-title">Facilities</span>
+            <span class="kanban-count">0/2</span>
+          </div>
+          <div class="kanban-items">
+            <div class="kanban-item">
+              <div class="accordion-checkbox" style="width: 14px; height: 14px;"></div>
+              <span>Access Card</span>
+            </div>
+            <div class="kanban-item">
+              <div class="accordion-checkbox" style="width: 14px; height: 14px;"></div>
+              <span>Parking Pass</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════════════
+       VARIATION 6: Success Screen - 3x2 Summary Grid
+       ═══════════════════════════════════════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-header">
+      <h2>Variation 6: Success Screen — 3x2 Summary Grid</h2>
+      <p>After wizard completion. Shows what was configured in a compact 3-column layout.</p>
+    </div>
+    <div class="mockup-container">
+      <div class="success-container">
+        <div class="success-header">
+          <div class="success-icon">✓</div>
+          <div>
+            <h2 class="success-title">Onboarding Created Successfully!</h2>
+            <p class="success-subtitle">John Smith • Software Engineer • Engineering • Starts Jan 15, 2026</p>
+          </div>
+        </div>
+
+        <div class="success-panels-grid">
+          <div class="success-panel">
+            <div class="success-panel-header">
+              <div class="success-panel-icon">📄</div>
+              <span class="success-panel-title">Documents</span>
+              <span class="success-panel-count">5</span>
+            </div>
+            <div class="success-panel-list">
+              <div class="success-panel-item">
+                <div class="success-panel-item-icon">✓</div>
+                <span>Employment Contract</span>
+              </div>
+              <div class="success-panel-item">
+                <div class="success-panel-item-icon">✓</div>
+                <span>Tax Forms (W-4)</span>
+              </div>
+              <div class="success-panel-item">
+                <div class="success-panel-item-icon">✓</div>
+                <span>NDA Agreement</span>
+              </div>
+              <div class="success-panel-item">
+                <div class="success-panel-item-icon">✓</div>
+                <span>Emergency Contact</span>
+              </div>
+              <div class="success-panel-item">
+                <div class="success-panel-item-icon">✓</div>
+                <span>Direct Deposit Form</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="success-panel">
+            <div class="success-panel-header">
+              <div class="success-panel-icon">🔐</div>
+              <span class="success-panel-title">System Access</span>
+              <span class="success-panel-count">4</span>
+            </div>
+            <div class="success-panel-list">
+              <div class="success-panel-item">
+                <div class="success-panel-item-icon">✓</div>
+                <span>Microsoft 365 (User)</span>
+              </div>
+              <div class="success-panel-item">
+                <div class="success-panel-item-icon">✓</div>
+                <span>SharePoint (Contributor)</span>
+              </div>
+              <div class="success-panel-item">
+                <div class="success-panel-item-icon">✓</div>
+                <span>Azure DevOps (Developer)</span>
+              </div>
+              <div class="success-panel-item">
+                <div class="success-panel-item-icon">✓</div>
+                <span>GitHub (Member)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="success-panel">
+            <div class="success-panel-header">
+              <div class="success-panel-icon">💻</div>
+              <span class="success-panel-title">Equipment</span>
+              <span class="success-panel-count">3</span>
+            </div>
+            <div class="success-panel-list">
+              <div class="success-panel-item">
+                <div class="success-panel-item-icon">✓</div>
+                <span>MacBook Pro 16"</span>
+              </div>
+              <div class="success-panel-item">
+                <div class="success-panel-item-icon">✓</div>
+                <span>Dell 27" Monitor x2</span>
+              </div>
+              <div class="success-panel-item">
+                <div class="success-panel-item-icon">✓</div>
+                <span>Wireless Keyboard/Mouse</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="success-panel">
+            <div class="success-panel-header">
+              <div class="success-panel-icon">📚</div>
+              <span class="success-panel-title">Training</span>
+              <span class="success-panel-count">3</span>
+            </div>
+            <div class="success-panel-list">
+              <div class="success-panel-item">
+                <div class="success-panel-item-icon">✓</div>
+                <span>Security Awareness</span>
+              </div>
+              <div class="success-panel-item">
+                <div class="success-panel-item-icon">✓</div>
+                <span>Code of Conduct</span>
+              </div>
+              <div class="success-panel-item">
+                <div class="success-panel-item-icon">✓</div>
+                <span>Data Privacy</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="success-panel">
+            <div class="success-panel-header">
+              <div class="success-panel-icon">🏢</div>
+              <span class="success-panel-title">Facilities</span>
+              <span class="success-panel-count">2</span>
+            </div>
+            <div class="success-panel-list">
+              <div class="success-panel-item">
+                <div class="success-panel-item-icon">✓</div>
+                <span>Building Access Card</span>
+              </div>
+              <div class="success-panel-item">
+                <div class="success-panel-item-icon">✓</div>
+                <span>Desk Assignment (Floor 3)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="success-panel">
+            <div class="success-panel-header">
+              <div class="success-panel-icon">📅</div>
+              <span class="success-panel-title">First Week Schedule</span>
+              <span class="success-panel-count">4</span>
+            </div>
+            <div class="success-panel-list">
+              <div class="success-panel-item">
+                <div class="success-panel-item-icon">✓</div>
+                <span>Day 1: Orientation</span>
+              </div>
+              <div class="success-panel-item">
+                <div class="success-panel-item-icon">✓</div>
+                <span>Day 2: Team Introduction</span>
+              </div>
+              <div class="success-panel-item">
+                <div class="success-panel-item-icon">✓</div>
+                <span>Day 3: System Training</span>
+              </div>
+              <div class="success-panel-item">
+                <div class="success-panel-item-icon">✓</div>
+                <span>Day 4-5: Shadowing</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; justify-content: center;">
+          <button style="padding: 12px 24px; background: linear-gradient(135deg, #005BAA 0%, #004A8Fcc 100%); border: none; border-radius: 6px; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer;">
+            View Onboarding Tracker
+          </button>
+          <button style="padding: 12px 24px; background: #f3f2f1; border: 1px solid #edebe9; border-radius: 6px; color: #323130; font-size: 14px; font-weight: 500; cursor: pointer;">
+            Start Another
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

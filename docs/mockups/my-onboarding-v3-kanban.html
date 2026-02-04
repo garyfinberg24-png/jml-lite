@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Onboarding - Kanban Board Layout (Embedded)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+
+    /* Simulate app container - this would be the main content area */
+    .app-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: #f8fafc;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    /* Page Header Block - contains welcome, progress, date/time */
+    .page-header {
+      background: linear-gradient(135deg, #005BAA 0%, #004A8F 100%);
+      color: white;
+      padding: 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 24px;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .user-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 600;
+    }
+    .welcome-text h1 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+    .welcome-text p {
+      font-size: 13px;
+      opacity: 0.9;
+    }
+
+    /* Progress in header */
+    .header-center {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex: 1;
+      justify-content: center;
+    }
+    .progress-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(255,255,255,0.15);
+      padding: 10px 16px;
+      border-radius: 8px;
+    }
+    .progress-ring {
+      position: relative;
+      width: 40px;
+      height: 40px;
+    }
+    .progress-ring svg {
+      transform: rotate(-90deg);
+      width: 100%;
+      height: 100%;
+    }
+    .progress-ring .bg {
+      fill: none;
+      stroke: rgba(255,255,255,0.3);
+      stroke-width: 4;
+    }
+    .progress-ring .progress {
+      fill: none;
+      stroke: #34d399;
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-dasharray: 100;
+      stroke-dashoffset: 30; /* 70% */
+    }
+    .progress-ring .text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 10px;
+      font-weight: 700;
+    }
+    .progress-info {
+      text-align: left;
+    }
+    .progress-info .percent {
+      font-size: 18px;
+      font-weight: 700;
+    }
+    .progress-info .label {
+      font-size: 11px;
+      opacity: 0.85;
+    }
+
+    /* Date/Time Block */
+    .header-right {
+      text-align: right;
+    }
+    .datetime-block {
+      background: rgba(255,255,255,0.15);
+      padding: 10px 16px;
+      border-radius: 8px;
+    }
+    .datetime-block .date {
+      font-size: 12px;
+      opacity: 0.9;
+      margin-bottom: 2px;
+    }
+    .datetime-block .time {
+      font-size: 22px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Main Content Area */
+    .main-content {
+      padding: 20px 24px 24px;
+    }
+
+    /* Board Header */
+    .board-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .board-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1e293b;
+    }
+    .board-subtitle {
+      color: #64748b;
+      font-size: 13px;
+      margin-top: 2px;
+    }
+    .view-toggle {
+      display: flex;
+      gap: 4px;
+      background: white;
+      padding: 3px;
+      border-radius: 6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    .view-btn {
+      padding: 6px 14px;
+      border: none;
+      background: transparent;
+      border-radius: 4px;
+      font-size: 12px;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-weight: 500;
+    }
+    .view-btn.active {
+      background: #005BAA;
+      color: white;
+    }
+
+    /* Kanban Board */
+    .kanban-board {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    /* Column */
+    .kanban-column {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      overflow: hidden;
+    }
+    .column-header {
+      padding: 12px 14px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .column-header.todo { border-top: 3px solid #64748b; }
+    .column-header.progress { border-top: 3px solid #005BAA; }
+    .column-header.review { border-top: 3px solid #f59e0b; }
+    .column-header.done { border-top: 3px solid #10b981; }
+    .column-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+    .column-icon.todo { background: #f1f5f9; }
+    .column-icon.progress { background: #dbeafe; }
+    .column-icon.review { background: #fef3c7; }
+    .column-icon.done { background: #dcfce7; }
+    .column-title {
+      font-weight: 600;
+      color: #1e293b;
+      font-size: 13px;
+      flex: 1;
+    }
+    .column-count {
+      background: #f1f5f9;
+      padding: 2px 7px;
+      border-radius: 8px;
+      font-size: 11px;
+      color: #64748b;
+      font-weight: 500;
+    }
+
+    /* Task Cards */
+    .column-body {
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 150px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .task-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .task-card:hover {
+      border-color: #cbd5e1;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+      transform: translateY(-1px);
+    }
+    .task-card.overdue {
+      border-color: #fecaca;
+      background: #fef2f2;
+    }
+    .task-category {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 2px 5px;
+      border-radius: 3px;
+      margin-bottom: 6px;
+      display: inline-block;
+      font-weight: 500;
+    }
+    .task-category.documentation { background: #dbeafe; color: #1d4ed8; }
+    .task-category.training { background: #fef3c7; color: #b45309; }
+    .task-category.equipment { background: #dcfce7; color: #166534; }
+    .task-category.access { background: #f3e8ff; color: #7c3aed; }
+    .task-category.orientation { background: #ffe4e6; color: #be123c; }
+    .task-title {
+      font-weight: 500;
+      color: #1e293b;
+      font-size: 12px;
+      line-height: 1.4;
+      margin-bottom: 8px;
+    }
+    .task-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .task-due {
+      font-size: 10px;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .task-due.overdue {
+      color: #dc2626;
+      font-weight: 500;
+    }
+    .task-due.today {
+      color: #f59e0b;
+      font-weight: 500;
+    }
+    .task-priority {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+    .task-priority.high { background: #dc2626; }
+    .task-priority.medium { background: #f59e0b; }
+    .task-priority.low { background: #10b981; }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 24px 12px;
+      color: #94a3b8;
+    }
+    .empty-icon {
+      font-size: 24px;
+      margin-bottom: 6px;
+      opacity: 0.5;
+    }
+    .empty-text {
+      font-size: 11px;
+    }
+
+    /* Stats Footer */
+    .stats-footer {
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    .stat-card {
+      background: white;
+      border-radius: 8px;
+      padding: 14px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+    }
+    .stat-value.blue { color: #005BAA; }
+    .stat-value.green { color: #10b981; }
+    .stat-value.orange { color: #f59e0b; }
+    .stat-value.red { color: #dc2626; }
+    .stat-label {
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 2px;
+    }
+
+    /* Completed tasks styling */
+    .task-card.completed {
+      opacity: 0.65;
+    }
+    .task-card.completed .task-title {
+      color: #64748b;
+    }
+
+    /* More link */
+    .more-tasks {
+      text-align: center;
+      padding: 8px;
+      color: #005BAA;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .more-tasks:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <!-- Simulated App Container (main content area) -->
+  <div class="app-container">
+    <!-- Page Header Block with Date/Time -->
+    <header class="page-header">
+      <div class="header-left">
+        <div class="user-avatar">SM</div>
+        <div class="welcome-text">
+          <h1>Welcome, Sarah!</h1>
+          <p>Software Engineer • Engineering Team</p>
+        </div>
+      </div>
+
+      <div class="header-center">
+        <div class="progress-container">
+          <div class="progress-ring">
+            <svg viewBox="0 0 40 40">
+              <circle class="bg" cx="20" cy="20" r="16"/>
+              <circle class="progress" cx="20" cy="20" r="16"/>
+            </svg>
+            <div class="text">70%</div>
+          </div>
+          <div class="progress-info">
+            <div class="percent">17/24</div>
+            <div class="label">tasks completed</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="datetime-block">
+          <div class="date">Monday, February 3, 2026</div>
+          <div class="time" id="live-time">09:45 AM</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Board Header -->
+      <div class="board-header">
+        <div>
+          <h2 class="board-title">Your Onboarding Tasks</h2>
+          <p class="board-subtitle">12 days remaining until Feb 15</p>
+        </div>
+        <div class="view-toggle">
+          <button class="view-btn active">Board</button>
+          <button class="view-btn">List</button>
+          <button class="view-btn">Calendar</button>
+        </div>
+      </div>
+
+      <!-- Kanban Board -->
+      <div class="kanban-board">
+        <!-- To Do Column -->
+        <div class="kanban-column">
+          <div class="column-header todo">
+            <div class="column-icon todo">📋</div>
+            <span class="column-title">To Do</span>
+            <span class="column-count">5</span>
+          </div>
+          <div class="column-body">
+            <div class="task-card">
+              <span class="task-category access">System Access</span>
+              <div class="task-title">Request GitHub Organization Access</div>
+              <div class="task-meta">
+                <span class="task-due">📅 Feb 5</span>
+                <div class="task-priority medium"></div>
+              </div>
+            </div>
+            <div class="task-card">
+              <span class="task-category training">Training</span>
+              <div class="task-title">Complete Product Overview Session</div>
+              <div class="task-meta">
+                <span class="task-due">📅 Feb 10</span>
+                <div class="task-priority medium"></div>
+              </div>
+            </div>
+            <div class="task-card">
+              <span class="task-category orientation">Orientation</span>
+              <div class="task-title">Schedule 1:1 with Manager</div>
+              <div class="task-meta">
+                <span class="task-due">📅 Feb 12</span>
+                <div class="task-priority high"></div>
+              </div>
+            </div>
+            <div class="task-card">
+              <span class="task-category orientation">Orientation</span>
+              <div class="task-title">Meet Product Team</div>
+              <div class="task-meta">
+                <span class="task-due">📅 Feb 14</span>
+                <div class="task-priority low"></div>
+              </div>
+            </div>
+            <div class="task-card">
+              <span class="task-category documentation">Documentation</span>
+              <div class="task-title">Review Architecture Docs</div>
+              <div class="task-meta">
+                <span class="task-due">📅 Feb 15</span>
+                <div class="task-priority low"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- In Progress Column -->
+        <div class="kanban-column">
+          <div class="column-header progress">
+            <div class="column-icon progress">🔄</div>
+            <span class="column-title">In Progress</span>
+            <span class="column-count">2</span>
+          </div>
+          <div class="column-body">
+            <div class="task-card">
+              <span class="task-category equipment">Equipment</span>
+              <div class="task-title">Set Up Development Environment</div>
+              <div class="task-meta">
+                <span class="task-due today">⚡ Due today</span>
+                <div class="task-priority high"></div>
+              </div>
+            </div>
+            <div class="task-card">
+              <span class="task-category training">Training</span>
+              <div class="task-title">Code Review Guidelines Course</div>
+              <div class="task-meta">
+                <span class="task-due">📅 Feb 7</span>
+                <div class="task-priority medium"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Awaiting Approval Column -->
+        <div class="kanban-column">
+          <div class="column-header review">
+            <div class="column-icon review">👀</div>
+            <span class="column-title">Awaiting Approval</span>
+            <span class="column-count">0</span>
+          </div>
+          <div class="column-body">
+            <div class="empty-state">
+              <div class="empty-icon">📭</div>
+              <div class="empty-text">No tasks awaiting approval</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Done Column -->
+        <div class="kanban-column">
+          <div class="column-header done">
+            <div class="column-icon done">✅</div>
+            <span class="column-title">Completed</span>
+            <span class="column-count">17</span>
+          </div>
+          <div class="column-body">
+            <div class="task-card completed">
+              <span class="task-category training">Training</span>
+              <div class="task-title">IT Security Awareness Training</div>
+              <div class="task-meta">
+                <span class="task-due">✓ Feb 1</span>
+              </div>
+            </div>
+            <div class="task-card completed">
+              <span class="task-category documentation">Documentation</span>
+              <div class="task-title">Sign Employee Handbook</div>
+              <div class="task-meta">
+                <span class="task-due">✓ Jan 31</span>
+              </div>
+            </div>
+            <div class="task-card completed">
+              <span class="task-category equipment">Equipment</span>
+              <div class="task-title">Laptop Setup & Configuration</div>
+              <div class="task-meta">
+                <span class="task-due">✓ Jan 28</span>
+              </div>
+            </div>
+            <div class="task-card completed">
+              <span class="task-category access">System Access</span>
+              <div class="task-title">Email & Calendar Setup</div>
+              <div class="task-meta">
+                <span class="task-due">✓ Jan 28</span>
+              </div>
+            </div>
+            <div class="more-tasks">+ 13 more completed tasks</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Footer -->
+      <div class="stats-footer">
+        <div class="stat-card">
+          <div class="stat-value blue">24</div>
+          <div class="stat-label">Total Tasks</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value green">17</div>
+          <div class="stat-label">Completed</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value orange">2</div>
+          <div class="stat-label">In Progress</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value red">0</div>
+          <div class="stat-label">Overdue</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    function updateTime() {
+      const now = new Date();
+      document.getElementById('live-time').textContent = now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    }
+    setInterval(updateTime, 1000);
+  </script>
+</body>
+</html>

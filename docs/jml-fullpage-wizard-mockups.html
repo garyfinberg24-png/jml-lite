@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JML Wizard Full-Page Layout Mockups</title>
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; background: #f3f2f1; color: #323130; line-height: 1.5; }
+
+    /* Mockup Container */
+    .mockup-container { max-width: 1400px; margin: 0 auto; padding: 40px 20px; }
+    .mockup-header { text-align: center; margin-bottom: 60px; }
+    .mockup-header h1 { font-size: 32px; font-weight: 700; color: #1a1a1a; margin-bottom: 12px; }
+    .mockup-header p { font-size: 16px; color: #605e5c; max-width: 700px; margin: 0 auto; }
+
+    /* Option Section */
+    .option-section { margin-bottom: 80px; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+    .option-header { padding: 24px 32px; background: linear-gradient(135deg, #005BAA 0%, #004A8F 100%); color: #fff; }
+    .option-header h2 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+    .option-header p { opacity: 0.9; font-size: 14px; }
+    .option-badge { display: inline-block; padding: 4px 12px; background: rgba(255,255,255,0.2); border-radius: 20px; font-size: 12px; font-weight: 600; margin-top: 8px; }
+    .option-badge.recommended { background: #059669; }
+    .option-preview { padding: 32px; background: #f9fafb; }
+    .option-notes { padding: 24px 32px; border-top: 1px solid #e5e7eb; }
+    .option-notes h4 { font-size: 14px; font-weight: 600; color: #1a1a1a; margin-bottom: 12px; }
+    .option-notes ul { list-style: none; }
+    .option-notes li { padding: 6px 0; padding-left: 24px; position: relative; color: #605e5c; font-size: 14px; }
+    .option-notes li::before { content: '✓'; position: absolute; left: 0; color: #059669; font-weight: 700; }
+    .option-notes li.con::before { content: '✗'; color: #dc2626; }
+
+    /* JML Colors */
+    .jml-onboarding { --jml-primary: #005BAA; --jml-dark: #004A8F; --jml-light: #e6f0f7; }
+    .jml-mover { --jml-primary: #ea580c; --jml-dark: #c2410c; --jml-light: #fff7ed; }
+    .jml-offboarding { --jml-primary: #d13438; --jml-dark: #a80000; --jml-light: #fef2f2; }
+
+    /* ═══════════════════════════════════════════════════════════════════════════════
+       OPTION 1: 3-Column Accordion Layout (Policy Builder Style)
+       ═══════════════════════════════════════════════════════════════════════════════ */
+    .opt1-layout {
+      display: flex;
+      min-height: 500px;
+      background: #f9fafb;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #e5e7eb;
+    }
+    .opt1-sidebar {
+      width: 220px;
+      min-width: 220px;
+      background: #ffffff;
+      border-right: 1px solid #e5e7eb;
+    }
+    .opt1-sidebar-header {
+      padding: 20px 18px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .opt1-sidebar-header h3 { font-size: 15px; font-weight: 700; color: #111827; }
+    .opt1-sidebar-header span { font-size: 12px; color: #6b7280; }
+    .opt1-accordion { padding: 8px 0; }
+    .opt1-acc-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 18px;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: all 0.15s ease;
+    }
+    .opt1-acc-item:hover { background: #f3f4f6; }
+    .opt1-acc-item.active { background: var(--jml-light); border-left-color: var(--jml-primary); }
+    .opt1-acc-item.completed { border-left-color: #059669; }
+    .opt1-acc-num {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: #e5e7eb; color: #6b7280;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; margin-right: 12px;
+    }
+    .opt1-acc-item.active .opt1-acc-num { background: var(--jml-primary); color: #fff; }
+    .opt1-acc-item.completed .opt1-acc-num { background: #059669; color: #fff; }
+    .opt1-acc-item.completed .opt1-acc-num::after { content: '✓'; }
+    .opt1-acc-text { font-size: 13px; color: #374151; }
+    .opt1-acc-item.active .opt1-acc-text { font-weight: 600; color: var(--jml-primary); }
+
+    .opt1-center {
+      flex: 1;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+    }
+    .opt1-center-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+    }
+    .opt1-center-header h2 { font-size: 22px; font-weight: 700; color: #111827; }
+    .opt1-center-header p { font-size: 14px; color: #6b7280; margin-top: 4px; }
+    .opt1-progress-badge {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--jml-light); padding: 8px 14px; border-radius: 8px;
+    }
+    .opt1-progress-badge span { font-size: 13px; font-weight: 600; color: var(--jml-primary); }
+    .opt1-progress-track { width: 80px; height: 6px; background: #e5e7eb; border-radius: 3px; overflow: hidden; }
+    .opt1-progress-fill { height: 100%; background: var(--jml-primary); border-radius: 3px; }
+
+    .opt1-form-card {
+      background: #ffffff;
+      border-radius: 10px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      flex: 1;
+    }
+    .opt1-form-section { margin-bottom: 24px; }
+    .opt1-form-section h4 { font-size: 13px; font-weight: 700; color: var(--jml-primary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--jml-primary); display: inline-block; }
+    .opt1-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .opt1-field label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+    .opt1-field input, .opt1-field select { width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px; }
+    .opt1-field input:focus, .opt1-field select:focus { border-color: var(--jml-primary); outline: none; box-shadow: 0 0 0 2px rgba(0,91,170,0.1); }
+
+    .opt1-footer {
+      margin-top: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 20px;
+      border-top: 1px solid #e5e7eb;
+    }
+    .opt1-footer-progress { display: flex; align-items: center; gap: 12px; flex: 1; }
+    .opt1-footer-track { flex: 1; max-width: 300px; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden; }
+    .opt1-footer-fill { height: 100%; background: var(--jml-primary); border-radius: 4px; }
+    .opt1-footer-text { font-size: 13px; font-weight: 600; color: var(--jml-primary); }
+    .opt1-footer-actions { display: flex; gap: 10px; }
+    .opt1-btn { padding: 10px 20px; border-radius: 4px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; display: flex; align-items: center; gap: 6px; }
+    .opt1-btn-secondary { background: #fff; color: #374151; border: 1px solid #d1d5db; }
+    .opt1-btn-secondary:hover { background: #f9fafb; }
+    .opt1-btn-primary { background: var(--jml-primary); color: #fff; }
+    .opt1-btn-primary:hover { background: var(--jml-dark); }
+
+    .opt1-right-panel {
+      width: 260px;
+      min-width: 260px;
+      background: #ffffff;
+      border-left: 1px solid #e5e7eb;
+      padding: 24px 20px;
+    }
+    .opt1-tip-card {
+      background: var(--jml-light);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    .opt1-tip-card h5 { font-size: 13px; font-weight: 600; color: var(--jml-primary); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .opt1-tip-card p { font-size: 13px; color: #4b5563; line-height: 1.5; }
+    .opt1-checklist h5 { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 12px; }
+    .opt1-checklist-item { display: flex; align-items: center; gap: 8px; padding: 8px 0; font-size: 13px; color: #6b7280; }
+    .opt1-checklist-item.done { color: #059669; text-decoration: line-through; }
+    .opt1-check { width: 18px; height: 18px; border: 2px solid #d1d5db; border-radius: 4px; }
+    .opt1-checklist-item.done .opt1-check { background: #059669; border-color: #059669; }
+
+    /* ═══════════════════════════════════════════════════════════════════════════════
+       OPTION 2: Full-Width with Sticky Top Stepper
+       ═══════════════════════════════════════════════════════════════════════════════ */
+    .opt2-layout { background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb; }
+    .opt2-stepper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px 32px;
+      background: linear-gradient(135deg, var(--jml-primary) 0%, var(--jml-dark) 100%);
+      gap: 8px;
+    }
+    .opt2-step {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 20px;
+      color: rgba(255,255,255,0.7);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .opt2-step:hover { background: rgba(255,255,255,0.2); }
+    .opt2-step.active { background: #fff; color: var(--jml-primary); font-weight: 600; }
+    .opt2-step.completed { background: rgba(255,255,255,0.2); color: #fff; }
+    .opt2-step-num {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700;
+    }
+    .opt2-step.active .opt2-step-num { background: var(--jml-primary); color: #fff; }
+    .opt2-step.completed .opt2-step-num { background: #059669; }
+    .opt2-step-connector { width: 40px; height: 2px; background: rgba(255,255,255,0.3); }
+    .opt2-step-connector.completed { background: #059669; }
+
+    .opt2-content { padding: 32px 48px; min-height: 400px; }
+    .opt2-content-header { margin-bottom: 32px; text-align: center; }
+    .opt2-content-header h2 { font-size: 24px; font-weight: 700; color: #111827; margin-bottom: 8px; }
+    .opt2-content-header p { font-size: 15px; color: #6b7280; }
+    .opt2-form-container { max-width: 800px; margin: 0 auto; }
+
+    .opt2-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 48px;
+      background: #f9fafb;
+      border-top: 1px solid #e5e7eb;
+    }
+    .opt2-progress-container { display: flex; align-items: center; gap: 16px; }
+    .opt2-progress-bar { width: 200px; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden; }
+    .opt2-progress-fill { height: 100%; background: var(--jml-primary); }
+    .opt2-progress-label { font-size: 14px; color: #6b7280; }
+    .opt2-progress-label strong { color: var(--jml-primary); }
+
+    /* ═══════════════════════════════════════════════════════════════════════════════
+       OPTION 3: Left Vertical Rail + Cards Pattern
+       ═══════════════════════════════════════════════════════════════════════════════ */
+    .opt3-layout { display: flex; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb; min-height: 500px; }
+    .opt3-rail {
+      width: 72px;
+      background: linear-gradient(180deg, var(--jml-primary) 0%, var(--jml-dark) 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 0;
+    }
+    .opt3-rail-icon { width: 40px; height: 40px; background: rgba(255,255,255,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px; margin-bottom: 24px; }
+    .opt3-rail-step {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(255,255,255,0.6);
+      font-size: 14px; font-weight: 700;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      position: relative;
+    }
+    .opt3-rail-step:hover { background: rgba(255,255,255,0.2); }
+    .opt3-rail-step.active { background: #fff; color: var(--jml-primary); }
+    .opt3-rail-step.completed { background: #059669; color: #fff; }
+    .opt3-rail-connector { width: 2px; height: 20px; background: rgba(255,255,255,0.2); margin-bottom: 8px; }
+    .opt3-rail-connector.completed { background: #059669; }
+
+    .opt3-main { flex: 1; display: flex; flex-direction: column; }
+    .opt3-header {
+      padding: 24px 32px;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .opt3-header h2 { font-size: 22px; font-weight: 700; color: #111827; }
+    .opt3-header p { font-size: 14px; color: #6b7280; margin-top: 4px; }
+    .opt3-header-meta { display: flex; align-items: center; gap: 16px; }
+    .opt3-step-badge { padding: 6px 12px; background: var(--jml-light); border-radius: 6px; font-size: 13px; font-weight: 600; color: var(--jml-primary); }
+
+    .opt3-body { flex: 1; padding: 32px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .opt3-card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 20px;
+      transition: all 0.15s ease;
+    }
+    .opt3-card:hover { border-color: var(--jml-primary); box-shadow: 0 4px 12px rgba(0,91,170,0.1); }
+    .opt3-card h4 { font-size: 14px; font-weight: 600; color: #111827; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .opt3-card h4 span { width: 28px; height: 28px; background: var(--jml-light); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: var(--jml-primary); font-size: 12px; }
+
+    .opt3-footer {
+      padding: 20px 32px;
+      background: #f9fafb;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════════════
+       OPTION 4: Tabs + Progress Bar (Minimal Modern)
+       ═══════════════════════════════════════════════════════════════════════════════ */
+    .opt4-layout { background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb; }
+    .opt4-header {
+      padding: 24px 32px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .opt4-header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .opt4-header h2 { font-size: 24px; font-weight: 700; color: #111827; }
+    .opt4-header p { font-size: 14px; color: #6b7280; }
+    .opt4-close-btn { width: 36px; height: 36px; border-radius: 8px; border: 1px solid #e5e7eb; background: #fff; cursor: pointer; font-size: 18px; color: #6b7280; }
+    .opt4-close-btn:hover { background: #f9fafb; }
+
+    .opt4-progress-section { margin-bottom: 20px; }
+    .opt4-progress-bar { height: 6px; background: #e5e7eb; border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
+    .opt4-progress-fill { height: 100%; background: linear-gradient(90deg, var(--jml-primary) 0%, var(--jml-dark) 100%); border-radius: 3px; }
+    .opt4-progress-labels { display: flex; justify-content: space-between; font-size: 12px; color: #6b7280; }
+
+    .opt4-tabs { display: flex; gap: 4px; }
+    .opt4-tab {
+      padding: 10px 18px;
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #6b7280;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.15s ease;
+    }
+    .opt4-tab:hover { background: #f3f4f6; color: #374151; }
+    .opt4-tab.active { background: var(--jml-primary); color: #fff; }
+    .opt4-tab.completed { color: #059669; }
+    .opt4-tab-num { width: 20px; height: 20px; border-radius: 50%; background: #e5e7eb; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+    .opt4-tab.active .opt4-tab-num { background: rgba(255,255,255,0.2); }
+    .opt4-tab.completed .opt4-tab-num { background: #059669; color: #fff; }
+
+    .opt4-content { padding: 32px; min-height: 350px; }
+    .opt4-footer {
+      padding: 20px 32px;
+      background: #f9fafb;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════════════
+       OPTION 5: Split Screen with Summary Preview
+       ═══════════════════════════════════════════════════════════════════════════════ */
+    .opt5-layout { display: flex; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb; min-height: 500px; }
+    .opt5-form-side { flex: 1; display: flex; flex-direction: column; }
+    .opt5-form-header {
+      padding: 24px 32px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .opt5-form-header h2 { font-size: 22px; font-weight: 700; color: #111827; }
+    .opt5-breadcrumb { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 13px; }
+    .opt5-breadcrumb span { color: #9ca3af; }
+    .opt5-breadcrumb span.active { color: var(--jml-primary); font-weight: 600; }
+    .opt5-breadcrumb span.separator { color: #d1d5db; }
+
+    .opt5-form-body { flex: 1; padding: 32px; overflow-y: auto; }
+    .opt5-form-footer {
+      padding: 20px 32px;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .opt5-step-dots { display: flex; gap: 8px; }
+    .opt5-dot { width: 10px; height: 10px; border-radius: 50%; background: #e5e7eb; cursor: pointer; transition: all 0.15s ease; }
+    .opt5-dot.active { background: var(--jml-primary); width: 24px; border-radius: 5px; }
+    .opt5-dot.completed { background: #059669; }
+
+    .opt5-preview-side {
+      width: 380px;
+      background: linear-gradient(180deg, var(--jml-primary) 0%, var(--jml-dark) 100%);
+      color: #fff;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+    }
+    .opt5-preview-header { margin-bottom: 24px; }
+    .opt5-preview-header h3 { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+    .opt5-preview-header p { font-size: 13px; opacity: 0.8; }
+
+    .opt5-preview-card {
+      background: rgba(255,255,255,0.1);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .opt5-preview-card h4 { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7; margin-bottom: 8px; }
+    .opt5-preview-card p { font-size: 15px; font-weight: 500; }
+    .opt5-preview-card.empty p { opacity: 0.5; font-style: italic; }
+
+    .opt5-preview-progress {
+      margin-top: auto;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255,255,255,0.2);
+    }
+    .opt5-preview-progress h4 { font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+    .opt5-progress-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; font-size: 13px; }
+    .opt5-progress-check { width: 20px; height: 20px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; }
+    .opt5-progress-item.done .opt5-progress-check { background: #059669; }
+    .opt5-progress-item.active { font-weight: 600; }
+    .opt5-progress-item.pending { opacity: 0.6; }
+
+    /* Shared Button Styles */
+    .btn { padding: 10px 20px; border-radius: 4px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s ease; }
+    .btn-secondary { background: #fff; color: #374151; border: 1px solid #d1d5db; }
+    .btn-secondary:hover { background: #f9fafb; }
+    .btn-primary { background: var(--jml-primary); color: #fff; }
+    .btn-primary:hover { background: var(--jml-dark); }
+    .btn-ghost { background: transparent; color: var(--jml-primary); }
+    .btn-ghost:hover { background: var(--jml-light); }
+
+    /* Shared Form Elements */
+    .form-section { margin-bottom: 28px; }
+    .form-section-title { font-size: 13px; font-weight: 700; color: var(--jml-primary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--jml-primary); display: inline-block; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-field label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+    .form-field input, .form-field select, .form-field textarea { width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px; font-family: inherit; }
+    .form-field input:focus, .form-field select:focus, .form-field textarea:focus { border-color: var(--jml-primary); outline: none; box-shadow: 0 0 0 3px rgba(0,91,170,0.1); }
+    .form-field textarea { resize: vertical; min-height: 80px; }
+  </style>
+</head>
+<body>
+  <div class="mockup-container">
+    <header class="mockup-header">
+      <h1>JML Full-Page Wizard Layout Options</h1>
+      <p>Moving wizards from side panels to the main content area. These mockups show different approaches based on the Policy Manager's wizard patterns.</p>
+    </header>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════════════
+         OPTION 1: 3-Column Accordion Layout (Policy Builder Style)
+         ═══════════════════════════════════════════════════════════════════════════════ -->
+    <section class="option-section">
+      <div class="option-header">
+        <h2>Option 1: 3-Column Accordion Layout</h2>
+        <p>Based on the Policy Builder pattern — left sidebar with accordion steps, center form area, right context panel</p>
+        <span class="option-badge recommended">★ Recommended</span>
+      </div>
+      <div class="option-preview jml-onboarding">
+        <div class="opt1-layout">
+          <!-- Left Sidebar -->
+          <aside class="opt1-sidebar">
+            <div class="opt1-sidebar-header">
+              <h3>Onboarding Wizard</h3>
+              <span>8 steps to complete</span>
+            </div>
+            <div class="opt1-accordion">
+              <div class="opt1-acc-item completed">
+                <div class="opt1-acc-num"></div>
+                <span class="opt1-acc-text">Select Candidate</span>
+              </div>
+              <div class="opt1-acc-item active">
+                <div class="opt1-acc-num">2</div>
+                <span class="opt1-acc-text">Employee Details</span>
+              </div>
+              <div class="opt1-acc-item">
+                <div class="opt1-acc-num">3</div>
+                <span class="opt1-acc-text">Policy Pack</span>
+              </div>
+              <div class="opt1-acc-item">
+                <div class="opt1-acc-num">4</div>
+                <span class="opt1-acc-text">Documents</span>
+              </div>
+              <div class="opt1-acc-item">
+                <div class="opt1-acc-num">5</div>
+                <span class="opt1-acc-text">System Access</span>
+              </div>
+              <div class="opt1-acc-item">
+                <div class="opt1-acc-num">6</div>
+                <span class="opt1-acc-text">Equipment</span>
+              </div>
+              <div class="opt1-acc-item">
+                <div class="opt1-acc-num">7</div>
+                <span class="opt1-acc-text">Training</span>
+              </div>
+              <div class="opt1-acc-item">
+                <div class="opt1-acc-num">8</div>
+                <span class="opt1-acc-text">Review & Submit</span>
+              </div>
+            </div>
+          </aside>
+
+          <!-- Center Content -->
+          <main class="opt1-center">
+            <div class="opt1-center-header">
+              <div>
+                <h2>Employee Details</h2>
+                <p>Enter the new employee's information and start date</p>
+              </div>
+              <div class="opt1-progress-badge">
+                <span>Step 2 of 8</span>
+                <div class="opt1-progress-track">
+                  <div class="opt1-progress-fill" style="width: 25%"></div>
+                </div>
+                <span>25%</span>
+              </div>
+            </div>
+
+            <div class="opt1-form-card">
+              <div class="opt1-form-section">
+                <h4>Personal Information</h4>
+                <div class="opt1-form-grid">
+                  <div class="opt1-field">
+                    <label>Full Name</label>
+                    <input type="text" value="Sarah Johnson" />
+                  </div>
+                  <div class="opt1-field">
+                    <label>Email Address</label>
+                    <input type="email" value="sarah.johnson@company.com" />
+                  </div>
+                  <div class="opt1-field">
+                    <label>Job Title</label>
+                    <input type="text" placeholder="e.g. Software Engineer" />
+                  </div>
+                  <div class="opt1-field">
+                    <label>Department</label>
+                    <select>
+                      <option>Select department...</option>
+                      <option>Engineering</option>
+                      <option>Marketing</option>
+                      <option>Sales</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="opt1-form-section">
+                <h4>Employment Details</h4>
+                <div class="opt1-form-grid">
+                  <div class="opt1-field">
+                    <label>Start Date</label>
+                    <input type="date" />
+                  </div>
+                  <div class="opt1-field">
+                    <label>Manager</label>
+                    <input type="text" placeholder="Search for manager..." />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="opt1-footer">
+              <div class="opt1-footer-progress">
+                <div class="opt1-footer-track">
+                  <div class="opt1-footer-fill" style="width: 25%"></div>
+                </div>
+                <span class="opt1-footer-text">25% Complete</span>
+              </div>
+              <div class="opt1-footer-actions">
+                <button class="opt1-btn opt1-btn-secondary">← Previous</button>
+                <button class="opt1-btn opt1-btn-secondary">Save Draft</button>
+                <button class="opt1-btn opt1-btn-primary">Next →</button>
+              </div>
+            </div>
+          </main>
+
+          <!-- Right Context Panel -->
+          <aside class="opt1-right-panel">
+            <div class="opt1-tip-card">
+              <h5>💡 Quick Tip</h5>
+              <p>Make sure the email address matches your organization's domain for automatic system provisioning.</p>
+            </div>
+            <div class="opt1-checklist">
+              <h5>Completion Checklist</h5>
+              <div class="opt1-checklist-item done">
+                <span class="opt1-check"></span>
+                Candidate selected
+              </div>
+              <div class="opt1-checklist-item">
+                <span class="opt1-check"></span>
+                Employee details filled
+              </div>
+              <div class="opt1-checklist-item">
+                <span class="opt1-check"></span>
+                Policy pack selected
+              </div>
+              <div class="opt1-checklist-item">
+                <span class="opt1-check"></span>
+                Documents assigned
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+      <div class="option-notes">
+        <h4>Key Features</h4>
+        <ul>
+          <li>Accordion sidebar shows all steps at a glance with clear progress indicators</li>
+          <li>Context panel provides helpful tips and completion checklist</li>
+          <li>Form card has clear section headers with JML color branding</li>
+          <li>Progress bar in both header and footer for visibility</li>
+          <li>Responsive — collapses sidebar and context panel on smaller screens</li>
+          <li class="con">More complex layout with 3 columns</li>
+          <li class="con">Context panel may be redundant for simpler wizards</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════════════
+         OPTION 2: Full-Width with Sticky Top Stepper
+         ═══════════════════════════════════════════════════════════════════════════════ -->
+    <section class="option-section">
+      <div class="option-header" style="background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);">
+        <h2>Option 2: Full-Width with Top Stepper</h2>
+        <p>Horizontal stepper in the header, full-width centered form below — clean and familiar pattern</p>
+        <span class="option-badge">Simple & Focused</span>
+      </div>
+      <div class="option-preview jml-mover">
+        <div class="opt2-layout">
+          <div class="opt2-stepper">
+            <div class="opt2-step completed">
+              <span class="opt2-step-num">✓</span>
+              <span>Select Employee</span>
+            </div>
+            <div class="opt2-step-connector completed"></div>
+            <div class="opt2-step active">
+              <span class="opt2-step-num">2</span>
+              <span>Current Position</span>
+            </div>
+            <div class="opt2-step-connector"></div>
+            <div class="opt2-step">
+              <span class="opt2-step-num">3</span>
+              <span>New Position</span>
+            </div>
+            <div class="opt2-step-connector"></div>
+            <div class="opt2-step">
+              <span class="opt2-step-num">4</span>
+              <span>System Access</span>
+            </div>
+            <div class="opt2-step-connector"></div>
+            <div class="opt2-step">
+              <span class="opt2-step-num">5</span>
+              <span>Training</span>
+            </div>
+            <div class="opt2-step-connector"></div>
+            <div class="opt2-step">
+              <span class="opt2-step-num">6</span>
+              <span>Review</span>
+            </div>
+          </div>
+
+          <div class="opt2-content">
+            <div class="opt2-content-header">
+              <h2>Current Position Details</h2>
+              <p>Confirm the employee's current role and department information</p>
+            </div>
+            <div class="opt2-form-container">
+              <div class="form-section">
+                <div class="form-section-title" style="color: #ea580c; border-color: #ea580c;">Current Role</div>
+                <div class="form-grid">
+                  <div class="form-field">
+                    <label>Current Job Title</label>
+                    <input type="text" value="Junior Developer" />
+                  </div>
+                  <div class="form-field">
+                    <label>Current Department</label>
+                    <input type="text" value="Engineering" />
+                  </div>
+                  <div class="form-field">
+                    <label>Current Manager</label>
+                    <input type="text" value="John Smith" />
+                  </div>
+                  <div class="form-field">
+                    <label>Current Location</label>
+                    <input type="text" value="London Office" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="opt2-footer">
+            <div class="opt2-progress-container">
+              <div class="opt2-progress-bar">
+                <div class="opt2-progress-fill" style="width: 33%; background: linear-gradient(90deg, #ea580c 0%, #c2410c 100%);"></div>
+              </div>
+              <span class="opt2-progress-label"><strong style="color: #ea580c;">33%</strong> complete</span>
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn btn-secondary">← Previous</button>
+              <button class="btn btn-secondary">Save Draft</button>
+              <button class="btn btn-primary" style="background: #ea580c;">Next →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="option-notes">
+        <h4>Key Features</h4>
+        <ul>
+          <li>Familiar horizontal stepper pattern — easy to understand</li>
+          <li>Full-width form gives maximum space for content</li>
+          <li>Clean, focused design with minimal distractions</li>
+          <li>Stepper doubles as navigation — click to jump to any step</li>
+          <li class="con">Steps may truncate on smaller screens</li>
+          <li class="con">No context/help panel — relies on inline guidance</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════════════
+         OPTION 3: Left Vertical Rail + Cards Pattern
+         ═══════════════════════════════════════════════════════════════════════════════ -->
+    <section class="option-section">
+      <div class="option-header" style="background: linear-gradient(135deg, #d13438 0%, #a80000 100%);">
+        <h2>Option 3: Vertical Rail + Cards Pattern</h2>
+        <p>Minimal left rail with step numbers, form area uses card-based sections</p>
+        <span class="option-badge">Modern & Compact</span>
+      </div>
+      <div class="option-preview jml-offboarding">
+        <div class="opt3-layout">
+          <div class="opt3-rail">
+            <div class="opt3-rail-icon">👋</div>
+            <div class="opt3-rail-step completed">✓</div>
+            <div class="opt3-rail-connector completed"></div>
+            <div class="opt3-rail-step active">2</div>
+            <div class="opt3-rail-connector"></div>
+            <div class="opt3-rail-step">3</div>
+            <div class="opt3-rail-connector"></div>
+            <div class="opt3-rail-step">4</div>
+            <div class="opt3-rail-connector"></div>
+            <div class="opt3-rail-step">5</div>
+            <div class="opt3-rail-connector"></div>
+            <div class="opt3-rail-step">6</div>
+            <div class="opt3-rail-connector"></div>
+            <div class="opt3-rail-step">7</div>
+          </div>
+
+          <div class="opt3-main">
+            <div class="opt3-header">
+              <div>
+                <h2>Termination Details</h2>
+                <p>Set the termination type and last working date</p>
+              </div>
+              <div class="opt3-header-meta">
+                <span class="opt3-step-badge" style="background: #fef2f2; color: #d13438;">Step 2 of 7</span>
+              </div>
+            </div>
+
+            <div class="opt3-body">
+              <div class="opt3-card">
+                <h4><span>1</span> Termination Type</h4>
+                <div class="form-field">
+                  <label>Select reason for departure</label>
+                  <select style="border-color: #d1d5db;">
+                    <option>Resignation</option>
+                    <option>Termination</option>
+                    <option>Redundancy</option>
+                    <option>Retirement</option>
+                    <option>Contract End</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="opt3-card">
+                <h4><span>2</span> Dates</h4>
+                <div class="form-field" style="margin-bottom: 16px;">
+                  <label>Last Working Date</label>
+                  <input type="date" style="border-color: #d1d5db;" />
+                </div>
+                <div class="form-field">
+                  <label>Notice Period (days)</label>
+                  <input type="number" value="30" style="border-color: #d1d5db;" />
+                </div>
+              </div>
+
+              <div class="opt3-card">
+                <h4><span>3</span> Handover Manager</h4>
+                <div class="form-field">
+                  <label>Assign handover responsibilities to</label>
+                  <input type="text" placeholder="Search for manager..." style="border-color: #d1d5db;" />
+                </div>
+              </div>
+
+              <div class="opt3-card">
+                <h4><span>4</span> Exit Interview</h4>
+                <div class="form-field">
+                  <label>Schedule exit interview?</label>
+                  <select style="border-color: #d1d5db;">
+                    <option>Yes — Schedule interview</option>
+                    <option>No — Not required</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="opt3-footer">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 200px; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden;">
+                  <div style="width: 28%; height: 100%; background: #d13438; border-radius: 4px;"></div>
+                </div>
+                <span style="font-size: 13px; color: #6b7280;">28% complete</span>
+              </div>
+              <div style="display: flex; gap: 10px;">
+                <button class="btn btn-secondary">← Previous</button>
+                <button class="btn btn-secondary">Save Draft</button>
+                <button class="btn btn-primary" style="background: #d13438;">Next →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="option-notes">
+        <h4>Key Features</h4>
+        <ul>
+          <li>Minimal vertical rail saves horizontal space</li>
+          <li>Card-based form sections feel modern and organized</li>
+          <li>Cards can be reordered or conditionally shown</li>
+          <li>Works well for forms with many small sections</li>
+          <li class="con">Step labels not visible — numbers only</li>
+          <li class="con">Tooltips needed to explain step names</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════════════
+         OPTION 4: Tabs + Progress Bar (Minimal Modern)
+         ═══════════════════════════════════════════════════════════════════════════════ -->
+    <section class="option-section">
+      <div class="option-header">
+        <h2>Option 4: Tabs + Progress Bar</h2>
+        <p>Modern tab-based navigation with prominent progress tracking — minimal and clean</p>
+        <span class="option-badge">Minimal & Clean</span>
+      </div>
+      <div class="option-preview jml-onboarding">
+        <div class="opt4-layout">
+          <div class="opt4-header">
+            <div class="opt4-header-top">
+              <div>
+                <h2>New Employee Onboarding</h2>
+                <p>Complete all steps to finish the onboarding process</p>
+              </div>
+              <button class="opt4-close-btn">×</button>
+            </div>
+
+            <div class="opt4-progress-section">
+              <div class="opt4-progress-bar">
+                <div class="opt4-progress-fill" style="width: 50%;"></div>
+              </div>
+              <div class="opt4-progress-labels">
+                <span>4 of 8 steps completed</span>
+                <span>50%</span>
+              </div>
+            </div>
+
+            <div class="opt4-tabs">
+              <button class="opt4-tab completed">
+                <span class="opt4-tab-num">✓</span>
+                Candidate
+              </button>
+              <button class="opt4-tab completed">
+                <span class="opt4-tab-num">✓</span>
+                Details
+              </button>
+              <button class="opt4-tab completed">
+                <span class="opt4-tab-num">✓</span>
+                Policy Pack
+              </button>
+              <button class="opt4-tab completed">
+                <span class="opt4-tab-num">✓</span>
+                Documents
+              </button>
+              <button class="opt4-tab active">
+                <span class="opt4-tab-num">5</span>
+                Systems
+              </button>
+              <button class="opt4-tab">
+                <span class="opt4-tab-num">6</span>
+                Equipment
+              </button>
+              <button class="opt4-tab">
+                <span class="opt4-tab-num">7</span>
+                Training
+              </button>
+              <button class="opt4-tab">
+                <span class="opt4-tab-num">8</span>
+                Review
+              </button>
+            </div>
+          </div>
+
+          <div class="opt4-content">
+            <div class="form-section">
+              <div class="form-section-title">System Access Requirements</div>
+              <p style="margin-bottom: 20px; color: #6b7280; font-size: 14px;">Select the systems this employee needs access to. Access will be provisioned automatically.</p>
+
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+                <label style="display: flex; align-items: center; gap: 12px; padding: 16px; border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer;">
+                  <input type="checkbox" checked style="width: 20px; height: 20px; accent-color: #005BAA;" />
+                  <div>
+                    <div style="font-weight: 600; color: #111827;">Microsoft 365</div>
+                    <div style="font-size: 12px; color: #6b7280;">Email, Teams, SharePoint</div>
+                  </div>
+                </label>
+                <label style="display: flex; align-items: center; gap: 12px; padding: 16px; border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer;">
+                  <input type="checkbox" checked style="width: 20px; height: 20px; accent-color: #005BAA;" />
+                  <div>
+                    <div style="font-weight: 600; color: #111827;">HR System</div>
+                    <div style="font-size: 12px; color: #6b7280;">Workday access</div>
+                  </div>
+                </label>
+                <label style="display: flex; align-items: center; gap: 12px; padding: 16px; border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer;">
+                  <input type="checkbox" style="width: 20px; height: 20px; accent-color: #005BAA;" />
+                  <div>
+                    <div style="font-weight: 600; color: #111827;">Development Tools</div>
+                    <div style="font-size: 12px; color: #6b7280;">GitHub, Azure DevOps</div>
+                  </div>
+                </label>
+                <label style="display: flex; align-items: center; gap: 12px; padding: 16px; border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer;">
+                  <input type="checkbox" style="width: 20px; height: 20px; accent-color: #005BAA;" />
+                  <div>
+                    <div style="font-weight: 600; color: #111827;">CRM System</div>
+                    <div style="font-size: 12px; color: #6b7280;">Salesforce access</div>
+                  </div>
+                </label>
+                <label style="display: flex; align-items: center; gap: 12px; padding: 16px; border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer;">
+                  <input type="checkbox" style="width: 20px; height: 20px; accent-color: #005BAA;" />
+                  <div>
+                    <div style="font-weight: 600; color: #111827;">Finance System</div>
+                    <div style="font-size: 12px; color: #6b7280;">SAP access</div>
+                  </div>
+                </label>
+                <label style="display: flex; align-items: center; gap: 12px; padding: 16px; border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer;">
+                  <input type="checkbox" style="width: 20px; height: 20px; accent-color: #005BAA;" />
+                  <div>
+                    <div style="font-weight: 600; color: #111827;">Building Access</div>
+                    <div style="font-size: 12px; color: #6b7280;">Card & security</div>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="opt4-footer">
+            <button class="btn btn-secondary">← Previous</button>
+            <button class="btn btn-secondary">Save Draft</button>
+            <button class="btn btn-primary">Next →</button>
+          </div>
+        </div>
+      </div>
+      <div class="option-notes">
+        <h4>Key Features</h4>
+        <ul>
+          <li>Tabs allow direct navigation to any step</li>
+          <li>Prominent progress bar shows overall completion</li>
+          <li>Clean, uncluttered interface</li>
+          <li>Tabs scroll horizontally if needed on smaller screens</li>
+          <li class="con">All steps visible — may overwhelm users</li>
+          <li class="con">Less guidance than accordion pattern</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════════════
+         OPTION 5: Split Screen with Summary Preview
+         ═══════════════════════════════════════════════════════════════════════════════ -->
+    <section class="option-section">
+      <div class="option-header" style="background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);">
+        <h2>Option 5: Split Screen with Live Preview</h2>
+        <p>Form on the left, live summary preview on the right — shows data as it's entered</p>
+        <span class="option-badge">Interactive Preview</span>
+      </div>
+      <div class="option-preview jml-mover">
+        <div class="opt5-layout">
+          <!-- Form Side -->
+          <div class="opt5-form-side">
+            <div class="opt5-form-header">
+              <h2>Internal Transfer Request</h2>
+              <div class="opt5-breadcrumb">
+                <span class="active">Employee</span>
+                <span class="separator">→</span>
+                <span>Current Role</span>
+                <span class="separator">→</span>
+                <span>New Role</span>
+                <span class="separator">→</span>
+                <span>Systems</span>
+                <span class="separator">→</span>
+                <span>Training</span>
+                <span class="separator">→</span>
+                <span>Review</span>
+              </div>
+            </div>
+
+            <div class="opt5-form-body">
+              <div class="form-section">
+                <div class="form-section-title" style="color: #ea580c; border-color: #ea580c;">Select Employee</div>
+                <div class="form-field" style="margin-bottom: 16px;">
+                  <label>Search Employee</label>
+                  <input type="text" placeholder="Start typing employee name..." style="border-color: #d1d5db;" />
+                </div>
+                <div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; padding: 16px;">
+                  <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 48px; height: 48px; border-radius: 50%; background: #ea580c; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 600;">MJ</div>
+                    <div>
+                      <div style="font-weight: 600; color: #111827;">Michael Johnson</div>
+                      <div style="font-size: 13px; color: #6b7280;">Junior Developer • Engineering</div>
+                      <div style="font-size: 12px; color: #9ca3af;">Started: 15 Jan 2024</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-section">
+                <div class="form-section-title" style="color: #ea580c; border-color: #ea580c;">Transfer Type</div>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                  <label style="display: flex; align-items: flex-start; gap: 12px; padding: 16px; border: 2px solid #ea580c; border-radius: 8px; cursor: pointer; background: #fff7ed;">
+                    <input type="radio" name="type" checked style="margin-top: 4px; accent-color: #ea580c;" />
+                    <div>
+                      <div style="font-weight: 600; color: #111827;">Promotion</div>
+                      <div style="font-size: 12px; color: #6b7280;">Move to a higher role</div>
+                    </div>
+                  </label>
+                  <label style="display: flex; align-items: flex-start; gap: 12px; padding: 16px; border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer;">
+                    <input type="radio" name="type" style="margin-top: 4px; accent-color: #ea580c;" />
+                    <div>
+                      <div style="font-weight: 600; color: #111827;">Department Transfer</div>
+                      <div style="font-size: 12px; color: #6b7280;">Move to different team</div>
+                    </div>
+                  </label>
+                  <label style="display: flex; align-items: flex-start; gap: 12px; padding: 16px; border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer;">
+                    <input type="radio" name="type" style="margin-top: 4px; accent-color: #ea580c;" />
+                    <div>
+                      <div style="font-weight: 600; color: #111827;">Location Change</div>
+                      <div style="font-size: 12px; color: #6b7280;">Move to different office</div>
+                    </div>
+                  </label>
+                  <label style="display: flex; align-items: flex-start; gap: 12px; padding: 16px; border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer;">
+                    <input type="radio" name="type" style="margin-top: 4px; accent-color: #ea580c;" />
+                    <div>
+                      <div style="font-weight: 600; color: #111827;">Lateral Move</div>
+                      <div style="font-size: 12px; color: #6b7280;">Same level, different role</div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="opt5-form-footer">
+              <div class="opt5-step-dots">
+                <div class="opt5-dot active"></div>
+                <div class="opt5-dot"></div>
+                <div class="opt5-dot"></div>
+                <div class="opt5-dot"></div>
+                <div class="opt5-dot"></div>
+                <div class="opt5-dot"></div>
+              </div>
+              <div style="display: flex; gap: 10px;">
+                <button class="btn btn-secondary">Save Draft</button>
+                <button class="btn btn-primary" style="background: #ea580c;">Next →</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Preview Side -->
+          <div class="opt5-preview-side" style="background: linear-gradient(180deg, #ea580c 0%, #c2410c 100%);">
+            <div class="opt5-preview-header">
+              <h3>Transfer Summary</h3>
+              <p>Live preview of your request</p>
+            </div>
+
+            <div class="opt5-preview-card">
+              <h4>Employee</h4>
+              <p>Michael Johnson</p>
+            </div>
+
+            <div class="opt5-preview-card">
+              <h4>Transfer Type</h4>
+              <p>Promotion</p>
+            </div>
+
+            <div class="opt5-preview-card empty">
+              <h4>New Position</h4>
+              <p>Not yet specified</p>
+            </div>
+
+            <div class="opt5-preview-card empty">
+              <h4>Effective Date</h4>
+              <p>Not yet specified</p>
+            </div>
+
+            <div class="opt5-preview-progress">
+              <h4>Progress</h4>
+              <div class="opt5-progress-item active">
+                <span class="opt5-progress-check">●</span>
+                Employee Selection
+              </div>
+              <div class="opt5-progress-item pending">
+                <span class="opt5-progress-check"></span>
+                Current Position
+              </div>
+              <div class="opt5-progress-item pending">
+                <span class="opt5-progress-check"></span>
+                New Position
+              </div>
+              <div class="opt5-progress-item pending">
+                <span class="opt5-progress-check"></span>
+                System Access
+              </div>
+              <div class="opt5-progress-item pending">
+                <span class="opt5-progress-check"></span>
+                Training
+              </div>
+              <div class="opt5-progress-item pending">
+                <span class="opt5-progress-check"></span>
+                Review & Submit
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="option-notes">
+        <h4>Key Features</h4>
+        <ul>
+          <li>Live preview shows data as it's entered — reduces errors</li>
+          <li>Progress list in preview panel doubles as navigation</li>
+          <li>Breadcrumb navigation shows all steps in sequence</li>
+          <li>Dot navigation for quick step switching</li>
+          <li class="con">Preview panel takes significant space</li>
+          <li class="con">May feel redundant for simple forms</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Summary -->
+    <section style="background: #fff; border-radius: 12px; padding: 32px; box-shadow: 0 2px 12px rgba(0,0,0,0.08);">
+      <h2 style="font-size: 24px; font-weight: 700; color: #1a1a1a; margin-bottom: 24px;">Comparison Summary</h2>
+      <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+        <thead>
+          <tr style="background: #f9fafb;">
+            <th style="padding: 12px; text-align: left; border-bottom: 2px solid #005BAA; font-weight: 600;">Option</th>
+            <th style="padding: 12px; text-align: center; border-bottom: 2px solid #005BAA; font-weight: 600;">Navigation</th>
+            <th style="padding: 12px; text-align: center; border-bottom: 2px solid #005BAA; font-weight: 600;">Form Space</th>
+            <th style="padding: 12px; text-align: center; border-bottom: 2px solid #005BAA; font-weight: 600;">Guidance</th>
+            <th style="padding: 12px; text-align: center; border-bottom: 2px solid #005BAA; font-weight: 600;">Complexity</th>
+            <th style="padding: 12px; text-align: center; border-bottom: 2px solid #005BAA; font-weight: 600;">Best For</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom: 1px solid #e5e7eb;">
+            <td style="padding: 12px;"><strong>1. 3-Column Accordion</strong> ★</td>
+            <td style="padding: 12px; text-align: center;">⭐⭐⭐⭐⭐</td>
+            <td style="padding: 12px; text-align: center;">⭐⭐⭐</td>
+            <td style="padding: 12px; text-align: center;">⭐⭐⭐⭐⭐</td>
+            <td style="padding: 12px; text-align: center;">High</td>
+            <td style="padding: 12px;">Complex wizards with many steps</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #e5e7eb;">
+            <td style="padding: 12px;"><strong>2. Top Stepper</strong></td>
+            <td style="padding: 12px; text-align: center;">⭐⭐⭐⭐</td>
+            <td style="padding: 12px; text-align: center;">⭐⭐⭐⭐⭐</td>
+            <td style="padding: 12px; text-align: center;">⭐⭐⭐</td>
+            <td style="padding: 12px; text-align: center;">Low</td>
+            <td style="padding: 12px;">Simple sequential flows</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #e5e7eb;">
+            <td style="padding: 12px;"><strong>3. Vertical Rail + Cards</strong></td>
+            <td style="padding: 12px; text-align: center;">⭐⭐⭐</td>
+            <td style="padding: 12px; text-align: center;">⭐⭐⭐⭐</td>
+            <td style="padding: 12px; text-align: center;">⭐⭐⭐</td>
+            <td style="padding: 12px; text-align: center;">Medium</td>
+            <td style="padding: 12px;">Forms with many small sections</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #e5e7eb;">
+            <td style="padding: 12px;"><strong>4. Tabs + Progress</strong></td>
+            <td style="padding: 12px; text-align: center;">⭐⭐⭐⭐⭐</td>
+            <td style="padding: 12px; text-align: center;">⭐⭐⭐⭐⭐</td>
+            <td style="padding: 12px; text-align: center;">⭐⭐</td>
+            <td style="padding: 12px; text-align: center;">Low</td>
+            <td style="padding: 12px;">Users familiar with the process</td>
+          </tr>
+          <tr>
+            <td style="padding: 12px;"><strong>5. Split with Preview</strong></td>
+            <td style="padding: 12px; text-align: center;">⭐⭐⭐</td>
+            <td style="padding: 12px; text-align: center;">⭐⭐⭐</td>
+            <td style="padding: 12px; text-align: center;">⭐⭐⭐⭐</td>
+            <td style="padding: 12px; text-align: center;">Medium</td>
+            <td style="padding: 12px;">Data accuracy is critical</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div style="margin-top: 32px; padding: 20px; background: #e6f0f7; border-radius: 8px; border-left: 4px solid #005BAA;">
+        <h4 style="font-size: 16px; font-weight: 600; color: #005BAA; margin-bottom: 8px;">💡 Recommendation</h4>
+        <p style="color: #374151; line-height: 1.6;">
+          <strong>Option 1 (3-Column Accordion)</strong> is recommended for the JML wizards as it:
+        </p>
+        <ul style="margin-top: 12px; color: #374151;">
+          <li>Matches the existing Policy Builder pattern for consistency</li>
+          <li>Provides excellent navigation with visible step labels</li>
+          <li>Includes context panel for tips and checklists</li>
+          <li>Handles complex multi-step forms well (Onboarding has 8 steps)</li>
+          <li>Responsive design degrades gracefully on smaller screens</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

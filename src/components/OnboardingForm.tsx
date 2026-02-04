@@ -1,12 +1,14 @@
 import * as React from 'react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { SPFI } from '@pnp/sp';
 import { Panel, PanelType } from '@fluentui/react/lib/Panel';
 import { TextField } from '@fluentui/react/lib/TextField';
 import { Dropdown, IDropdownOption } from '@fluentui/react/lib/Dropdown';
 import { DatePicker } from '@fluentui/react/lib/DatePicker';
 import { Icon } from '@fluentui/react/lib/Icon';
+import { Spinner, SpinnerSize } from '@fluentui/react/lib/Spinner';
 import { OnboardingService } from '../services/OnboardingService';
+import { DocumentService, IEmployeeDocument, DOCUMENT_CATEGORIES, DocumentCategory } from '../services/DocumentService';
 import { IOnboarding, IOnboardingTask, OnboardingStatus, OnboardingTaskStatus } from '../models/IOnboarding';
 import styles from '../styles/JmlPanelStyles.module.scss';
 import '../styles/FieldBorders.module.scss';
@@ -38,15 +40,24 @@ export const OnboardingForm: React.FC<IProps> = ({ sp, isOpen, mode, item, onDis
   const [tasks, setTasks] = useState<IOnboardingTask[]>([]);
   const [saving, setSaving] = useState(false);
   const [currentMode, setCurrentMode] = useState(mode);
+  const [documents, setDocuments] = useState<IEmployeeDocument[]>([]);
+  const [loadingDocs, setLoadingDocs] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<DocumentCategory>('ID Documents');
+  const [docLibraryExists, setDocLibraryExists] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen) {
       setCurrentMode(mode);
+      setDocuments([]);
       if (item) {
         setFormData({ ...item });
         if (item.Id) {
           const svc = new OnboardingService(sp);
           svc.getOnboardingTasks(item.Id).then(setTasks).catch(() => setTasks([]));
+          // Load documents
+          loadDocuments(item.CandidateName);
         }
       } else {
         setFormData({ Status: OnboardingStatus.NotStarted, CompletionPercentage: 0, TotalTasks: 0, CompletedTasks: 0 });
@@ -54,6 +65,71 @@ export const OnboardingForm: React.FC<IProps> = ({ sp, isOpen, mode, item, onDis
       }
     }
   }, [isOpen, item, mode, sp]);
+
+  const loadDocuments = async (employeeName: string): Promise<void> => {
+    setLoadingDocs(true);
+    try {
+      const docSvc = new DocumentService(sp);
+      const exists = await docSvc.libraryExists();
+      setDocLibraryExists(exists);
+      if (exists && employeeName) {
+        const docs = await docSvc.getEmployeeDocuments(employeeName);
+        setDocuments(docs);
+      }
+    } catch (error) {
+      console.error('[OnboardingForm] Error loading documents:', error);
+    }
+    setLoadingDocs(false);
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
+    const files = e.target.files;
+    if (!files?.length || !formData.CandidateName) return;
+
+    setUploading(true);
+    try {
+      const docSvc = new DocumentService(sp);
+      for (let i = 0; i < files.length; i++) {
+        await docSvc.uploadDocument(formData.CandidateName, selectedCategory, files[i]);
+      }
+      await loadDocuments(formData.CandidateName);
+    } catch (error) {
+      console.error('[OnboardingForm] Error uploading:', error);
+    }
+    setUploading(false);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleDeleteDocument = async (doc: IEmployeeDocument): Promise<void> => {
+    if (!confirm(`Delete "${doc.Name}"?`)) return;
+    try {
+      const docSvc = new DocumentService(sp);
+      await docSvc.deleteDocument(doc.ServerRelativeUrl);
+      await loadDocuments(formData.CandidateName || '');
+    } catch (error) {
+      console.error('[OnboardingForm] Error deleting document:', error);
+    }
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  };
+
+  const getFileIcon = (fileName: string): string => {
+    const ext = fileName.split('.').pop()?.toLowerCase();
+    switch (ext) {
+      case 'pdf': return 'PDF';
+      case 'doc': case 'docx': return 'WordDocument';
+      case 'xls': case 'xlsx': return 'ExcelDocument';
+      case 'ppt': case 'pptx': return 'PowerPointDocument';
+      case 'jpg': case 'jpeg': case 'png': case 'gif': return 'FileImage';
+      default: return 'Document';
+    }
+  };
 
   const handleTextChange = (field: string) => (_: any, val?: string): void => {
     setFormData(prev => ({ ...prev, [field]: val || '' }));
@@ -246,6 +322,105 @@ export const OnboardingForm: React.FC<IProps> = ({ sp, isOpen, mode, item, onDis
                 }}>{task.Status}</span>
               </div>
             ))}
+          </>
+        )}
+
+        {/* Documents Section */}
+        {item?.Id && (
+          <>
+            <div className={styles.formSectionTitle} style={{ marginTop: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span>Documents ({documents.length})</span>
+              {!isView && docLibraryExists && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value as DocumentCategory)}
+                    style={{
+                      padding: '4px 8px', borderRadius: 4, border: '1px solid #edebe9',
+                      fontSize: 12, color: '#323130', background: '#fff',
+                    }}
+                  >
+                    {DOCUMENT_CATEGORIES.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    style={{
+                      padding: '4px 12px', borderRadius: 4, border: 'none',
+                      background: '#005BAA', color: '#fff', fontSize: 12, fontWeight: 500,
+                      cursor: uploading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 4,
+                    }}
+                  >
+                    <Icon iconName="Upload" style={{ fontSize: 12 }} />
+                    {uploading ? 'Uploading...' : 'Upload'}
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    onChange={handleFileUpload}
+                    style={{ display: 'none' }}
+                  />
+                </div>
+              )}
+            </div>
+            {loadingDocs ? (
+              <div style={{ padding: 20, textAlign: 'center' }}>
+                <Spinner size={SpinnerSize.small} label="Loading documents..." />
+              </div>
+            ) : !docLibraryExists ? (
+              <div style={{ padding: 16, background: '#fff4ce', borderRadius: 8, fontSize: 13, color: '#605e5c' }}>
+                <Icon iconName="Warning" style={{ marginRight: 8, color: '#d97706' }} />
+                Document library (JML_EmployeeDocuments) not found. Create it in SharePoint to enable document storage.
+              </div>
+            ) : documents.length === 0 ? (
+              <div style={{ padding: 20, textAlign: 'center', color: '#8a8886', fontSize: 13 }}>
+                <Icon iconName="DocumentSet" style={{ fontSize: 32, marginBottom: 8, opacity: 0.5, display: 'block' }} />
+                No documents uploaded yet
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {documents.map(doc => (
+                  <div key={doc.ServerRelativeUrl} style={{
+                    display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px',
+                    background: '#f9f9f9', borderRadius: 6, border: '1px solid #edebe9',
+                  }}>
+                    <Icon iconName={getFileIcon(doc.Name)} style={{ fontSize: 24, color: '#005BAA' }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <a
+                        href={doc.ServerRelativeUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          fontSize: 13, fontWeight: 500, color: '#323130', textDecoration: 'none',
+                          display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        }}
+                        title={doc.Name}
+                      >
+                        {doc.Name}
+                      </a>
+                      <div style={{ fontSize: 11, color: '#8a8886', marginTop: 2 }}>
+                        {formatFileSize(doc.Length)} • {doc.TimeLastModified.toLocaleDateString()}
+                        {doc.DocumentType && <span style={{ marginLeft: 8, padding: '1px 6px', background: '#e9e5f5', borderRadius: 4 }}>{doc.DocumentType}</span>}
+                      </div>
+                    </div>
+                    {!isView && (
+                      <button
+                        onClick={() => handleDeleteDocument(doc)}
+                        title="Delete"
+                        style={{
+                          background: 'transparent', border: 'none', cursor: 'pointer', padding: 4,
+                        }}
+                      >
+                        <Icon iconName="Delete" style={{ fontSize: 14, color: '#d13438' }} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </>
         )}
 

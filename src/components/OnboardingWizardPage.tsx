@@ -44,7 +44,8 @@ interface ISelectedTraining { id: number; name: string; category: string; mandat
 const STEPS: IJmlWizardStep[] = [
   { key: 'candidate', label: 'Select Candidate', icon: 'Contact' },
   { key: 'details', label: 'Employee Details', icon: 'EditContact' },
-  { key: 'policypack', label: 'Policy Pack', icon: 'Package' },
+  // Temporarily disabled - Policy Pack step
+  // { key: 'policypack', label: 'Policy Pack', icon: 'Package' },
   { key: 'documents', label: 'Documents', icon: 'DocumentSet' },
   { key: 'systems', label: 'System Access', icon: 'Permissions' },
   { key: 'equipment', label: 'Equipment', icon: 'Devices3' },
@@ -63,7 +64,8 @@ export const OnboardingWizardPage: React.FC<IProps> = ({ sp, onComplete, onCance
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
-  const [selectedPolicyPackId, setSelectedPolicyPackId] = useState<number | null>(null);
+  // Temporarily disabled - Policy Pack feature
+  // const [selectedPolicyPackId, setSelectedPolicyPackId] = useState<number | null>(null);
 
   const [selectedDocs, setSelectedDocs] = useState<ISelectedDoc[]>([]);
   const [selectedSystems, setSelectedSystems] = useState<ISelectedSystem[]>([]);
@@ -124,6 +126,7 @@ export const OnboardingWizardPage: React.FC<IProps> = ({ sp, onComplete, onCance
     setLoadingConfig(false);
   };
 
+  /* Temporarily disabled - Policy Pack feature
   const applyPolicyPack = (packId: number): void => {
     if (!configData) return;
     const pack = configData.policyPacks.find(p => p.Id === packId);
@@ -165,6 +168,7 @@ export const OnboardingWizardPage: React.FC<IProps> = ({ sp, onComplete, onCance
       scheduled: false
     })));
   };
+  */
 
   const updateField = (field: keyof IOnboardingWizardData, value: any): void => {
     setWizardData(prev => ({ ...prev, [field]: value }));
@@ -270,6 +274,7 @@ export const OnboardingWizardPage: React.FC<IProps> = ({ sp, onComplete, onCance
   };
 
   // Generate tips based on current step
+  // Note: Policy Pack step (index 2) is temporarily disabled, so indices shifted
   const getTips = (): IJmlWizardTip[] => {
     switch (currentStep) {
       case 0:
@@ -282,32 +287,33 @@ export const OnboardingWizardPage: React.FC<IProps> = ({ sp, onComplete, onCance
           { icon: 'Calendar', title: 'Start Date', content: 'Set the employee\'s first day. This determines when onboarding tasks should be completed.' },
           { icon: 'Briefcase', title: 'Department', content: 'Selecting a department may auto-apply a policy pack with pre-configured settings.' },
         ];
-      case 2:
-        return [
-          { icon: 'Package', title: 'Policy Packs', content: 'Policy packs pre-configure documents, systems, equipment, and training based on role or department.' },
-          { icon: 'Lightbulb', title: 'Tip', content: 'You can customize individual selections in the following steps after applying a pack.' },
-        ];
-      case 3:
+      // Policy Pack tips (disabled)
+      // case 2:
+      //   return [
+      //     { icon: 'Package', title: 'Policy Packs', content: 'Policy packs pre-configure documents, systems, equipment, and training based on role or department.' },
+      //     { icon: 'Lightbulb', title: 'Tip', content: 'You can customize individual selections in the following steps after applying a pack.' },
+      //   ];
+      case 2: // Documents (was case 3)
         return [
           { icon: 'DocumentSet', title: 'Required Documents', content: 'Mark documents as required to create tasks for collecting them.' },
           { icon: 'CheckboxComposite', title: 'Already Received?', content: 'Toggle "Received" for any documents already collected during hiring.' },
         ];
-      case 4:
+      case 3: // Systems (was case 4)
         return [
           { icon: 'Permissions', title: 'System Access', content: 'Select which systems the new employee needs access to.' },
           { icon: 'Settings', title: 'Roles', content: 'You can customize the access role for each system.' },
         ];
-      case 5:
+      case 4: // Equipment (was case 5)
         return [
           { icon: 'Devices3', title: 'Equipment', content: 'Select hardware and equipment to be provisioned for the employee.' },
           { icon: 'Add', title: 'Add More', content: 'Use the dropdown at the bottom to add additional equipment items.' },
         ];
-      case 6:
+      case 5: // Training (was case 6)
         return [
           { icon: 'Education', title: 'Training', content: 'Mandatory training courses will create tasks that must be completed.' },
           { icon: 'Calendar', title: 'Scheduling', content: 'Mark courses as "Scheduled" if training dates have already been set.' },
         ];
-      case 7:
+      case 6: // Review (was case 7)
         return [
           { icon: 'CheckList', title: 'Review Carefully', content: 'Review all selections before submitting. You can go back to make changes.' },
           { icon: 'Warning', title: 'Submit', content: 'Once submitted, the onboarding will be created with all tasks.' },
@@ -328,16 +334,17 @@ export const OnboardingWizardPage: React.FC<IProps> = ({ sp, onComplete, onCance
   ];
 
   // Step content renderers
+  // Note: Policy Pack step (index 2) is temporarily disabled
   const renderStepContent = (): JSX.Element => {
     switch (currentStep) {
       case 0: return renderCandidateStep();
       case 1: return renderDetailsStep();
-      case 2: return renderPolicyPackStep();
-      case 3: return renderDocumentsStep();
-      case 4: return renderSystemsStep();
-      case 5: return renderEquipmentStep();
-      case 6: return renderTrainingStep();
-      case 7: return renderReviewStep();
+      // case 2: return renderPolicyPackStep(); // Temporarily disabled
+      case 2: return renderDocumentsStep();
+      case 3: return renderSystemsStep();
+      case 4: return renderEquipmentStep();
+      case 5: return renderTrainingStep();
+      case 6: return renderReviewStep();
       default: return <div />;
     }
   };
@@ -439,6 +446,7 @@ export const OnboardingWizardPage: React.FC<IProps> = ({ sp, onComplete, onCance
     </div>
   );
 
+  /* Temporarily disabled - Policy Pack step
   const renderPolicyPackStep = (): JSX.Element => (
     <div className={styles.formCard}>
       <div className={styles.formCardHeader}>
@@ -499,6 +507,7 @@ export const OnboardingWizardPage: React.FC<IProps> = ({ sp, onComplete, onCance
       )}
     </div>
   );
+  */
 
   // Helper function to get icon style class for document category
   const getDocCategoryIconClass = (category: string): string => {
@@ -1174,8 +1183,8 @@ export const OnboardingWizardPage: React.FC<IProps> = ({ sp, onComplete, onCance
           { value: selectedTraining.filter(t => t.mandatory).length, label: 'Training' },
         ]}
         summaryPanels={summaryPanels}
-        primaryAction={{ label: 'View Onboarding Tracker', onClick: onComplete }}
-        secondaryAction={{ label: 'Start Another', onClick: () => { setSubmitted(false); setCurrentStep(0); } }}
+        primaryAction={{ icon: 'AddFriend', tooltip: 'Onboard Another Employee', onClick: () => { setSubmitted(false); setCurrentStep(0); setWizardData({ documents: [], systemAccess: [], equipment: [], training: [] }); } }}
+        secondaryAction={{ icon: 'ChromeClose', tooltip: 'Close', onClick: onComplete }}
       />
     );
   }
@@ -1205,8 +1214,6 @@ export const OnboardingWizardPage: React.FC<IProps> = ({ sp, onComplete, onCance
       isLastStep={currentStep === STEPS.length - 1}
       isSubmitting={submitting}
       submitLabel="Start Onboarding"
-      backToTrackerLabel="Back to Onboarding"
-      onBackToTracker={onCancel}
     >
       {renderStepContent()}
     </JmlWizardLayout>

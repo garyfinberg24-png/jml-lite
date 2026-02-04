@@ -936,8 +936,8 @@ export const OffboardingWizardPage: React.FC<IProps> = ({ sp, onComplete, onCanc
           { value: exitInterviewDate ? 1 : 0, label: 'Interview' },
         ]}
         summaryPanels={summaryPanels}
-        primaryAction={{ label: 'View Offboarding Tracker', onClick: onComplete }}
-        secondaryAction={{ label: 'Start Another', onClick: () => { setSubmitted(false); setCurrentStep(0); } }}
+        primaryAction={{ icon: 'UserRemove', tooltip: 'Offboard Another Employee', onClick: () => { setSubmitted(false); setCurrentStep(0); } }}
+        secondaryAction={{ icon: 'ChromeClose', tooltip: 'Close', onClick: onComplete }}
       />
     );
   }
@@ -967,8 +967,6 @@ export const OffboardingWizardPage: React.FC<IProps> = ({ sp, onComplete, onCanc
       isLastStep={currentStep === STEPS.length - 1}
       isSubmitting={submitting}
       submitLabel="Start Offboarding"
-      backToTrackerLabel="Back to Offboarding"
-      onBackToTracker={onCancel}
     >
       {renderStepContent()}
     </JmlWizardLayout>

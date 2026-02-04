@@ -1,9 +1,11 @@
 import * as React from 'react';
 import { useState, useEffect, useRef } from 'react';
+import { SPFI } from '@pnp/sp';
 import { WebPartContext } from '@microsoft/sp-webpart-base';
 import { Icon } from '@fluentui/react/lib/Icon';
 import { JmlRole, filterNavForRole, getHeaderVisibility } from '../services/JmlRoleService';
 import { getUnreadCount, markAllRead, getActivityLog, formatRelativeTime } from '../utils/activityLog';
+import { NotificationPanel } from './NotificationPanel';
 
 type JmlViewType =
   | 'dashboard'
@@ -11,7 +13,10 @@ type JmlViewType =
   | 'myonboarding'
   | 'mover'
   | 'offboarding'
+  | 'approvals'
+  | 'taskmanager'
   | 'jmlreporting'
+  | 'analytics'
   | 'search'
   | 'admin'
   | 'help'
@@ -24,6 +29,7 @@ export interface IJmlAppHeaderProps {
   onNavigate: (view: JmlViewType) => void;
   userRole: JmlRole;
   context: WebPartContext;
+  sp?: SPFI; // Optional SP instance for enhanced notifications
 }
 
 export interface IRecentlyViewedItem {
@@ -41,7 +47,10 @@ const NAV_ITEMS: { key: JmlViewType; label: string; icon: string }[] = [
   { key: 'myonboarding', label: 'My Onboarding', icon: 'Contact' },
   { key: 'mover', label: 'Transfers', icon: 'Sync' },
   { key: 'offboarding', label: 'Offboarding', icon: 'UserRemove' },
+  { key: 'approvals', label: 'Approvals', icon: 'Taskboard' },
+  { key: 'taskmanager', label: 'Task Manager', icon: 'TaskList' },
   { key: 'jmlreporting', label: 'Reporting', icon: 'ReportDocument' },
+  { key: 'analytics', label: 'Analytics', icon: 'BarChartVertical' },
 ];
 
 export function addToRecentlyViewed(item: IRecentlyViewedItem): void {
@@ -70,11 +79,12 @@ const dropdownStyle: React.CSSProperties = {
 };
 
 export const JmlAppHeader: React.FC<IJmlAppHeaderProps> = ({
-  currentView, onNavigate, userRole, context
+  currentView, onNavigate, userRole, context, sp
 }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showRecentlyViewed, setShowRecentlyViewed] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const headerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -86,6 +96,7 @@ export const JmlAppHeader: React.FC<IJmlAppHeaderProps> = ({
       if (headerRef.current && !headerRef.current.contains(e.target as Node)) {
         setShowNotifications(false);
         setShowRecentlyViewed(false);
+        setShowProfile(false);
       }
     };
     document.addEventListener('mousedown', handleClick);
@@ -113,6 +124,7 @@ export const JmlAppHeader: React.FC<IJmlAppHeaderProps> = ({
   const closeDropdowns = (): void => {
     setShowNotifications(false);
     setShowRecentlyViewed(false);
+    setShowProfile(false);
   };
 
   return (
@@ -219,7 +231,12 @@ export const JmlAppHeader: React.FC<IJmlAppHeaderProps> = ({
           {visibility.showNotifications && (
             <div style={{ position: 'relative' }}>
               <button
-                onClick={() => { setShowNotifications(!showNotifications); setShowRecentlyViewed(false); handleMarkAllRead(); }}
+                onClick={() => {
+                  setShowNotifications(!showNotifications);
+                  setShowRecentlyViewed(false);
+                  setShowProfile(false);
+                  if (!sp) handleMarkAllRead(); // Only mark read for localStorage-based notifications
+                }}
                 style={iconBtnStyle}
                 title="Notifications"
               >
@@ -233,7 +250,22 @@ export const JmlAppHeader: React.FC<IJmlAppHeaderProps> = ({
                   }}>{unreadCount > 9 ? '9+' : unreadCount}</span>
                 )}
               </button>
-              {showNotifications && (
+              {/* Enhanced NotificationPanel when sp is available */}
+              {sp && showNotifications && (
+                <NotificationPanel
+                  sp={sp}
+                  userEmail={context?.pageContext?.user?.email || ''}
+                  userId={context?.pageContext?.legacyPageContext?.userId}
+                  isOpen={showNotifications}
+                  onClose={() => setShowNotifications(false)}
+                  onNavigate={(view: string) => {
+                    onNavigate(view as JmlViewType);
+                    setShowNotifications(false);
+                  }}
+                />
+              )}
+              {/* Fallback to localStorage-based notifications when sp is not available */}
+              {!sp && showNotifications && (
                 <div style={dropdownStyle}>
                   <div style={{ padding: '12px 16px', borderBottom: '1px solid #edebe9', fontWeight: 600, fontSize: '13px' }}>
                     Notifications
@@ -255,15 +287,95 @@ export const JmlAppHeader: React.FC<IJmlAppHeaderProps> = ({
             </div>
           )}
 
-          {/* User avatar */}
-          <div style={{
-            width: '40px', height: '40px', borderRadius: '50%',
-            background: 'rgba(255,255,255,0.25)', display: 'flex',
-            alignItems: 'center', justifyContent: 'center',
-            fontSize: '13px', fontWeight: 600, color: '#fff',
-            border: '1px solid rgba(255,255,255,0.3)',
-          }} title={`${userDisplayName} (${userRole})`}>
-            {userInitials}
+          {/* User avatar with dropdown */}
+          <div style={{ position: 'relative' }}>
+            <button
+              onClick={() => { setShowProfile(!showProfile); setShowNotifications(false); setShowRecentlyViewed(false); }}
+              style={{
+                width: '40px', height: '40px', borderRadius: '50%',
+                background: showProfile ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.25)',
+                display: 'flex',
+                alignItems: 'center', justifyContent: 'center',
+                fontSize: '13px', fontWeight: 600, color: '#fff',
+                border: '1px solid rgba(255,255,255,0.3)',
+                cursor: 'pointer',
+                transition: 'background 0.15s ease',
+              }}
+              title={`${userDisplayName} (${userRole})`}
+            >
+              {userInitials}
+            </button>
+            {showProfile && (
+              <div style={dropdownStyle}>
+                <div style={{ padding: '16px', borderBottom: '1px solid #edebe9' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{
+                      width: '48px', height: '48px', borderRadius: '50%',
+                      background: 'linear-gradient(135deg, #005BAA 0%, #004A8F 100%)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: '#fff', fontSize: '16px', fontWeight: 600,
+                    }}>
+                      {userInitials}
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: '14px', color: '#323130' }}>{userDisplayName}</div>
+                      <div style={{ fontSize: '12px', color: '#605e5c' }}>{context?.pageContext?.user?.email || 'user@company.com'}</div>
+                      <div style={{
+                        fontSize: '11px', marginTop: '4px', padding: '2px 8px', borderRadius: '10px',
+                        background: userRole === JmlRole.Admin ? '#dbeafe' : userRole === JmlRole.Manager ? '#fef3c7' : '#f1f5f9',
+                        color: userRole === JmlRole.Admin ? '#1d4ed8' : userRole === JmlRole.Manager ? '#b45309' : '#64748b',
+                        display: 'inline-block', fontWeight: 500,
+                      }}>
+                        {userRole === JmlRole.Admin ? 'Administrator' : userRole === JmlRole.Manager ? 'Manager' : 'User'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div style={{ padding: '8px' }}>
+                  <button
+                    onClick={() => { onNavigate('myonboarding'); closeDropdowns(); }}
+                    style={{
+                      width: '100%', padding: '10px 12px', border: 'none', background: 'transparent',
+                      cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px',
+                      borderRadius: '4px', fontSize: '13px', color: '#323130', textAlign: 'left',
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = '#f3f2f1')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <Icon iconName="Contact" style={{ fontSize: '16px', color: '#605e5c' }} />
+                    My Onboarding
+                  </button>
+                  <button
+                    onClick={() => { onNavigate('help'); closeDropdowns(); }}
+                    style={{
+                      width: '100%', padding: '10px 12px', border: 'none', background: 'transparent',
+                      cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px',
+                      borderRadius: '4px', fontSize: '13px', color: '#323130', textAlign: 'left',
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = '#f3f2f1')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <Icon iconName="Help" style={{ fontSize: '16px', color: '#605e5c' }} />
+                    Help & Support
+                  </button>
+                </div>
+                <div style={{ borderTop: '1px solid #edebe9', padding: '8px' }}>
+                  <button
+                    onClick={() => { closeDropdowns(); }}
+                    style={{
+                      width: '100%', padding: '10px 12px', border: 'none', background: 'transparent',
+                      cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px',
+                      borderRadius: '4px', fontSize: '13px', color: '#a4262c', textAlign: 'left',
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = '#fef2f2')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <Icon iconName="SignOut" style={{ fontSize: '16px' }} />
+                    Sign Out
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

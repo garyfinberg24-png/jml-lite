@@ -49,8 +49,6 @@ export interface IJmlWizardLayoutProps {
   nextLabel?: string;
   children: React.ReactNode;
   hideRightPanel?: boolean;
-  backToTrackerLabel?: string;
-  onBackToTracker?: () => void;
   /** Page header configuration */
   pageTitle?: string;
   pageSubtitle?: string;
@@ -119,8 +117,6 @@ export const JmlWizardLayout: React.FC<IJmlWizardLayoutProps> = ({
   nextLabel = 'Next',
   children,
   hideRightPanel,
-  backToTrackerLabel,
-  onBackToTracker,
   pageTitle,
   pageSubtitle,
 }) => {
@@ -150,12 +146,7 @@ export const JmlWizardLayout: React.FC<IJmlWizardLayoutProps> = ({
           </div>
         </div>
         <div className={styles.pageHeaderRight}>
-          {onCancel && (
-            <button className={styles.pageHeaderBtn} onClick={onCancel}>
-              <Icon iconName="Cancel" style={{ fontSize: 14 }} />
-              Exit Wizard
-            </button>
-          )}
+          {/* Exit Wizard button removed - users can use Cancel button in footer or Back to Tracker link */}
         </div>
       </div>
 
@@ -223,16 +214,6 @@ export const JmlWizardLayout: React.FC<IJmlWizardLayoutProps> = ({
           CENTER AREA - Form Content
           ═══════════════════════════════════════════════════════════════════════════ */}
       <div className={styles.centerArea}>
-        {/* Back to tracker link */}
-        {backToTrackerLabel && onBackToTracker && (
-          <div style={{ padding: '16px 32px 0' }}>
-            <div className={styles.backLink} onClick={onBackToTracker}>
-              <Icon iconName="ChevronLeft" style={{ fontSize: 12 }} />
-              {backToTrackerLabel}
-            </div>
-          </div>
-        )}
-
         {/* Form Header */}
         <div className={styles.formHeader}>
           <h2 className={styles.formTitle}>{steps[currentStep]?.label || title}</h2>
@@ -399,6 +380,15 @@ export interface ISummaryPanel {
   items: ISummaryPanelItem[];
 }
 
+export interface IWizardAction {
+  /** Icon name from Fluent UI (e.g., 'AddFriend', 'ChromeClose') */
+  icon: string;
+  /** Tooltip text shown on hover */
+  tooltip: string;
+  /** Click handler */
+  onClick: () => void;
+}
+
 export interface IJmlWizardSuccessProps {
   theme: JmlWizardTheme;
   icon: string;
@@ -412,8 +402,10 @@ export interface IJmlWizardSuccessProps {
   summaryContent?: React.ReactNode;
   /** Stats row (4 items max recommended) */
   stats?: { value: number | string; label: string }[];
-  primaryAction?: { label: string; onClick: () => void };
-  secondaryAction?: { label: string; onClick: () => void };
+  /** Primary action - icon button (e.g., add another) */
+  primaryAction?: IWizardAction;
+  /** Secondary action - icon button (e.g., close) */
+  secondaryAction?: IWizardAction;
 }
 
 export const JmlWizardSuccess: React.FC<IJmlWizardSuccessProps> = ({
@@ -516,22 +508,29 @@ export const JmlWizardSuccess: React.FC<IJmlWizardSuccessProps> = ({
         </div>
       )}
 
-      {/* Action buttons */}
+      {/* Action buttons - Icon buttons with tooltips */}
       <div className={styles.successActions}>
         {primaryAction && (
           <button
-            className={styles.btnPrimary}
+            className={styles.btnIconPrimary}
             onClick={primaryAction.onClick}
+            title={primaryAction.tooltip}
+            aria-label={primaryAction.tooltip}
             style={{
               background: `linear-gradient(135deg, ${themeColor} 0%, ${themeColor}cc 100%)`,
             }}
           >
-            {primaryAction.label}
+            <Icon iconName={primaryAction.icon} style={{ fontSize: 20, color: '#fff' }} />
           </button>
         )}
         {secondaryAction && (
-          <button className={styles.btnSecondary} onClick={secondaryAction.onClick}>
-            {secondaryAction.label}
+          <button
+            className={styles.btnIconSecondary}
+            onClick={secondaryAction.onClick}
+            title={secondaryAction.tooltip}
+            aria-label={secondaryAction.tooltip}
+          >
+            <Icon iconName={secondaryAction.icon} style={{ fontSize: 20 }} />
           </button>
         )}
       </div>

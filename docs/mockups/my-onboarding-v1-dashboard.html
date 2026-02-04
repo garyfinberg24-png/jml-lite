@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Onboarding - Dashboard Layout</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #f8fafc; }
+
+    /* Header with Date/Time */
+    .header {
+      background: linear-gradient(135deg, #005BAA 0%, #004A8F 100%);
+      color: white;
+      padding: 24px 32px;
+      position: relative;
+    }
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 24px;
+    }
+    .datetime {
+      text-align: right;
+      opacity: 0.9;
+    }
+    .datetime .date { font-size: 14px; font-weight: 500; }
+    .datetime .time { font-size: 24px; font-weight: 700; margin-top: 2px; }
+    .welcome-section {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+    }
+    .welcome-text h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .welcome-text p {
+      opacity: 0.9;
+      font-size: 15px;
+    }
+
+    /* Dashboard Grid */
+    .dashboard {
+      max-width: 1200px;
+      margin: -40px auto 0;
+      padding: 0 24px 40px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Stats Row */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .stat-card .label {
+      font-size: 12px;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    .stat-card .value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #1e293b;
+    }
+    .stat-card .value.blue { color: #005BAA; }
+    .stat-card .value.green { color: #059669; }
+    .stat-card .value.orange { color: #ea580c; }
+    .stat-card .value.red { color: #dc2626; }
+
+    /* Main Content Grid */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 24px;
+    }
+
+    /* Tasks Panel */
+    .panel {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      overflow: hidden;
+    }
+    .panel-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #e2e8f0;
+      font-weight: 600;
+      font-size: 16px;
+      color: #1e293b;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .panel-header .icon {
+      width: 32px;
+      height: 32px;
+      background: #f1f5f9;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Task List */
+    .task-list {
+      padding: 12px 0;
+    }
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 20px;
+      border-bottom: 1px solid #f1f5f9;
+      transition: background 0.15s;
+    }
+    .task-item:hover { background: #f8fafc; }
+    .task-item:last-child { border-bottom: none; }
+    .task-checkbox {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid #005BAA;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .task-checkbox.completed {
+      background: #059669;
+      border-color: #059669;
+      color: white;
+    }
+    .task-content { flex: 1; }
+    .task-title { font-weight: 500; color: #1e293b; font-size: 14px; }
+    .task-title.completed { text-decoration: line-through; color: #94a3b8; }
+    .task-meta { font-size: 12px; color: #64748b; margin-top: 2px; }
+    .task-category {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: #f1f5f9;
+      color: #64748b;
+    }
+
+    /* Progress Ring */
+    .progress-ring-container {
+      text-align: center;
+      padding: 24px;
+    }
+    .progress-ring {
+      width: 140px;
+      height: 140px;
+      position: relative;
+      margin: 0 auto 16px;
+    }
+    .progress-ring svg {
+      transform: rotate(-90deg);
+      width: 100%;
+      height: 100%;
+    }
+    .progress-ring .bg {
+      fill: none;
+      stroke: #e2e8f0;
+      stroke-width: 12;
+    }
+    .progress-ring .progress {
+      fill: none;
+      stroke: #005BAA;
+      stroke-width: 12;
+      stroke-linecap: round;
+      stroke-dasharray: 377;
+      stroke-dashoffset: 113; /* 70% progress */
+    }
+    .progress-ring .text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 32px;
+      font-weight: 700;
+      color: #1e293b;
+    }
+    .progress-label {
+      font-size: 14px;
+      color: #64748b;
+    }
+
+    /* Timeline */
+    .timeline {
+      padding: 0 20px 20px;
+    }
+    .timeline-item {
+      display: flex;
+      gap: 12px;
+      padding: 12px 0;
+      position: relative;
+    }
+    .timeline-item:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      left: 11px;
+      top: 36px;
+      bottom: -12px;
+      width: 2px;
+      background: #e2e8f0;
+    }
+    .timeline-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #005BAA;
+      flex-shrink: 0;
+    }
+    .timeline-dot.pending { background: #e2e8f0; }
+    .timeline-content { flex: 1; }
+    .timeline-title { font-weight: 500; color: #1e293b; font-size: 13px; }
+    .timeline-date { font-size: 12px; color: #64748b; margin-top: 2px; }
+
+    /* Countdown */
+    .countdown {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      border-radius: 12px;
+      padding: 20px;
+      margin: 0 20px 20px;
+      text-align: center;
+    }
+    .countdown-value {
+      font-size: 48px;
+      font-weight: 700;
+      color: #b45309;
+    }
+    .countdown-label {
+      font-size: 13px;
+      color: #92400e;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header with Date/Time -->
+  <header class="header">
+    <div class="header-top">
+      <div class="welcome-section">
+        <div class="avatar">👋</div>
+        <div class="welcome-text">
+          <h1>Welcome, Sarah!</h1>
+          <p>Software Engineer • Engineering Team</p>
+        </div>
+      </div>
+      <div class="datetime">
+        <div class="date">Monday, February 3, 2026</div>
+        <div class="time">09:45 AM</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Dashboard -->
+  <div class="dashboard">
+    <!-- Stats Row -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="label">Total Tasks</div>
+        <div class="value">24</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Completed</div>
+        <div class="value green">17</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">In Progress</div>
+        <div class="value blue">5</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Overdue</div>
+        <div class="value red">2</div>
+      </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="main-grid">
+      <!-- Tasks Panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="icon">📋</div>
+          Today's Tasks
+        </div>
+        <div class="task-list">
+          <div class="task-item">
+            <div class="task-checkbox completed">✓</div>
+            <div class="task-content">
+              <div class="task-title completed">Complete IT Security Training</div>
+              <div class="task-meta">Completed yesterday</div>
+            </div>
+            <span class="task-category">Training</span>
+          </div>
+          <div class="task-item">
+            <div class="task-checkbox completed">✓</div>
+            <div class="task-content">
+              <div class="task-title completed">Sign Employee Handbook Acknowledgment</div>
+              <div class="task-meta">Completed Jan 31</div>
+            </div>
+            <span class="task-category">Documentation</span>
+          </div>
+          <div class="task-item">
+            <div class="task-checkbox"></div>
+            <div class="task-content">
+              <div class="task-title">Set Up Development Environment</div>
+              <div class="task-meta">Due today</div>
+            </div>
+            <span class="task-category">Equipment</span>
+          </div>
+          <div class="task-item">
+            <div class="task-checkbox"></div>
+            <div class="task-content">
+              <div class="task-title">Request Access to GitHub Organization</div>
+              <div class="task-meta">Due Feb 5</div>
+            </div>
+            <span class="task-category">System Access</span>
+          </div>
+          <div class="task-item">
+            <div class="task-checkbox"></div>
+            <div class="task-content">
+              <div class="task-title">Schedule 1:1 with Manager</div>
+              <div class="task-meta">Due Feb 7</div>
+            </div>
+            <span class="task-category">Orientation</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Sidebar -->
+      <div style="display: flex; flex-direction: column; gap: 24px;">
+        <!-- Progress Ring -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="icon">📊</div>
+            Overall Progress
+          </div>
+          <div class="progress-ring-container">
+            <div class="progress-ring">
+              <svg viewBox="0 0 140 140">
+                <circle class="bg" cx="70" cy="70" r="60"/>
+                <circle class="progress" cx="70" cy="70" r="60"/>
+              </svg>
+              <div class="text">70%</div>
+            </div>
+            <div class="progress-label">17 of 24 tasks completed</div>
+          </div>
+        </div>
+
+        <!-- Days Remaining -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="icon">⏱️</div>
+            Time Remaining
+          </div>
+          <div class="countdown">
+            <div class="countdown-value">12</div>
+            <div class="countdown-label">days until onboarding complete</div>
+          </div>
+        </div>
+
+        <!-- Timeline -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="icon">📅</div>
+            Key Milestones
+          </div>
+          <div class="timeline">
+            <div class="timeline-item">
+              <div class="timeline-dot"></div>
+              <div class="timeline-content">
+                <div class="timeline-title">First Day Orientation</div>
+                <div class="timeline-date">Jan 27 • Completed</div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot"></div>
+              <div class="timeline-content">
+                <div class="timeline-title">IT Setup Complete</div>
+                <div class="timeline-date">Jan 30 • Completed</div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot pending"></div>
+              <div class="timeline-content">
+                <div class="timeline-title">Training Complete</div>
+                <div class="timeline-date">Feb 10 • In Progress</div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot pending"></div>
+              <div class="timeline-content">
+                <div class="timeline-title">Probation Review</div>
+                <div class="timeline-date">Feb 15 • Upcoming</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Update time every second
+    function updateTime() {
+      const now = new Date();
+      const timeEl = document.querySelector('.datetime .time');
+      timeEl.textContent = now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    }
+    setInterval(updateTime, 1000);
+  </script>
+</body>
+</html>

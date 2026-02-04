@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JML Dashboard - V1 Hero Cards</title>
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; background: #f5f5f5; color: #323130; }
+
+    /* Variables */
+    :root {
+      --joiner: #005BAA;
+      --joiner-light: #e6f0f8;
+      --mover: #ea580c;
+      --mover-light: #fef3ed;
+      --leaver: #d13438;
+      --leaver-light: #fbeaea;
+      --success: #107c10;
+    }
+
+    .container { max-width: 1400px; margin: 0 auto; padding: 32px; }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #005BAA 0%, #004A8F 100%);
+      color: white;
+      padding: 24px 32px;
+      margin-bottom: 32px;
+      border-radius: 12px;
+    }
+    .header h1 { font-size: 28px; font-weight: 600; margin-bottom: 4px; }
+    .header p { opacity: 0.9; font-size: 14px; }
+
+    /* Intro Section - Gradient Background */
+    .intro-section {
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 32px;
+      border: 1px solid #e2e8f0;
+      position: relative;
+      overflow: hidden;
+    }
+    .intro-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 300px;
+      height: 100%;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23005BAA' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
+      opacity: 0.5;
+    }
+    .intro-content { position: relative; z-index: 1; max-width: 800px; }
+    .intro-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--joiner);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+    }
+    .intro-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 12px;
+    }
+    .intro-text {
+      font-size: 15px;
+      line-height: 1.7;
+      color: #4a5568;
+      margin-bottom: 20px;
+    }
+    .intro-features {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .feature-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: white;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #4a5568;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    .feature-tag svg { width: 16px; height: 16px; }
+
+    /* Hero Action Cards - V1 Style */
+    .hero-actions {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+    .hero-card {
+      background: white;
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+    }
+    .hero-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+    }
+    .hero-card.joiner::before { background: var(--joiner); }
+    .hero-card.mover::before { background: var(--mover); }
+    .hero-card.leaver::before { background: var(--leaver); }
+
+    .hero-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+    .hero-card.joiner .hero-icon { background: var(--joiner-light); color: var(--joiner); }
+    .hero-card.mover .hero-icon { background: var(--mover-light); color: var(--mover); }
+    .hero-card.leaver .hero-icon { background: var(--leaver-light); color: var(--leaver); }
+
+    .hero-card h3 { font-size: 20px; font-weight: 600; margin-bottom: 8px; color: #1a1a1a; }
+    .hero-card p { font-size: 14px; color: #666; line-height: 1.5; margin-bottom: 16px; }
+
+    .hero-stat {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      padding-top: 16px;
+      border-top: 1px solid #f0f0f0;
+    }
+    .hero-stat .number { font-size: 28px; font-weight: 700; }
+    .hero-card.joiner .hero-stat .number { color: var(--joiner); }
+    .hero-card.mover .hero-stat .number { color: var(--mover); }
+    .hero-card.leaver .hero-stat .number { color: var(--leaver); }
+    .hero-stat .label { font-size: 13px; color: #888; }
+
+    .hero-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .hero-card.joiner .hero-btn { background: var(--joiner); color: white; }
+    .hero-card.mover .hero-btn { background: var(--mover); color: white; }
+    .hero-card.leaver .hero-btn { background: var(--leaver); color: white; }
+    .hero-btn:hover { opacity: 0.9; transform: scale(1.02); }
+
+    /* Metrics Row */
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .metric-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    .metric-card .label { font-size: 13px; color: #666; margin-bottom: 8px; }
+    .metric-card .value { font-size: 32px; font-weight: 700; color: var(--joiner); }
+    .metric-card .change { font-size: 12px; color: var(--success); margin-top: 4px; }
+
+    /* Two Column Layout */
+    .two-col { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    .card h3 { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #1a1a1a; }
+
+    .activity-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: #f9f9f9;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+    .activity-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+    .activity-item.joiner .activity-icon { background: var(--joiner-light); color: var(--joiner); }
+    .activity-item.mover .activity-icon { background: var(--mover-light); color: var(--mover); }
+    .activity-item.leaver .activity-icon { background: var(--leaver-light); color: var(--leaver); }
+    .activity-info { flex: 1; }
+    .activity-name { font-weight: 500; font-size: 14px; }
+    .activity-meta { font-size: 12px; color: #888; }
+    .activity-date { font-size: 11px; color: #aaa; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>JML Dashboard</h1>
+      <p>Employee Lifecycle Management Overview</p>
+    </div>
+
+    <!-- Intro Section -->
+    <div class="intro-section">
+      <div class="intro-content">
+        <div class="intro-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Employee Lifecycle Management
+        </div>
+        <h2 class="intro-title">Welcome to JML Lite</h2>
+        <p class="intro-text">
+          JML (Joiner, Mover, Leaver) is your complete employee lifecycle management solution.
+          Streamline onboarding for new hires, manage internal transfers seamlessly, and ensure
+          compliant offboarding processes. Track tasks, documents, and approvals all in one place.
+        </p>
+        <div class="intro-features">
+          <span class="feature-tag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#005BAA" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            Automated Task Management
+          </span>
+          <span class="feature-tag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Document Tracking
+          </span>
+          <span class="feature-tag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#d13438" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Timeline Management
+          </span>
+          <span class="feature-tag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#107c10" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Compliance Ready
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hero Action Cards -->
+    <div class="hero-actions">
+      <div class="hero-card joiner">
+        <div class="hero-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+        </div>
+        <h3>Onboarding</h3>
+        <p>Welcome new employees with a structured onboarding experience</p>
+        <button class="hero-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Start Onboarding
+        </button>
+        <div class="hero-stat">
+          <span class="number">12</span>
+          <span class="label">Active onboardings</span>
+        </div>
+      </div>
+
+      <div class="hero-card mover">
+        <div class="hero-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+        </div>
+        <h3>Transfers</h3>
+        <p>Manage internal moves, promotions, and department changes</p>
+        <button class="hero-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Start Transfer
+        </button>
+        <div class="hero-stat">
+          <span class="number">5</span>
+          <span class="label">Pending transfers</span>
+        </div>
+      </div>
+
+      <div class="hero-card leaver">
+        <div class="hero-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="18" y1="8" x2="23" y2="13"/><line x1="23" y1="8" x2="18" y2="13"/></svg>
+        </div>
+        <h3>Offboarding</h3>
+        <p>Ensure smooth departures with complete exit processes</p>
+        <button class="hero-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Start Offboarding
+        </button>
+        <div class="hero-stat">
+          <span class="number">3</span>
+          <span class="label">Active offboardings</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Metrics Row -->
+    <div class="metrics-row">
+      <div class="metric-card">
+        <div class="label">This Month's Joiners</div>
+        <div class="value">8</div>
+        <div class="change">+25% vs last month</div>
+      </div>
+      <div class="metric-card">
+        <div class="label">Completed This Week</div>
+        <div class="value" style="color: var(--success)">15</div>
+        <div class="change">On track</div>
+      </div>
+      <div class="metric-card">
+        <div class="label">Total Active Processes</div>
+        <div class="value">20</div>
+        <div class="change">Across all workflows</div>
+      </div>
+      <div class="metric-card">
+        <div class="label">Overdue Tasks</div>
+        <div class="value" style="color: var(--leaver)">2</div>
+        <div class="change" style="color: var(--leaver)">Requires attention</div>
+      </div>
+    </div>
+
+    <!-- Two Column -->
+    <div class="two-col">
+      <div class="card">
+        <h3>Recent Activity</h3>
+        <div class="activity-item joiner">
+          <div class="activity-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+          </div>
+          <div class="activity-info">
+            <div class="activity-name">Sarah Johnson</div>
+            <div class="activity-meta">Joiner - In Progress</div>
+          </div>
+          <div class="activity-date">Today</div>
+        </div>
+        <div class="activity-item mover">
+          <div class="activity-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          </div>
+          <div class="activity-info">
+            <div class="activity-name">Michael Chen</div>
+            <div class="activity-meta">Mover - Pending Approval</div>
+          </div>
+          <div class="activity-date">Yesterday</div>
+        </div>
+        <div class="activity-item leaver">
+          <div class="activity-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="18" y1="8" x2="23" y2="13"/><line x1="23" y1="8" x2="18" y2="13"/></svg>
+          </div>
+          <div class="activity-info">
+            <div class="activity-name">Emma Williams</div>
+            <div class="activity-meta">Leaver - Exit Interview Scheduled</div>
+          </div>
+          <div class="activity-date">2 days ago</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Quick Links</h3>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <a href="#" style="color: var(--joiner); text-decoration: none; display: flex; align-items: center; gap: 8px; padding: 12px; background: var(--joiner-light); border-radius: 8px; font-weight: 500;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            View Reports
+          </a>
+          <a href="#" style="color: #4a5568; text-decoration: none; display: flex; align-items: center; gap: 8px; padding: 12px; background: #f5f5f5; border-radius: 8px; font-weight: 500;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            Search Employees
+          </a>
+          <a href="#" style="color: #4a5568; text-decoration: none; display: flex; align-items: center; gap: 8px; padding: 12px; background: #f5f5f5; border-radius: 8px; font-weight: 500;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            My Onboarding
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

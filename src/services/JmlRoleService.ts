@@ -27,7 +27,10 @@ const NAV_MIN_ROLE: Record<string, JmlRole> = {
   onboarding: JmlRole.Manager,
   mover: JmlRole.Manager,
   offboarding: JmlRole.Manager,
+  approvals: JmlRole.Manager,
+  taskmanager: JmlRole.Manager,
   jmlreporting: JmlRole.Manager,
+  analytics: JmlRole.Manager,
   admin: JmlRole.Admin,
 };
 

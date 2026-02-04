@@ -13,6 +13,12 @@ export const JML_LISTS = {
   OFFBOARDING_TASKS: 'JML_OffboardingTasks',
   ASSET_RETURN: 'JML_AssetReturn',
 
+  // Workflow Lists
+  APPROVALS: 'JML_Approvals',
+  TASK_LIBRARY: 'JML_TaskLibrary',
+  CLASSIFICATION_RULES: 'JML_ClassificationRules',
+  NOTIFICATIONS: 'JML_Notifications',
+
   // Configuration Lists
   CONFIGURATION: 'JML_Configuration',
   AUDIT_TRAIL: 'JML_AuditTrail',
@@ -24,7 +30,14 @@ export const JML_LISTS = {
   DEPARTMENTS: 'JML_Departments',
 } as const;
 
+// Document Libraries
+export const JML_LIBRARIES = {
+  // Employee document library with folder per employee
+  EMPLOYEE_DOCUMENTS: 'JML_EmployeeDocuments',
+} as const;
+
 export type JML_ListName = typeof JML_LISTS[keyof typeof JML_LISTS];
+export type JML_LibraryName = typeof JML_LIBRARIES[keyof typeof JML_LIBRARIES];
 
 // Backwards compatibility alias (for migration)
 export const RM_LISTS = JML_LISTS;

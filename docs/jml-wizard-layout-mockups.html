@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JML Wizard Layout Options - DWx Recruitment Manager</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f5f5f5;
+      padding: 40px;
+      color: #1a1a1a;
+    }
+    h1 { font-size: 28px; font-weight: 600; margin-bottom: 8px; }
+    .subtitle { color: #605e5c; margin-bottom: 40px; }
+
+    .section { margin-bottom: 60px; }
+    .section-title {
+      font-size: 18px; font-weight: 600; margin-bottom: 8px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-desc { color: #605e5c; font-size: 14px; margin-bottom: 20px; }
+
+    .mockup-container {
+      background: #e8e8e8;
+      border-radius: 12px;
+      padding: 24px;
+      display: flex;
+      justify-content: center;
+      position: relative;
+    }
+
+    .badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: #7c3aed;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge.recommended { background: #059669; }
+
+    /* Panel Base Styles */
+    .panel {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel-header {
+      padding: 20px 24px;
+      background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .panel-header-content {
+      display: flex;
+      gap: 12px;
+    }
+
+    .panel-icon {
+      width: 40px;
+      height: 40px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .panel-title { font-size: 18px; font-weight: 600; }
+    .panel-subtitle { font-size: 13px; opacity: 0.9; margin-top: 2px; }
+
+    .panel-close {
+      width: 32px;
+      height: 32px;
+      background: rgba(255,255,255,0.15);
+      border: none;
+      border-radius: 6px;
+      color: white;
+      cursor: pointer;
+      font-size: 18px;
+    }
+
+    .panel-body { flex: 1; padding: 24px; overflow-y: auto; }
+
+    .panel-footer {
+      padding: 16px 24px;
+      border-top: 1px solid #e1dfdd;
+      display: flex;
+      justify-content: space-between;
+      background: #fafafa;
+    }
+
+    .btn {
+      padding: 8px 20px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+    }
+    .btn-secondary { background: #fff; border: 1px solid #8a8886; color: #333; }
+    .btn-primary { background: #ea580c; color: white; }
+
+    /* Stepper Styles */
+    .stepper-horizontal {
+      display: flex;
+      justify-content: space-between;
+      padding: 0 20px;
+      margin-bottom: 24px;
+    }
+
+    .stepper-horizontal .step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      position: relative;
+    }
+
+    .stepper-horizontal .step:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      top: 14px;
+      left: 50%;
+      width: 100%;
+      height: 2px;
+      background: #e1dfdd;
+    }
+
+    .stepper-horizontal .step.active:not(:last-child)::after,
+    .stepper-horizontal .step.completed:not(:last-child)::after {
+      background: #ea580c;
+    }
+
+    .step-number {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #e1dfdd;
+      color: #605e5c;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      position: relative;
+      z-index: 1;
+    }
+
+    .step.active .step-number,
+    .step.completed .step-number {
+      background: #ea580c;
+      color: white;
+    }
+
+    .step-label {
+      font-size: 11px;
+      color: #605e5c;
+      margin-top: 6px;
+      text-align: center;
+    }
+
+    .step.active .step-label { color: #ea580c; font-weight: 600; }
+
+    /* Vertical Stepper */
+    .stepper-vertical {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      min-width: 180px;
+      padding: 20px;
+      border-right: 1px solid #e1dfdd;
+      background: #fafafa;
+    }
+
+    .stepper-vertical .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 0;
+      position: relative;
+    }
+
+    .stepper-vertical .step:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      left: 13px;
+      top: 40px;
+      width: 2px;
+      height: calc(100% - 28px);
+      background: #e1dfdd;
+    }
+
+    .stepper-vertical .step.completed:not(:last-child)::after {
+      background: #ea580c;
+    }
+
+    .stepper-vertical .step-content {
+      flex: 1;
+    }
+
+    .stepper-vertical .step-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: #323130;
+    }
+
+    .stepper-vertical .step.active .step-title {
+      color: #ea580c;
+      font-weight: 600;
+    }
+
+    .stepper-vertical .step-desc {
+      font-size: 11px;
+      color: #8a8886;
+      margin-top: 2px;
+    }
+
+    /* Pill Stepper */
+    .stepper-pills {
+      display: flex;
+      gap: 8px;
+      padding: 16px 24px;
+      background: #f8f8f8;
+      border-bottom: 1px solid #e1dfdd;
+      overflow-x: auto;
+    }
+
+    .stepper-pills .step {
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+      background: #e1dfdd;
+      color: #605e5c;
+    }
+
+    .stepper-pills .step.active {
+      background: #ea580c;
+      color: white;
+    }
+
+    .stepper-pills .step.completed {
+      background: #fff7ed;
+      color: #ea580c;
+      border: 1px solid #ea580c;
+    }
+
+    /* Compact Number Steps */
+    .stepper-compact {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 12px 24px;
+      background: #f8f8f8;
+      border-bottom: 1px solid #e1dfdd;
+    }
+
+    .stepper-compact .step {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #e1dfdd;
+      color: #605e5c;
+      font-size: 11px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .stepper-compact .step.active {
+      background: #ea580c;
+      color: white;
+      width: auto;
+      padding: 4px 12px;
+      border-radius: 12px;
+    }
+
+    .stepper-compact .step.completed {
+      background: #ea580c;
+      color: white;
+    }
+
+    .stepper-compact .connector {
+      flex: 1;
+      height: 2px;
+      background: #e1dfdd;
+      max-width: 40px;
+    }
+
+    .stepper-compact .connector.active { background: #ea580c; }
+
+    /* Form content placeholder */
+    .form-content {
+      background: #f9f9f9;
+      border: 2px dashed #e1dfdd;
+      border-radius: 8px;
+      padding: 40px;
+      text-align: center;
+      color: #8a8886;
+    }
+
+    /* Layout variations */
+    .layout-split { display: flex; }
+    .layout-split .panel-main { flex: 1; display: flex; flex-direction: column; }
+
+    .pros-cons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 16px;
+      font-size: 13px;
+    }
+
+    .pros { color: #059669; }
+    .cons { color: #dc2626; }
+    .pros li, .cons li { margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+  <h1>JML Wizard Layout Options</h1>
+  <p class="subtitle">Exploring different panel layouts and stepper designs for the Internal Transfer (Mover) wizard</p>
+
+  <!-- OPTION 1: Current - Wide Panel with Horizontal Stepper -->
+  <div class="section">
+    <div class="section-title">
+      <span>Option 1: Wide Panel with Horizontal Stepper</span>
+      <span style="color: #8a8886; font-weight: 400; font-size: 14px;">(Current Design)</span>
+    </div>
+    <p class="section-desc">Full-width panel with step indicators across the top. Best for complex forms with many fields per step.</p>
+
+    <div class="mockup-container">
+      <div class="panel" style="width: 900px; height: 600px;">
+        <div class="panel-header">
+          <div class="panel-header-content">
+            <div class="panel-icon">🔄</div>
+            <div>
+              <div class="panel-title">New Internal Transfer</div>
+              <div class="panel-subtitle">Step 3 of 6: New Position</div>
+            </div>
+          </div>
+          <button class="panel-close">×</button>
+        </div>
+
+        <div class="panel-body">
+          <div class="stepper-horizontal">
+            <div class="step completed">
+              <div class="step-number">✓</div>
+              <div class="step-label">Employee</div>
+            </div>
+            <div class="step completed">
+              <div class="step-number">✓</div>
+              <div class="step-label">Current</div>
+            </div>
+            <div class="step active">
+              <div class="step-number">3</div>
+              <div class="step-label">New Position</div>
+            </div>
+            <div class="step">
+              <div class="step-number">4</div>
+              <div class="step-label">Systems</div>
+            </div>
+            <div class="step">
+              <div class="step-number">5</div>
+              <div class="step-label">Training</div>
+            </div>
+            <div class="step">
+              <div class="step-number">6</div>
+              <div class="step-label">Review</div>
+            </div>
+          </div>
+
+          <div class="form-content" style="height: 280px;">
+            Form fields for "New Position" step<br><br>
+            • New Job Title<br>
+            • New Department<br>
+            • New Location<br>
+            • Effective Date
+          </div>
+        </div>
+
+        <div class="panel-footer">
+          <button class="btn btn-secondary">Back</button>
+          <button class="btn btn-primary">Next</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="pros-cons">
+      <ul class="pros">
+        <li>✓ Clear visual progress indicator</li>
+        <li>✓ Room for complex forms</li>
+        <li>✓ Familiar wizard pattern</li>
+      </ul>
+      <ul class="cons">
+        <li>✗ Takes up significant screen space</li>
+        <li>✗ Horizontal stepper gets crowded with many steps</li>
+        <li>✗ Mobile responsiveness challenges</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- OPTION 2: Medium Panel with Vertical Side Stepper -->
+  <div class="section">
+    <div class="section-title">Option 2: Medium Panel with Vertical Side Stepper</div>
+    <p class="section-desc">Split layout with persistent step navigation on the left. Good for longer workflows.</p>
+
+    <div class="mockup-container">
+      <div class="badge recommended">Recommended</div>
+      <div class="panel layout-split" style="width: 800px; height: 600px;">
+        <div class="stepper-vertical">
+          <div class="step completed">
+            <div class="step-number" style="font-size: 10px;">✓</div>
+            <div class="step-content">
+              <div class="step-title">Select Employee</div>
+              <div class="step-desc">Choose who to transfer</div>
+            </div>
+          </div>
+          <div class="step completed">
+            <div class="step-number" style="font-size: 10px;">✓</div>
+            <div class="step-content">
+              <div class="step-title">Current Position</div>
+              <div class="step-desc">Confirm current details</div>
+            </div>
+          </div>
+          <div class="step active">
+            <div class="step-number">3</div>
+            <div class="step-content">
+              <div class="step-title">New Position</div>
+              <div class="step-desc">Enter new role details</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+              <div class="step-title">System Access</div>
+              <div class="step-desc">Configure permissions</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-number">5</div>
+            <div class="step-content">
+              <div class="step-title">Training</div>
+              <div class="step-desc">Assign required courses</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-number">6</div>
+            <div class="step-content">
+              <div class="step-title">Review</div>
+              <div class="step-desc">Confirm and submit</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-main">
+          <div class="panel-header">
+            <div class="panel-header-content">
+              <div class="panel-icon">🔄</div>
+              <div>
+                <div class="panel-title">New Internal Transfer</div>
+                <div class="panel-subtitle">New Position Details</div>
+              </div>
+            </div>
+            <button class="panel-close">×</button>
+          </div>
+
+          <div class="panel-body">
+            <div class="form-content" style="height: 340px;">
+              Form fields for "New Position" step<br><br>
+              • New Job Title<br>
+              • New Department<br>
+              • New Location<br>
+              • Effective Date<br>
+              • Salary Change
+            </div>
+          </div>
+
+          <div class="panel-footer">
+            <button class="btn btn-secondary">Back</button>
+            <button class="btn btn-primary">Next</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pros-cons">
+      <ul class="pros">
+        <li>✓ Always-visible navigation</li>
+        <li>✓ Step descriptions provide context</li>
+        <li>✓ Easy to jump between steps</li>
+        <li>✓ Narrower panel footprint</li>
+      </ul>
+      <ul class="cons">
+        <li>✗ Reduced form width</li>
+        <li>✗ More complex layout</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- OPTION 3: Compact Panel with Pill Stepper -->
+  <div class="section">
+    <div class="section-title">Option 3: Medium Panel with Pill Tabs</div>
+    <p class="section-desc">Compact design with scrollable pill-style step indicators. Modern and clean.</p>
+
+    <div class="mockup-container">
+      <div class="panel" style="width: 640px; height: 600px;">
+        <div class="panel-header">
+          <div class="panel-header-content">
+            <div class="panel-icon">🔄</div>
+            <div>
+              <div class="panel-title">New Internal Transfer</div>
+              <div class="panel-subtitle">John Smith → Senior Developer</div>
+            </div>
+          </div>
+          <button class="panel-close">×</button>
+        </div>
+
+        <div class="stepper-pills">
+          <div class="step completed">1. Employee</div>
+          <div class="step completed">2. Current</div>
+          <div class="step active">3. New Position</div>
+          <div class="step">4. Systems</div>
+          <div class="step">5. Training</div>
+          <div class="step">6. Review</div>
+        </div>
+
+        <div class="panel-body">
+          <div class="form-content" style="height: 300px;">
+            Form fields for "New Position" step<br><br>
+            • New Job Title<br>
+            • New Department<br>
+            • New Location<br>
+            • Effective Date
+          </div>
+        </div>
+
+        <div class="panel-footer">
+          <button class="btn btn-secondary">Back</button>
+          <button class="btn btn-primary">Next</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="pros-cons">
+      <ul class="pros">
+        <li>✓ Compact horizontal footprint</li>
+        <li>✓ Modern pill design</li>
+        <li>✓ Scrollable on mobile</li>
+        <li>✓ Clear active/completed states</li>
+      </ul>
+      <ul class="cons">
+        <li>✗ Less room for step descriptions</li>
+        <li>✗ Pills can wrap on small screens</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- OPTION 4: Minimal with Number Progress -->
+  <div class="section">
+    <div class="section-title">Option 4: Compact Panel with Minimal Progress</div>
+    <p class="section-desc">Minimalist approach with simple number indicators. Maximum form space.</p>
+
+    <div class="mockup-container">
+      <div class="panel" style="width: 560px; height: 580px;">
+        <div class="panel-header">
+          <div class="panel-header-content">
+            <div class="panel-icon">🔄</div>
+            <div>
+              <div class="panel-title">New Internal Transfer</div>
+              <div class="panel-subtitle">New Position Details</div>
+            </div>
+          </div>
+          <button class="panel-close">×</button>
+        </div>
+
+        <div class="stepper-compact">
+          <div class="step completed">✓</div>
+          <div class="connector active"></div>
+          <div class="step completed">✓</div>
+          <div class="connector active"></div>
+          <div class="step active">3 of 6</div>
+          <div class="connector"></div>
+          <div class="step">4</div>
+          <div class="connector"></div>
+          <div class="step">5</div>
+          <div class="connector"></div>
+          <div class="step">6</div>
+        </div>
+
+        <div class="panel-body">
+          <div class="form-content" style="height: 320px;">
+            Form fields for "New Position" step<br><br>
+            • New Job Title<br>
+            • New Department<br>
+            • New Location<br>
+            • Effective Date<br>
+            • Notes
+          </div>
+        </div>
+
+        <div class="panel-footer">
+          <button class="btn btn-secondary">Back</button>
+          <button class="btn btn-primary">Next</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="pros-cons">
+      <ul class="pros">
+        <li>✓ Maximum content space</li>
+        <li>✓ Clean, minimal UI</li>
+        <li>✓ Works well on mobile</li>
+        <li>✓ Fast to scan</li>
+      </ul>
+      <ul class="cons">
+        <li>✗ No step labels visible</li>
+        <li>✗ Hard to navigate back to specific step</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- OPTION 5: Dialog-style (No Slide Panel) -->
+  <div class="section">
+    <div class="section-title">Option 5: Centered Modal Dialog</div>
+    <p class="section-desc">Traditional modal dialog instead of slide-in panel. Good for focused tasks.</p>
+
+    <div class="mockup-container" style="background: rgba(0,0,0,0.5); min-height: 500px; align-items: center;">
+      <div class="panel" style="width: 600px; max-height: 500px; border-radius: 12px;">
+        <div class="panel-header" style="border-radius: 12px 12px 0 0;">
+          <div class="panel-header-content">
+            <div class="panel-icon">🔄</div>
+            <div>
+              <div class="panel-title">New Internal Transfer</div>
+              <div class="panel-subtitle">Step 3: New Position</div>
+            </div>
+          </div>
+          <button class="panel-close">×</button>
+        </div>
+
+        <div class="stepper-pills" style="justify-content: center;">
+          <div class="step completed">✓</div>
+          <div class="step completed">✓</div>
+          <div class="step active">3</div>
+          <div class="step">4</div>
+          <div class="step">5</div>
+          <div class="step">6</div>
+        </div>
+
+        <div class="panel-body" style="padding: 20px 24px;">
+          <div class="form-content" style="height: 200px;">
+            Form fields for "New Position" step
+          </div>
+        </div>
+
+        <div class="panel-footer" style="border-radius: 0 0 12px 12px;">
+          <button class="btn btn-secondary">Back</button>
+          <button class="btn btn-primary">Next</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="pros-cons">
+      <ul class="pros">
+        <li>✓ Focused attention on task</li>
+        <li>✓ Centered, balanced layout</li>
+        <li>✓ Familiar dialog pattern</li>
+      </ul>
+      <ul class="cons">
+        <li>✗ Less space for complex forms</li>
+        <li>✗ Blocks entire screen</li>
+        <li>✗ Can feel restrictive</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Recommendation -->
+  <div class="section" style="background: #f0fdf4; padding: 24px; border-radius: 12px; border: 1px solid #bbf7d0;">
+    <div class="section-title" style="color: #059669;">💡 Recommendation</div>
+    <p style="margin-top: 8px; color: #166534;">
+      <strong>Option 2 (Vertical Side Stepper)</strong> provides the best balance of usability and space efficiency for the JML wizards.
+      It allows users to see all steps at a glance, provides contextual descriptions, and keeps the panel width reasonable
+      while maintaining enough space for form fields.
+    </p>
+    <p style="margin-top: 12px; color: #166534;">
+      For mobile/tablet, consider falling back to <strong>Option 3 (Pill Tabs)</strong> which adapts better to narrow viewports.
+    </p>
+  </div>
+
+  <!-- Panel Header Fix Note -->
+  <div class="section" style="background: #fef3c7; padding: 24px; border-radius: 12px; border: 1px solid #fcd34d; margin-top: 40px;">
+    <div class="section-title" style="color: #92400e;">⚠️ Header Whitespace Fix</div>
+    <p style="margin-top: 8px; color: #78350f;">
+      To fix the whitespace above the panel header, add these CSS overrides to remove the default SharePoint Panel padding:
+    </p>
+    <pre style="background: #1a1a1a; color: #e5e5e5; padding: 16px; border-radius: 8px; margin-top: 12px; font-size: 13px; overflow-x: auto;">
+.rmPanel :global(.ms-Panel-main) {
+  padding-top: 0 !important;
+}
+
+.rmPanel :global(.ms-Panel-contentInner) {
+  padding-top: 0 !important;
+}
+
+.rmPanel :global(.ms-Panel-scrollableContent) {
+  padding-top: 0 !important;
+}
+
+.panelHeader, .panelHeaderMover, .panelHeaderOffboarding {
+  margin-top: 0 !important;
+}</pre>
+  </div>
+
+</body>
+</html>

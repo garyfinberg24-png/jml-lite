@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Onboarding - Gamified Experience</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(180deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+      min-height: 100vh;
+      color: white;
+    }
+
+    /* Top Bar */
+    .top-bar {
+      background: rgba(0,0,0,0.3);
+      backdrop-filter: blur(12px);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .brand {
+      font-size: 18px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .brand-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #005BAA, #60a5fa);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .datetime-chip {
+      background: rgba(255,255,255,0.1);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .datetime-chip .time {
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    /* Main Container */
+    .main-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+
+    /* Profile Card */
+    .profile-card {
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 20px;
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+    .profile-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #f59e0b, #ef4444);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      box-shadow: 0 8px 32px rgba(245, 158, 11, 0.3);
+    }
+    .profile-info {
+      flex: 1;
+    }
+    .profile-info h1 {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .profile-info p {
+      color: rgba(255,255,255,0.7);
+      font-size: 14px;
+    }
+    .level-badge {
+      background: linear-gradient(135deg, #8b5cf6, #6366f1);
+      padding: 8px 20px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 4px 16px rgba(139, 92, 246, 0.4);
+    }
+    .xp-bar-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .xp-bar {
+      flex: 1;
+      height: 8px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .xp-fill {
+      height: 100%;
+      width: 70%;
+      background: linear-gradient(90deg, #f59e0b, #fbbf24);
+      border-radius: 4px;
+    }
+    .xp-text {
+      font-size: 12px;
+      color: #fbbf24;
+      font-weight: 600;
+    }
+    .stats-row {
+      display: flex;
+      gap: 32px;
+      margin-left: auto;
+    }
+    .stat-item {
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 28px;
+      font-weight: 800;
+    }
+    .stat-value.gold { color: #fbbf24; }
+    .stat-value.green { color: #34d399; }
+    .stat-value.blue { color: #60a5fa; }
+    .stat-label {
+      font-size: 11px;
+      color: rgba(255,255,255,0.6);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Achievement Banner */
+    .achievement-banner {
+      background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(245, 158, 11, 0.1));
+      border: 1px solid rgba(251, 191, 36, 0.3);
+      border-radius: 16px;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .achievement-icon {
+      font-size: 40px;
+    }
+    .achievement-text h3 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #fbbf24;
+    }
+    .achievement-text p {
+      font-size: 13px;
+      color: rgba(255,255,255,0.7);
+    }
+    .achievement-xp {
+      margin-left: auto;
+      background: rgba(251, 191, 36, 0.2);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: 700;
+      color: #fbbf24;
+    }
+
+    /* Quest Cards */
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .quests-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .quest-card {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 20px;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .quest-card:hover {
+      background: rgba(255,255,255,0.1);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+    .quest-card.completed {
+      opacity: 0.6;
+      border-color: rgba(52, 211, 153, 0.3);
+    }
+    .quest-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .quest-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    .quest-icon.docs { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+    .quest-icon.training { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .quest-icon.equipment { background: linear-gradient(135deg, #10b981, #059669); }
+    .quest-icon.access { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+    .quest-icon.orientation { background: linear-gradient(135deg, #ec4899, #be185d); }
+    .quest-title {
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .quest-category {
+      font-size: 11px;
+      color: rgba(255,255,255,0.5);
+    }
+    .quest-reward {
+      margin-left: auto;
+      font-size: 12px;
+      font-weight: 600;
+      color: #fbbf24;
+    }
+    .quest-progress {
+      height: 6px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    .quest-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #3b82f6, #60a5fa);
+      border-radius: 3px;
+    }
+    .quest-status {
+      font-size: 12px;
+      color: rgba(255,255,255,0.6);
+    }
+    .quest-card.completed .quest-status {
+      color: #34d399;
+    }
+
+    /* Badges Section */
+    .badges-section {
+      margin-bottom: 32px;
+    }
+    .badges-grid {
+      display: flex;
+      gap: 16px;
+      overflow-x: auto;
+      padding: 8px 0;
+    }
+    .badge-card {
+      flex-shrink: 0;
+      width: 100px;
+      text-align: center;
+      padding: 16px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+    }
+    .badge-card.earned {
+      border-color: rgba(251, 191, 36, 0.4);
+      background: rgba(251, 191, 36, 0.1);
+    }
+    .badge-card.locked {
+      opacity: 0.4;
+    }
+    .badge-icon {
+      font-size: 36px;
+      margin-bottom: 8px;
+    }
+    .badge-name {
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-card.locked .badge-name {
+      color: rgba(255,255,255,0.5);
+    }
+
+    /* Daily Challenges */
+    .challenges-section {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 20px;
+    }
+    .challenge-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .challenge-item:last-child {
+      border-bottom: none;
+    }
+    .challenge-check {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .challenge-check.done {
+      background: #34d399;
+      border-color: #34d399;
+    }
+    .challenge-text {
+      flex: 1;
+      font-size: 13px;
+    }
+    .challenge-xp {
+      font-size: 12px;
+      font-weight: 600;
+      color: #fbbf24;
+      background: rgba(251, 191, 36, 0.15);
+      padding: 4px 10px;
+      border-radius: 12px;
+    }
+
+    /* Leaderboard Snippet */
+    .leaderboard-preview {
+      margin-top: 32px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 20px;
+    }
+    .leaderboard-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+    }
+    .leaderboard-rank {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 12px;
+    }
+    .leaderboard-rank.gold { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
+    .leaderboard-rank.silver { background: linear-gradient(135deg, #94a3b8, #64748b); }
+    .leaderboard-rank.bronze { background: linear-gradient(135deg, #f97316, #ea580c); }
+    .leaderboard-rank.you { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+    .leaderboard-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+    .leaderboard-name {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .leaderboard-score {
+      font-size: 13px;
+      font-weight: 600;
+      color: #fbbf24;
+    }
+    .you-indicator {
+      background: rgba(59, 130, 246, 0.2);
+      border-radius: 8px;
+      margin: 0 -8px;
+      padding: 0 8px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Top Bar -->
+  <header class="top-bar">
+    <div class="brand">
+      <div class="brand-icon">🚀</div>
+      Onboarding Quest
+    </div>
+    <div class="datetime-chip">
+      <span>Monday, Feb 3, 2026</span>
+      <span class="time" id="live-time">09:45 AM</span>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-container">
+    <!-- Profile Card -->
+    <div class="profile-card">
+      <div class="profile-avatar">👩‍💻</div>
+      <div class="profile-info">
+        <h1>Sarah Mitchell</h1>
+        <p>Software Engineer • Engineering Team</p>
+        <div class="xp-bar-container">
+          <div class="xp-bar"><div class="xp-fill"></div></div>
+          <span class="xp-text">1,750 / 2,500 XP</span>
+        </div>
+      </div>
+      <div class="level-badge">Level 4</div>
+      <div class="stats-row">
+        <div class="stat-item">
+          <div class="stat-value gold">17</div>
+          <div class="stat-label">Completed</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value blue">7</div>
+          <div class="stat-label">Remaining</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value green">12</div>
+          <div class="stat-label">Days Left</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Achievement Banner -->
+    <div class="achievement-banner">
+      <div class="achievement-icon">🏆</div>
+      <div class="achievement-text">
+        <h3>Achievement Unlocked!</h3>
+        <p>Completed "Security Champion" - Finished IT Security Training</p>
+      </div>
+      <div class="achievement-xp">+250 XP</div>
+    </div>
+
+    <!-- Active Quests -->
+    <h2 class="section-title">⚔️ Active Quests</h2>
+    <div class="quests-grid">
+      <div class="quest-card">
+        <div class="quest-header">
+          <div class="quest-icon equipment">🖥️</div>
+          <div>
+            <div class="quest-title">Set Up Dev Environment</div>
+            <div class="quest-category">Equipment</div>
+          </div>
+          <div class="quest-reward">+100 XP</div>
+        </div>
+        <div class="quest-progress"><div class="quest-progress-fill" style="width: 60%;"></div></div>
+        <div class="quest-status">In progress • Due today</div>
+      </div>
+
+      <div class="quest-card">
+        <div class="quest-header">
+          <div class="quest-icon access">🔑</div>
+          <div>
+            <div class="quest-title">GitHub Access Request</div>
+            <div class="quest-category">System Access</div>
+          </div>
+          <div class="quest-reward">+75 XP</div>
+        </div>
+        <div class="quest-progress"><div class="quest-progress-fill" style="width: 0%;"></div></div>
+        <div class="quest-status">Not started • Due Feb 5</div>
+      </div>
+
+      <div class="quest-card">
+        <div class="quest-header">
+          <div class="quest-icon training">📚</div>
+          <div>
+            <div class="quest-title">Code Review Guidelines</div>
+            <div class="quest-category">Training</div>
+          </div>
+          <div class="quest-reward">+150 XP</div>
+        </div>
+        <div class="quest-progress"><div class="quest-progress-fill" style="width: 40%;"></div></div>
+        <div class="quest-status">In progress • Due Feb 7</div>
+      </div>
+
+      <div class="quest-card completed">
+        <div class="quest-header">
+          <div class="quest-icon training">🛡️</div>
+          <div>
+            <div class="quest-title">IT Security Training</div>
+            <div class="quest-category">Training</div>
+          </div>
+          <div class="quest-reward">✓ Earned</div>
+        </div>
+        <div class="quest-progress"><div class="quest-progress-fill" style="width: 100%; background: linear-gradient(90deg, #10b981, #34d399);"></div></div>
+        <div class="quest-status">✅ Completed Feb 1</div>
+      </div>
+    </div>
+
+    <!-- Badges Section -->
+    <div class="badges-section">
+      <h2 class="section-title">🎖️ Badges</h2>
+      <div class="badges-grid">
+        <div class="badge-card earned">
+          <div class="badge-icon">🌟</div>
+          <div class="badge-name">First Day Star</div>
+        </div>
+        <div class="badge-card earned">
+          <div class="badge-icon">🛡️</div>
+          <div class="badge-name">Security Champion</div>
+        </div>
+        <div class="badge-card earned">
+          <div class="badge-icon">💻</div>
+          <div class="badge-name">Tech Setup</div>
+        </div>
+        <div class="badge-card locked">
+          <div class="badge-icon">🤝</div>
+          <div class="badge-name">Team Player</div>
+        </div>
+        <div class="badge-card locked">
+          <div class="badge-icon">📈</div>
+          <div class="badge-name">Quick Learner</div>
+        </div>
+        <div class="badge-card locked">
+          <div class="badge-icon">🏅</div>
+          <div class="badge-name">Onboarding Pro</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Daily Challenges -->
+    <div class="challenges-section">
+      <h2 class="section-title">🎯 Today's Challenges</h2>
+      <div class="challenge-item">
+        <div class="challenge-check done">✓</div>
+        <div class="challenge-text">Complete 2 tasks</div>
+        <div class="challenge-xp">+50 XP</div>
+      </div>
+      <div class="challenge-item">
+        <div class="challenge-check"></div>
+        <div class="challenge-text">Finish a training module</div>
+        <div class="challenge-xp">+75 XP</div>
+      </div>
+      <div class="challenge-item">
+        <div class="challenge-check"></div>
+        <div class="challenge-text">Update your profile picture</div>
+        <div class="challenge-xp">+25 XP</div>
+      </div>
+    </div>
+
+    <!-- Leaderboard Preview -->
+    <div class="leaderboard-preview">
+      <h2 class="section-title">🏆 February New Hires Leaderboard</h2>
+      <div class="leaderboard-item">
+        <div class="leaderboard-rank gold">1</div>
+        <div class="leaderboard-avatar">JD</div>
+        <div class="leaderboard-name">James Davis</div>
+        <div class="leaderboard-score">2,450 XP</div>
+      </div>
+      <div class="leaderboard-item you-indicator">
+        <div class="leaderboard-rank you">2</div>
+        <div class="leaderboard-avatar">SM</div>
+        <div class="leaderboard-name">Sarah Mitchell (You)</div>
+        <div class="leaderboard-score">1,750 XP</div>
+      </div>
+      <div class="leaderboard-item">
+        <div class="leaderboard-rank bronze">3</div>
+        <div class="leaderboard-avatar">AT</div>
+        <div class="leaderboard-name">Alex Thompson</div>
+        <div class="leaderboard-score">1,620 XP</div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    function updateTime() {
+      const now = new Date();
+      document.getElementById('live-time').textContent = now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    }
+    setInterval(updateTime, 1000);
+  </script>
+</body>
+</html>

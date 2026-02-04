@@ -83,6 +83,32 @@ Ensure-Field "JML_OnboardingTemplates" "TasksJSON" "Note"
 Ensure-Field "JML_OnboardingTemplates" "EstimatedDurationDays" "Number"
 
 # ══════════════════════════════════════════════════════════════════
+# JML_MoverTemplates — Reusable mover/transfer task templates
+# ══════════════════════════════════════════════════════════════════
+Ensure-List "JML_MoverTemplates" "Reusable transfer task templates"
+Ensure-Field "JML_MoverTemplates" "Description" "Note"
+Ensure-ChoiceField "JML_MoverTemplates" "Category" @("System Access","Asset Transfer","Documentation","Training","Knowledge Transfer","Orientation","Compliance","Other") $true
+Ensure-ChoiceField "JML_MoverTemplates" "AssignToRole" @("Employee","HR Manager","IT Manager","Line Manager","New Manager") $true
+Ensure-Field "JML_MoverTemplates" "DaysBeforeEffective" "Number"
+Ensure-Field "JML_MoverTemplates" "DaysAfterEffective" "Number"
+Ensure-Field "JML_MoverTemplates" "IsMandatory" "Boolean"
+Ensure-Field "JML_MoverTemplates" "SortOrder" "Number"
+Ensure-Field "JML_MoverTemplates" "IsActive" "Boolean"
+
+# ══════════════════════════════════════════════════════════════════
+# JML_OffboardingTemplates — Reusable offboarding task templates
+# ══════════════════════════════════════════════════════════════════
+Ensure-List "JML_OffboardingTemplates" "Reusable offboarding task templates"
+Ensure-Field "JML_OffboardingTemplates" "Description" "Note"
+Ensure-ChoiceField "JML_OffboardingTemplates" "Category" @("Asset Return","System Access","Documentation","Exit Interview","Knowledge Transfer","Final Pay","Compliance","Other") $true
+Ensure-ChoiceField "JML_OffboardingTemplates" "AssignToRole" @("Employee","HR Manager","IT Manager","Line Manager","Finance") $true
+Ensure-Field "JML_OffboardingTemplates" "DaysBeforeLastDay" "Number"
+Ensure-Field "JML_OffboardingTemplates" "DaysAfterLastDay" "Number"
+Ensure-Field "JML_OffboardingTemplates" "IsMandatory" "Boolean"
+Ensure-Field "JML_OffboardingTemplates" "SortOrder" "Number"
+Ensure-Field "JML_OffboardingTemplates" "IsActive" "Boolean"
+
+# ══════════════════════════════════════════════════════════════════
 # JML_Mover — Employee internal transfer tracking
 # ══════════════════════════════════════════════════════════════════
 Ensure-List "JML_Mover" "Employee internal transfer tracking"
@@ -293,6 +319,124 @@ Ensure-Field "JML_Departments" "CostCenter" "Text"
 Ensure-Field "JML_Departments" "IsActive" "Boolean"
 
 # ══════════════════════════════════════════════════════════════════
+# JML_TaskLibrary — Predefined task templates with classification
+# ══════════════════════════════════════════════════════════════════
+Ensure-List "JML_TaskLibrary" "Predefined task templates with classification codes"
+Ensure-Field "JML_TaskLibrary" "TaskCode" "Text" $true
+Ensure-ChoiceField "JML_TaskLibrary" "Classification" @("DOC","SYS","HRD","TRN","ORI","CMP","FAC","SEC","FIN","COM") $true
+Ensure-Field "JML_TaskLibrary" "SequenceNumber" "Number"
+Ensure-Field "JML_TaskLibrary" "Description" "Note"
+Ensure-Field "JML_TaskLibrary" "Instructions" "Note"
+Ensure-Field "JML_TaskLibrary" "ProcessTypes" "Note"
+Ensure-Field "JML_TaskLibrary" "Departments" "Note"
+Ensure-Field "JML_TaskLibrary" "JobTitles" "Note"
+Ensure-ChoiceField "JML_TaskLibrary" "DefaultAssignmentType" @("Specific","Role","Manager","Employee","Auto") $true
+Ensure-Field "JML_TaskLibrary" "DefaultAssigneeRole" "Text"
+Ensure-Field "JML_TaskLibrary" "DefaultAssigneeId" "Number"
+Ensure-Field "JML_TaskLibrary" "DefaultAssigneeName" "Text"
+Ensure-ChoiceField "JML_TaskLibrary" "DefaultOffsetType" @("before-start","on-start","after-start") $true
+Ensure-Field "JML_TaskLibrary" "DefaultDaysOffset" "Number"
+Ensure-Field "JML_TaskLibrary" "EstimatedHours" "Number"
+Ensure-ChoiceField "JML_TaskLibrary" "DefaultPriority" @("Low","Medium","High","Critical") $true
+Ensure-Field "JML_TaskLibrary" "RequiresApproval" "Boolean"
+Ensure-Field "JML_TaskLibrary" "DefaultApproverId" "Number"
+Ensure-Field "JML_TaskLibrary" "DefaultApproverName" "Text"
+Ensure-Field "JML_TaskLibrary" "DefaultApproverRole" "Text"
+Ensure-Field "JML_TaskLibrary" "SendEmailNotification" "Boolean"
+Ensure-Field "JML_TaskLibrary" "SendTeamsNotification" "Boolean"
+Ensure-Field "JML_TaskLibrary" "SendReminder" "Boolean"
+Ensure-Field "JML_TaskLibrary" "ReminderDaysBefore" "Number"
+Ensure-Field "JML_TaskLibrary" "NotifyOnComplete" "Boolean"
+Ensure-Field "JML_TaskLibrary" "DependsOnTaskCodes" "Note"
+Ensure-Field "JML_TaskLibrary" "BlockedByTaskCodes" "Note"
+Ensure-Field "JML_TaskLibrary" "IsMandatory" "Boolean"
+Ensure-Field "JML_TaskLibrary" "SortOrder" "Number"
+Ensure-Field "JML_TaskLibrary" "Tags" "Note"
+Ensure-Field "JML_TaskLibrary" "IsActive" "Boolean"
+
+# ══════════════════════════════════════════════════════════════════
+# JML_ClassificationRules — Classification-based routing rules
+# ══════════════════════════════════════════════════════════════════
+Ensure-List "JML_ClassificationRules" "Classification-based assignment and approval routing rules"
+Ensure-ChoiceField "JML_ClassificationRules" "Classification" @("DOC","SYS","HRD","TRN","ORI","CMP","FAC","SEC","FIN","COM") $true
+Ensure-Field "JML_ClassificationRules" "ProcessTypes" "Note"
+Ensure-Field "JML_ClassificationRules" "Departments" "Note"
+Ensure-ChoiceField "JML_ClassificationRules" "DefaultAssigneeType" @("Role","Specific","Manager","Employee") $true
+Ensure-Field "JML_ClassificationRules" "DefaultAssigneeRole" "Text"
+Ensure-Field "JML_ClassificationRules" "DefaultAssigneeId" "Number"
+Ensure-Field "JML_ClassificationRules" "DefaultAssigneeName" "Text"
+Ensure-Field "JML_ClassificationRules" "RequiresApproval" "Boolean"
+Ensure-ChoiceField "JML_ClassificationRules" "ApproverType" @("Role","Specific","Manager","Skip-Level")
+Ensure-Field "JML_ClassificationRules" "ApproverRole" "Text"
+Ensure-Field "JML_ClassificationRules" "ApproverId" "Number"
+Ensure-Field "JML_ClassificationRules" "ApproverName" "Text"
+Ensure-Field "JML_ClassificationRules" "EscalationEnabled" "Boolean"
+Ensure-Field "JML_ClassificationRules" "EscalationDays" "Number"
+Ensure-Field "JML_ClassificationRules" "EscalationApproverId" "Number"
+Ensure-Field "JML_ClassificationRules" "EscalationApproverName" "Text"
+Ensure-Field "JML_ClassificationRules" "AutoApproveEnabled" "Boolean"
+Ensure-Field "JML_ClassificationRules" "AutoApproveMaxCost" "Number"
+Ensure-Field "JML_ClassificationRules" "SendEmailNotification" "Boolean"
+Ensure-Field "JML_ClassificationRules" "SendTeamsNotification" "Boolean"
+Ensure-Field "JML_ClassificationRules" "NotifyOnCompletion" "Boolean"
+Ensure-ChoiceField "JML_ClassificationRules" "DefaultOffsetType" @("before-start","on-start","after-start")
+Ensure-Field "JML_ClassificationRules" "DefaultDaysOffset" "Number"
+Ensure-ChoiceField "JML_ClassificationRules" "DefaultPriority" @("Low","Medium","High","Critical")
+Ensure-Field "JML_ClassificationRules" "SLADays" "Number"
+Ensure-Field "JML_ClassificationRules" "SortOrder" "Number"
+Ensure-Field "JML_ClassificationRules" "IsActive" "Boolean"
+
+# ══════════════════════════════════════════════════════════════════
+# JML_Approvals — Approval workflow queue
+# ══════════════════════════════════════════════════════════════════
+Ensure-List "JML_Approvals" "Approval workflow queue"
+Ensure-Field "JML_Approvals" "ApprovalType" "Text" $true
+Ensure-ChoiceField "JML_Approvals" "Status" @("Pending","Approved","Rejected","Cancelled","Expired") $true
+Ensure-ChoiceField "JML_Approvals" "Priority" @("Low","Medium","High","Urgent") $true
+Ensure-Field "JML_Approvals" "RelatedItemId" "Number" $true
+Ensure-Field "JML_Approvals" "RelatedItemType" "Text" $true
+Ensure-Field "JML_Approvals" "RelatedItemTitle" "Text"
+Ensure-Field "JML_Approvals" "EmployeeName" "Text" $true
+Ensure-Field "JML_Approvals" "EmployeeEmail" "Text"
+Ensure-Field "JML_Approvals" "Department" "Text"
+Ensure-Field "JML_Approvals" "JobTitle" "Text"
+Ensure-Field "JML_Approvals" "RequestorId" "Number"
+Ensure-Field "JML_Approvals" "RequestorName" "Text"
+Ensure-Field "JML_Approvals" "RequestorEmail" "Text"
+Ensure-Field "JML_Approvals" "RequestedDate" "DateTime"
+Ensure-Field "JML_Approvals" "ApproverId" "Number"
+Ensure-Field "JML_Approvals" "ApproverName" "Text"
+Ensure-Field "JML_Approvals" "ApproverEmail" "Text"
+Ensure-Field "JML_Approvals" "ApprovedById" "Number"
+Ensure-Field "JML_Approvals" "ApprovedByName" "Text"
+Ensure-Field "JML_Approvals" "ApprovedDate" "DateTime"
+Ensure-Field "JML_Approvals" "RequestComments" "Note"
+Ensure-Field "JML_Approvals" "ApprovalComments" "Note"
+Ensure-Field "JML_Approvals" "RejectionReason" "Note"
+Ensure-Field "JML_Approvals" "DueDate" "DateTime"
+Ensure-Field "JML_Approvals" "DelegatedToId" "Number"
+Ensure-Field "JML_Approvals" "DelegatedToName" "Text"
+Ensure-Field "JML_Approvals" "DelegatedDate" "DateTime"
+
+# ══════════════════════════════════════════════════════════════════
+# JML_Notifications — In-app notifications for users
+# ══════════════════════════════════════════════════════════════════
+Ensure-List "JML_Notifications" "In-app notifications for users"
+Ensure-ChoiceField "JML_Notifications" "NotificationType" @("task_assigned","task_completed","task_overdue","approval_required","approval_approved","approval_rejected","onboarding_started","transfer_started","offboarding_started","document_uploaded","reminder","system","info") $true
+Ensure-ChoiceField "JML_Notifications" "Category" @("Onboarding","Transfer","Offboarding","Approval","Task","System") $true
+Ensure-ChoiceField "JML_Notifications" "Priority" @("low","medium","high","urgent") $true
+Ensure-Field "JML_Notifications" "Message" "Note"
+Ensure-Field "JML_Notifications" "RecipientId" "Number"
+Ensure-Field "JML_Notifications" "RecipientEmail" "Text" $true
+Ensure-Field "JML_Notifications" "RelatedEntityType" "Text"
+Ensure-Field "JML_Notifications" "RelatedEntityId" "Number"
+Ensure-Field "JML_Notifications" "ActionUrl" "Text"
+Ensure-Field "JML_Notifications" "IsRead" "Boolean"
+Ensure-Field "JML_Notifications" "IsDismissed" "Boolean"
+Ensure-Field "JML_Notifications" "ReadAt" "DateTime"
+Ensure-Field "JML_Notifications" "ExpiresAt" "DateTime"
+
+# ══════════════════════════════════════════════════════════════════
 # JML_Configuration — Application configuration settings
 # ══════════════════════════════════════════════════════════════════
 Ensure-List "JML_Configuration" "Application configuration settings"
@@ -311,8 +455,29 @@ Ensure-Field "JML_AuditTrail" "EntityId" "Number"
 Ensure-Field "JML_AuditTrail" "EntityTitle" "Text"
 Ensure-Field "JML_AuditTrail" "Details" "Note"
 
+# ══════════════════════════════════════════════════════════════════
+# JML_EmployeeDocuments — Document Library for employee files
+# ══════════════════════════════════════════════════════════════════
 Write-Host ""
-Write-Host "=== All JML_ lists provisioned successfully ===" -ForegroundColor Green
+Write-Host "Creating Document Library: JML_EmployeeDocuments..." -ForegroundColor Yellow
+$docLib = Get-PnPList -Identity "JML_EmployeeDocuments" -ErrorAction SilentlyContinue
+if ($null -eq $docLib) {
+    New-PnPList -Title "JML_EmployeeDocuments" -Template DocumentLibrary -OnQuickLaunch:$false
+    Write-Host "Created: JML_EmployeeDocuments" -ForegroundColor Green
+
+    # Add custom columns to the library
+    Add-PnPField -List "JML_EmployeeDocuments" -DisplayName "EmployeeName" -InternalName "EmployeeName" -Type Text -ErrorAction SilentlyContinue
+    Add-PnPField -List "JML_EmployeeDocuments" -DisplayName "DocumentCategory" -InternalName "DocumentCategory" -Type Choice -Choices @("ID Documents","Contracts","Certifications","Tax Forms","Background Checks","Training Certificates","Other") -ErrorAction SilentlyContinue
+    Add-PnPField -List "JML_EmployeeDocuments" -DisplayName "OnboardingId" -InternalName "OnboardingId" -Type Number -ErrorAction SilentlyContinue
+    Add-PnPField -List "JML_EmployeeDocuments" -DisplayName "VerifiedDate" -InternalName "VerifiedDate" -Type DateTime -ErrorAction SilentlyContinue
+    Add-PnPField -List "JML_EmployeeDocuments" -DisplayName "VerifiedById" -InternalName "VerifiedById" -Type Number -ErrorAction SilentlyContinue
+    Write-Host "  Added custom fields to JML_EmployeeDocuments" -ForegroundColor Cyan
+} else {
+    Write-Host "Exists: JML_EmployeeDocuments" -ForegroundColor Gray
+}
+
+Write-Host ""
+Write-Host "=== All JML_ lists and libraries provisioned successfully ===" -ForegroundColor Green
 Write-Host ""
 Write-Host "Lists created:" -ForegroundColor White
 Write-Host "  - JML_Onboarding" -ForegroundColor Cyan
@@ -320,15 +485,21 @@ Write-Host "  - JML_OnboardingTasks" -ForegroundColor Cyan
 Write-Host "  - JML_OnboardingTemplates" -ForegroundColor Cyan
 Write-Host "  - JML_Mover" -ForegroundColor Cyan
 Write-Host "  - JML_MoverTasks" -ForegroundColor Cyan
+Write-Host "  - JML_MoverTemplates" -ForegroundColor Cyan
 Write-Host "  - JML_MoverSystemAccess" -ForegroundColor Cyan
 Write-Host "  - JML_Offboarding" -ForegroundColor Cyan
 Write-Host "  - JML_OffboardingTasks" -ForegroundColor Cyan
+Write-Host "  - JML_OffboardingTemplates" -ForegroundColor Cyan
 Write-Host "  - JML_AssetReturn" -ForegroundColor Cyan
+Write-Host "  - JML_Approvals" -ForegroundColor Cyan
+Write-Host "  - JML_Notifications" -ForegroundColor Cyan
 Write-Host "  - JML_DocumentTypes" -ForegroundColor Cyan
 Write-Host "  - JML_AssetTypes" -ForegroundColor Cyan
 Write-Host "  - JML_SystemAccessTypes" -ForegroundColor Cyan
 Write-Host "  - JML_TrainingCourses" -ForegroundColor Cyan
 Write-Host "  - JML_PolicyPacks" -ForegroundColor Cyan
 Write-Host "  - JML_Departments" -ForegroundColor Cyan
+Write-Host "  - JML_TaskLibrary" -ForegroundColor Cyan
+Write-Host "  - JML_ClassificationRules" -ForegroundColor Cyan
 Write-Host "  - JML_Configuration" -ForegroundColor Cyan
 Write-Host "  - JML_AuditTrail" -ForegroundColor Cyan

@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Onboarding - Timeline Journey Layout</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #0f172a; min-height: 100vh; }
+
+    /* Floating Header */
+    .floating-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding: 12px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .avatar-small {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #005BAA, #38bdf8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+    }
+    .header-info h2 {
+      color: white;
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .header-info p {
+      color: #94a3b8;
+      font-size: 12px;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+    .datetime-display {
+      text-align: right;
+    }
+    .datetime-display .date {
+      color: #94a3b8;
+      font-size: 12px;
+    }
+    .datetime-display .time {
+      color: white;
+      font-size: 20px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+    .progress-badge {
+      background: linear-gradient(135deg, #005BAA, #0284c7);
+      padding: 8px 16px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .progress-badge span {
+      color: white;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .progress-mini {
+      width: 60px;
+      height: 6px;
+      background: rgba(255,255,255,0.3);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .progress-mini-fill {
+      height: 100%;
+      width: 70%;
+      background: white;
+      border-radius: 3px;
+    }
+
+    /* Main Content */
+    .main-content {
+      padding: 80px 32px 40px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    /* Hero Section */
+    .hero {
+      text-align: center;
+      padding: 60px 0 80px;
+    }
+    .hero h1 {
+      font-size: 42px;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 12px;
+    }
+    .hero h1 span {
+      background: linear-gradient(135deg, #38bdf8, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      color: #94a3b8;
+      font-size: 18px;
+    }
+
+    /* Journey Timeline */
+    .journey-timeline {
+      position: relative;
+      padding: 0 60px;
+    }
+    .timeline-track {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: linear-gradient(180deg, #005BAA 0%, #0284c7 50%, #64748b 100%);
+      transform: translateX(-50%);
+      border-radius: 2px;
+    }
+    .timeline-track::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 16px;
+      height: 16px;
+      background: #005BAA;
+      border-radius: 50%;
+      box-shadow: 0 0 20px rgba(0, 91, 170, 0.5);
+    }
+
+    /* Phase Section */
+    .phase {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 60px;
+      position: relative;
+    }
+    .phase:nth-child(even) {
+      flex-direction: row-reverse;
+    }
+    .phase:nth-child(even) .phase-content {
+      text-align: right;
+    }
+    .phase:nth-child(even) .phase-tasks {
+      align-items: flex-end;
+    }
+    .phase-marker {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: #1e293b;
+      border: 4px solid #005BAA;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      z-index: 2;
+    }
+    .phase-marker.completed {
+      background: #005BAA;
+      border-color: #38bdf8;
+    }
+    .phase-marker.current {
+      border-color: #38bdf8;
+      box-shadow: 0 0 24px rgba(56, 189, 248, 0.5);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 24px rgba(56, 189, 248, 0.5); }
+      50% { box-shadow: 0 0 40px rgba(56, 189, 248, 0.8); }
+    }
+    .phase-content {
+      width: calc(50% - 60px);
+      padding: 0 24px;
+    }
+    .phase-label {
+      color: #64748b;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+    .phase-title {
+      color: white;
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .phase-desc {
+      color: #94a3b8;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+    .phase-tasks {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* Task Card */
+    .task-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      max-width: 320px;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .task-card:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.2);
+      transform: translateY(-2px);
+    }
+    .task-card.completed {
+      opacity: 0.6;
+    }
+    .task-check {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid #64748b;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .task-check.done {
+      background: #059669;
+      border-color: #059669;
+      color: white;
+      font-size: 11px;
+    }
+    .task-info { flex: 1; }
+    .task-name {
+      color: white;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .task-card.completed .task-name {
+      text-decoration: line-through;
+      color: #64748b;
+    }
+    .task-due {
+      color: #64748b;
+      font-size: 11px;
+      margin-top: 2px;
+    }
+
+    /* Phase Stats */
+    .phase-stats {
+      display: flex;
+      gap: 16px;
+      margin-top: 12px;
+    }
+    .phase-stat {
+      color: #64748b;
+      font-size: 12px;
+    }
+    .phase-stat strong {
+      color: #38bdf8;
+    }
+
+    /* Empty space for other side */
+    .phase-spacer {
+      width: calc(50% - 60px);
+    }
+
+    /* Completion Banner */
+    .completion-banner {
+      background: linear-gradient(135deg, rgba(5, 150, 105, 0.2), rgba(16, 185, 129, 0.1));
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 16px;
+      padding: 32px;
+      text-align: center;
+      margin-top: 60px;
+    }
+    .completion-banner h3 {
+      color: #34d399;
+      font-size: 20px;
+      margin-bottom: 8px;
+    }
+    .completion-banner p {
+      color: #94a3b8;
+      font-size: 14px;
+    }
+    .completion-date {
+      color: #10b981;
+      font-weight: 600;
+      margin-top: 12px;
+      font-size: 15px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Floating Header -->
+  <header class="floating-header">
+    <div class="header-left">
+      <div class="avatar-small">SM</div>
+      <div class="header-info">
+        <h2>Sarah Mitchell</h2>
+        <p>Software Engineer • Engineering</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="progress-badge">
+        <div class="progress-mini"><div class="progress-mini-fill"></div></div>
+        <span>70%</span>
+      </div>
+      <div class="datetime-display">
+        <div class="date">Monday, February 3, 2026</div>
+        <div class="time" id="live-time">09:45 AM</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Hero -->
+    <section class="hero">
+      <h1>Your <span>Onboarding Journey</span></h1>
+      <p>Track your progress through each phase of your new role</p>
+    </section>
+
+    <!-- Journey Timeline -->
+    <div class="journey-timeline">
+      <div class="timeline-track"></div>
+
+      <!-- Phase 1: Day One -->
+      <div class="phase">
+        <div class="phase-marker completed">✓</div>
+        <div class="phase-content">
+          <div class="phase-label">Week 1</div>
+          <div class="phase-title">Day One Essentials</div>
+          <div class="phase-desc">Complete your first day paperwork and get set up</div>
+          <div class="phase-tasks">
+            <div class="task-card completed">
+              <div class="task-check done">✓</div>
+              <div class="task-info">
+                <div class="task-name">Sign Employment Contract</div>
+                <div class="task-due">Completed Jan 27</div>
+              </div>
+            </div>
+            <div class="task-card completed">
+              <div class="task-check done">✓</div>
+              <div class="task-info">
+                <div class="task-name">Collect ID Badge</div>
+                <div class="task-due">Completed Jan 27</div>
+              </div>
+            </div>
+            <div class="task-card completed">
+              <div class="task-check done">✓</div>
+              <div class="task-info">
+                <div class="task-name">Meet Your Team</div>
+                <div class="task-due">Completed Jan 27</div>
+              </div>
+            </div>
+          </div>
+          <div class="phase-stats">
+            <span class="phase-stat"><strong>3/3</strong> completed</span>
+          </div>
+        </div>
+        <div class="phase-spacer"></div>
+      </div>
+
+      <!-- Phase 2: IT & Equipment -->
+      <div class="phase">
+        <div class="phase-marker completed">✓</div>
+        <div class="phase-spacer"></div>
+        <div class="phase-content">
+          <div class="phase-label">Week 1-2</div>
+          <div class="phase-title">IT & Equipment</div>
+          <div class="phase-desc">Set up your workspace and get access to systems</div>
+          <div class="phase-tasks">
+            <div class="task-card completed">
+              <div class="task-check done">✓</div>
+              <div class="task-info">
+                <div class="task-name">Laptop Setup</div>
+                <div class="task-due">Completed Jan 28</div>
+              </div>
+            </div>
+            <div class="task-card completed">
+              <div class="task-check done">✓</div>
+              <div class="task-info">
+                <div class="task-name">Email Configuration</div>
+                <div class="task-due">Completed Jan 28</div>
+              </div>
+            </div>
+            <div class="task-card">
+              <div class="task-check"></div>
+              <div class="task-info">
+                <div class="task-name">Request GitHub Access</div>
+                <div class="task-due">Due Feb 5</div>
+              </div>
+            </div>
+          </div>
+          <div class="phase-stats">
+            <span class="phase-stat"><strong>2/3</strong> completed</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phase 3: Training -->
+      <div class="phase">
+        <div class="phase-marker current">📚</div>
+        <div class="phase-content">
+          <div class="phase-label">Week 2-3</div>
+          <div class="phase-title">Training & Learning</div>
+          <div class="phase-desc">Complete required training and certifications</div>
+          <div class="phase-tasks">
+            <div class="task-card completed">
+              <div class="task-check done">✓</div>
+              <div class="task-info">
+                <div class="task-name">Security Awareness</div>
+                <div class="task-due">Completed Feb 1</div>
+              </div>
+            </div>
+            <div class="task-card">
+              <div class="task-check"></div>
+              <div class="task-info">
+                <div class="task-name">Code Review Guidelines</div>
+                <div class="task-due">Due Feb 7</div>
+              </div>
+            </div>
+            <div class="task-card">
+              <div class="task-check"></div>
+              <div class="task-info">
+                <div class="task-name">Product Overview Session</div>
+                <div class="task-due">Due Feb 10</div>
+              </div>
+            </div>
+          </div>
+          <div class="phase-stats">
+            <span class="phase-stat"><strong>1/3</strong> completed</span>
+            <span class="phase-stat">• <strong>Current phase</strong></span>
+          </div>
+        </div>
+        <div class="phase-spacer"></div>
+      </div>
+
+      <!-- Phase 4: Integration -->
+      <div class="phase">
+        <div class="phase-marker">🤝</div>
+        <div class="phase-spacer"></div>
+        <div class="phase-content">
+          <div class="phase-label">Week 3-4</div>
+          <div class="phase-title">Team Integration</div>
+          <div class="phase-desc">Meet key stakeholders and understand team dynamics</div>
+          <div class="phase-tasks">
+            <div class="task-card">
+              <div class="task-check"></div>
+              <div class="task-info">
+                <div class="task-name">1:1 with Manager</div>
+                <div class="task-due">Due Feb 12</div>
+              </div>
+            </div>
+            <div class="task-card">
+              <div class="task-check"></div>
+              <div class="task-info">
+                <div class="task-name">Meet Product Team</div>
+                <div class="task-due">Due Feb 14</div>
+              </div>
+            </div>
+          </div>
+          <div class="phase-stats">
+            <span class="phase-stat"><strong>0/2</strong> completed</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Completion Banner -->
+      <div class="completion-banner">
+        <h3>🎉 Onboarding Complete!</h3>
+        <p>You're on track to complete your onboarding journey</p>
+        <div class="completion-date">Target: February 15, 2026</div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    function updateTime() {
+      const now = new Date();
+      document.getElementById('live-time').textContent = now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    }
+    setInterval(updateTime, 1000);
+  </script>
+</body>
+</html>

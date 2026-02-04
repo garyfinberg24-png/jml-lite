@@ -16,9 +16,12 @@ import { OnboardingBuddy } from '../../../components/OnboardingBuddy';
 import { MoverTracker } from '../../../components/MoverTracker';
 import { OffboardingTracker } from '../../../components/OffboardingTracker';
 import { JMLReporting } from '../../../components/JMLReporting';
+import { JMLAnalytics } from '../../../components/JMLAnalytics';
 import { OnboardingWizardPage } from '../../../components/OnboardingWizardPage';
 import { MoverWizardPage } from '../../../components/MoverWizardPage';
 import { OffboardingWizardPage } from '../../../components/OffboardingWizardPage';
+import { ApprovalQueue } from '../../../components/ApprovalQueue';
+import { TaskManager } from '../../../components/TaskManager';
 
 export type JmlViewType =
   | 'dashboard'
@@ -26,7 +29,10 @@ export type JmlViewType =
   | 'myonboarding'
   | 'mover'
   | 'offboarding'
+  | 'approvals'
+  | 'taskmanager'
   | 'jmlreporting'
+  | 'analytics'
   | 'search'
   | 'admin'
   | 'help'
@@ -62,8 +68,14 @@ const JmlLite: React.FC<IJmlLiteProps> = (props) => {
         return <MoverTracker sp={sp} onStartWizard={() => setCurrentView('mover-wizard')} />;
       case 'offboarding':
         return <OffboardingTracker sp={sp} onStartWizard={() => setCurrentView('offboarding-wizard')} />;
+      case 'approvals':
+        return <ApprovalQueue sp={sp} />;
+      case 'taskmanager':
+        return <TaskManager sp={sp} />;
       case 'jmlreporting':
         return <JMLReporting sp={sp} />;
+      case 'analytics':
+        return <JMLAnalytics sp={sp} />;
       case 'onboarding-wizard':
         return <OnboardingWizardPage sp={sp} onComplete={() => setCurrentView('onboarding')} onCancel={() => setCurrentView('onboarding')} />;
       case 'mover-wizard':
@@ -81,23 +93,22 @@ const JmlLite: React.FC<IJmlLiteProps> = (props) => {
     }
   };
 
-  // Check if we're in a full-page wizard mode (hide header and use full width)
+  // Wizards render within content bounds with header visible
+  // Wizards get a wider maxWidth for better form layout
   const isWizardMode = currentView.endsWith('-wizard');
 
   return (
     <FluentProvider theme={webLightTheme}>
-      {!isWizardMode && (
-        <JmlAppHeader
-          currentView={currentView}
-          onNavigate={(view: JmlViewType) => setCurrentView(view)}
-          userRole={userRole}
-          context={props.context}
-        />
-      )}
+      <JmlAppHeader
+        currentView={currentView}
+        onNavigate={(view: JmlViewType) => setCurrentView(view)}
+        userRole={userRole}
+        context={props.context}
+      />
       <div style={{
-        maxWidth: isWizardMode ? 'none' : '1400px',
+        maxWidth: isWizardMode ? '1600px' : '1400px',
         margin: '0 auto',
-        padding: isWizardMode ? '0' : '24px'
+        padding: isWizardMode ? '16px' : '24px'
       }}>
         {renderView()}
       </div>

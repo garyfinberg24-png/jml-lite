@@ -8,15 +8,22 @@ import { DatePicker } from '@fluentui/react/lib/DatePicker';
 import { Toggle } from '@fluentui/react/lib/Toggle';
 import { Spinner, SpinnerSize } from '@fluentui/react/lib/Spinner';
 import { Icon } from '@fluentui/react/lib/Icon';
+import { WebPartContext } from '@microsoft/sp-webpart-base';
 import { OnboardingService } from '../services/OnboardingService';
 import { OnboardingConfigService } from '../services/OnboardingConfigService';
+import { TaskLibraryService } from '../services/TaskLibraryService';
+import { ClassificationRulesService } from '../services/ClassificationRulesService';
 import { IOnboardingWizardData, OnboardingStatus, OnboardingTaskStatus } from '../models/IOnboarding';
 import { IDocumentType, IAssetType, ISystemAccessType, ITrainingCourse, IPolicyPack, IDepartment } from '../models/IOnboardingConfig';
+import { ITaskLibraryItem, TaskProcessType, TaskClassification, TASK_CLASSIFICATION_INFO } from '../models/ITaskLibrary';
+import { IClassificationRule } from '../models/IClassificationRules';
+import { TaskConfigurationPanel, IConfigurableTask } from './TaskConfigurationPanel';
 import styles from '../styles/JmlPanelStyles.module.scss';
 import '../styles/FieldBorders.module.scss';
 
 interface IProps {
   sp: SPFI;
+  context?: WebPartContext;
   isOpen: boolean;
   onDismiss: () => void;
   onCompleted: () => void;
@@ -31,6 +38,8 @@ interface IConfigData {
   trainingCourses: ITrainingCourse[];
   policyPacks: IPolicyPack[];
   departments: IDepartment[];
+  taskLibrary: ITaskLibraryItem[];
+  classificationRules: IClassificationRule[];
 }
 
 interface ISelectedDoc { id: number; name: string; required: boolean; received: boolean }
@@ -46,10 +55,11 @@ const STEPS = [
   { label: 'Systems', icon: 'Permissions' },
   { label: 'Equipment', icon: 'Devices3' },
   { label: 'Training', icon: 'Education' },
+  { label: 'Configure', icon: 'TaskManager' },
   { label: 'Review', icon: 'CheckList' },
 ];
 
-export const OnboardingWizard: React.FC<IProps> = ({ sp, isOpen, onDismiss, onCompleted }) => {
+export const OnboardingWizard: React.FC<IProps> = ({ sp, context, isOpen, onDismiss, onCompleted }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [wizardData, setWizardData] = useState<IOnboardingWizardData>({
     documents: [], systemAccess: [], equipment: [], training: []
@@ -68,6 +78,11 @@ export const OnboardingWizard: React.FC<IProps> = ({ sp, isOpen, onDismiss, onCo
   const [selectedAssets, setSelectedAssets] = useState<ISelectedAsset[]>([]);
   const [selectedTraining, setSelectedTraining] = useState<ISelectedTraining[]>([]);
 
+  // Task configuration state
+  const [showTaskConfig, setShowTaskConfig] = useState(false);
+  const [configuredTasks, setConfiguredTasks] = useState<IConfigurableTask[]>([]);
+  const [tasksConfirmed, setTasksConfirmed] = useState(false); // True after user confirms in TaskConfigurationPanel
+
   useEffect(() => {
     if (isOpen) {
       setCurrentStep(0);
@@ -80,6 +95,9 @@ export const OnboardingWizard: React.FC<IProps> = ({ sp, isOpen, onDismiss, onCo
       setSelectedSystems([]);
       setSelectedAssets([]);
       setSelectedTraining([]);
+      setShowTaskConfig(false);
+      setConfiguredTasks([]);
+      setTasksConfirmed(false);
       loadData();
     }
   }, [isOpen, sp]);
@@ -89,8 +107,10 @@ export const OnboardingWizard: React.FC<IProps> = ({ sp, isOpen, onDismiss, onCo
     try {
       const svc = new OnboardingService(sp);
       const configSvc = new OnboardingConfigService(sp);
+      const taskLibrarySvc = new TaskLibraryService(sp);
+      const classRulesSvc = new ClassificationRulesService(sp);
 
-      const [cands, docs, assets, systems, courses, packs, depts] = await Promise.all([
+      const [cands, docs, assets, systems, courses, packs, depts, taskLib, classRules] = await Promise.all([
         svc.getEligibleCandidates(),
         configSvc.getDocumentTypes({ isActive: true }),
         configSvc.getAssetTypes({ isActive: true }),
@@ -98,6 +118,8 @@ export const OnboardingWizard: React.FC<IProps> = ({ sp, isOpen, onDismiss, onCo
         configSvc.getTrainingCourses({ isActive: true }),
         configSvc.getPolicyPacks({ isActive: true }),
         configSvc.getDepartments({ isActive: true }),
+        taskLibrarySvc.getTaskLibraryItems({ isActive: true, processType: TaskProcessType.Onboarding }),
+        classRulesSvc.getClassificationRules({ isActive: true }),
       ]);
 
       setCandidates(cands);
@@ -108,6 +130,8 @@ export const OnboardingWizard: React.FC<IProps> = ({ sp, isOpen, onDismiss, onCo
         trainingCourses: courses,
         policyPacks: packs,
         departments: depts,
+        taskLibrary: taskLib,
+        classificationRules: classRules,
       });
 
       // Initialize with default selections
@@ -175,14 +199,334 @@ export const OnboardingWizard: React.FC<IProps> = ({ sp, isOpen, onDismiss, onCo
     setWizardData(prev => ({ ...prev, [field]: value }));
   };
 
+  // Map task library classification to configurable task category
+  const classificationToCategory = (classification: string): IConfigurableTask['category'] => {
+    const map: Record<string, IConfigurableTask['category']> = {
+      'DOC': 'Documentation',
+      'SYS': 'System Access',
+      'HRD': 'Equipment',
+      'TRN': 'Training',
+      'ORI': 'Orientation',
+      'CMP': 'Compliance',
+      'FAC': 'General',
+      'SEC': 'General',
+      'FIN': 'General',
+      'COM': 'General',
+    };
+    return map[classification] || 'General';
+  };
+
+  // Find matching task library item by classification and title keywords
+  const findMatchingTaskLibraryItem = (
+    category: string,
+    titleKeywords: string[]
+  ): ITaskLibraryItem | undefined => {
+    if (!configData?.taskLibrary) return undefined;
+
+    // Map category to classification
+    const classificationMap: Record<string, string[]> = {
+      'Documentation': ['DOC'],
+      'System Access': ['SYS', 'COM'],
+      'Equipment': ['HRD'],
+      'Training': ['TRN'],
+      'Orientation': ['ORI'],
+      'Compliance': ['CMP'],
+      'General': ['FAC', 'SEC', 'FIN'],
+    };
+
+    const targetClassifications = classificationMap[category] || [];
+
+    // Find a matching task from the library
+    return configData.taskLibrary.find(task => {
+      if (!targetClassifications.includes(task.Classification)) return false;
+
+      // Check if any keyword matches the task title
+      const titleLower = task.Title.toLowerCase();
+      return titleKeywords.some(kw => titleLower.includes(kw.toLowerCase()));
+    });
+  };
+
+  // Get classification rule for a specific classification
+  const getClassificationRule = (classification: TaskClassification): IClassificationRule | undefined => {
+    if (!configData?.classificationRules) return undefined;
+    return configData.classificationRules.find(r => r.Classification === classification && r.IsActive);
+  };
+
+  // Apply classification rule to task configuration
+  const applyClassificationRule = (
+    classification: TaskClassification,
+    defaults: Partial<IConfigurableTask>
+  ): Partial<IConfigurableTask> => {
+    const rule = getClassificationRule(classification);
+    if (!rule) return defaults;
+
+    return {
+      ...defaults,
+      // Assignment from rule
+      assignmentType: rule.DefaultAssigneeType === 'Role' ? 'role' :
+        rule.DefaultAssigneeType === 'Manager' ? 'manager' :
+          rule.DefaultAssigneeType === 'Specific' ? 'specific' : 'auto',
+      roleAssignment: rule.DefaultAssigneeRole || defaults.roleAssignment,
+      assigneeId: rule.DefaultAssigneeId,
+      assigneeName: rule.DefaultAssigneeName,
+      // Approval from rule
+      requiresApproval: rule.RequiresApproval,
+      approverRole: rule.ApproverRole,
+      approverId: rule.ApproverId,
+      approverName: rule.ApproverName,
+      // Timing from rule
+      daysOffset: rule.DefaultDaysOffset ?? defaults.daysOffset,
+      offsetType: rule.DefaultOffsetType || defaults.offsetType,
+      priority: rule.DefaultPriority || defaults.priority,
+      // Notifications from rule
+      sendReminder: rule.SendEmailNotification ?? defaults.sendReminder,
+      notifyOnComplete: rule.NotifyOnCompletion ?? defaults.notifyOnComplete,
+      notifyAssigneeEmail: rule.SendEmailNotification ?? defaults.notifyAssigneeEmail,
+      notifyTeamsChat: rule.SendTeamsNotification ?? defaults.notifyTeamsChat,
+    };
+  };
+
+  // Build configurable tasks from selections, enhanced with task library defaults and classification rules
+  const buildConfigurableTasks = (): IConfigurableTask[] => {
+    const tasks: IConfigurableTask[] = [];
+    const taskLibrary = configData?.taskLibrary || [];
+
+    // Document tasks - enhanced with task library and classification rules
+    selectedDocs.filter(d => d.required).forEach((doc) => {
+      // Try to find a matching task library item
+      const libraryItem = findMatchingTaskLibraryItem('Documentation', [doc.name, 'document', 'collect']);
+
+      // Base task configuration from library or defaults
+      const baseTask: Partial<IConfigurableTask> = {
+        id: `doc-${doc.id}`,
+        taskCode: libraryItem?.TaskCode,
+        title: `Collect: ${doc.name}`,
+        category: 'Documentation',
+        sourceType: 'document',
+        sourceId: doc.id,
+        assignmentType: (libraryItem?.DefaultAssignmentType as any) || 'role',
+        roleAssignment: libraryItem?.DefaultAssigneeRole || 'HR Team',
+        daysOffset: libraryItem?.DefaultDaysOffset ?? 0,
+        offsetType: (libraryItem?.DefaultOffsetType as any) || 'before-start',
+        priority: (libraryItem?.DefaultPriority as any) || 'High',
+        requiresApproval: libraryItem?.RequiresApproval ?? false,
+        sendReminder: libraryItem?.SendReminder ?? true,
+        reminderDaysBefore: libraryItem?.ReminderDaysBefore ?? 2,
+        notifyOnComplete: libraryItem?.NotifyOnComplete ?? true,
+        notifyAssigneeEmail: true,
+        notifyTeamsChat: false,
+        estimatedHours: libraryItem?.EstimatedHours,
+        instructions: libraryItem?.Instructions,
+        isSelected: true,
+        isConfigured: !!libraryItem,
+      };
+
+      // Apply classification rule for DOC tasks (auto-routing)
+      const configuredTask = applyClassificationRule(TaskClassification.DOC, baseTask);
+      tasks.push(configuredTask as IConfigurableTask);
+    });
+
+    // System access tasks - enhanced with task library and classification rules
+    selectedSystems.filter(s => s.requested).forEach((sys) => {
+      const libraryItem = findMatchingTaskLibraryItem('System Access', [sys.name, 'system', 'access', 'setup']);
+
+      const baseTask: Partial<IConfigurableTask> = {
+        id: `sys-${sys.id}`,
+        taskCode: libraryItem?.TaskCode,
+        title: `Set up ${sys.name} (${sys.role})`,
+        category: 'System Access',
+        sourceType: 'system',
+        sourceId: sys.id,
+        assignmentType: (libraryItem?.DefaultAssignmentType as any) || 'role',
+        roleAssignment: libraryItem?.DefaultAssigneeRole || 'IT Team',
+        daysOffset: libraryItem?.DefaultDaysOffset ?? 1,
+        offsetType: (libraryItem?.DefaultOffsetType as any) || 'before-start',
+        priority: (libraryItem?.DefaultPriority as any) || 'High',
+        requiresApproval: libraryItem?.RequiresApproval ?? true,
+        sendReminder: libraryItem?.SendReminder ?? true,
+        reminderDaysBefore: libraryItem?.ReminderDaysBefore ?? 1,
+        notifyOnComplete: libraryItem?.NotifyOnComplete ?? true,
+        notifyAssigneeEmail: true,
+        notifyTeamsChat: true,
+        estimatedHours: libraryItem?.EstimatedHours,
+        instructions: libraryItem?.Instructions,
+        isSelected: true,
+        isConfigured: !!libraryItem,
+      };
+
+      // Apply classification rule for SYS tasks (auto-routing with IT Admin approval)
+      const configuredTask = applyClassificationRule(TaskClassification.SYS, baseTask);
+      tasks.push(configuredTask as IConfigurableTask);
+    });
+
+    // Equipment tasks - enhanced with task library and classification rules (HRD classification)
+    selectedAssets.filter(e => e.requested).forEach((asset) => {
+      const libraryItem = findMatchingTaskLibraryItem('Equipment', [asset.name, 'hardware', 'provision', 'equipment']);
+
+      const baseTask: Partial<IConfigurableTask> = {
+        id: `asset-${asset.id}`,
+        taskCode: libraryItem?.TaskCode,
+        title: `Provision ${asset.name}${asset.quantity > 1 ? ` x${asset.quantity}` : ''}`,
+        category: 'Equipment',
+        sourceType: 'asset',
+        sourceId: asset.id,
+        assignmentType: (libraryItem?.DefaultAssignmentType as any) || 'role',
+        roleAssignment: libraryItem?.DefaultAssigneeRole || 'IT Team',
+        daysOffset: libraryItem?.DefaultDaysOffset ?? 3,
+        offsetType: (libraryItem?.DefaultOffsetType as any) || 'before-start',
+        priority: (libraryItem?.DefaultPriority as any) || 'Medium',
+        requiresApproval: libraryItem?.RequiresApproval ?? false,
+        sendReminder: libraryItem?.SendReminder ?? true,
+        reminderDaysBefore: libraryItem?.ReminderDaysBefore ?? 2,
+        notifyOnComplete: libraryItem?.NotifyOnComplete ?? true,
+        notifyAssigneeEmail: true,
+        notifyTeamsChat: false,
+        estimatedHours: libraryItem?.EstimatedHours,
+        instructions: libraryItem?.Instructions,
+        isSelected: true,
+        isConfigured: !!libraryItem,
+      };
+
+      // Apply classification rule for HRD tasks (Hardware/Equipment with IT Admin approval)
+      const configuredTask = applyClassificationRule(TaskClassification.HRD, baseTask);
+      tasks.push(configuredTask as IConfigurableTask);
+    });
+
+    // Training tasks - enhanced with task library and classification rules
+    selectedTraining.filter(t => t.mandatory).forEach((tr) => {
+      const libraryItem = findMatchingTaskLibraryItem('Training', [tr.name, 'training', 'course']);
+
+      const baseTask: Partial<IConfigurableTask> = {
+        id: `train-${tr.id}`,
+        taskCode: libraryItem?.TaskCode,
+        title: tr.name,
+        category: 'Training',
+        sourceType: 'training',
+        sourceId: tr.id,
+        assignmentType: (libraryItem?.DefaultAssignmentType as any) || 'role',
+        roleAssignment: libraryItem?.DefaultAssigneeRole || 'Training',
+        daysOffset: libraryItem?.DefaultDaysOffset ?? 5,
+        offsetType: (libraryItem?.DefaultOffsetType as any) || 'after-start',
+        priority: (libraryItem?.DefaultPriority as any) || 'Medium',
+        requiresApproval: libraryItem?.RequiresApproval ?? false,
+        sendReminder: libraryItem?.SendReminder ?? true,
+        reminderDaysBefore: libraryItem?.ReminderDaysBefore ?? 1,
+        notifyOnComplete: libraryItem?.NotifyOnComplete ?? true,
+        notifyAssigneeEmail: true,
+        notifyTeamsChat: false,
+        estimatedHours: libraryItem?.EstimatedHours,
+        instructions: libraryItem?.Instructions,
+        isSelected: true,
+        isConfigured: !!libraryItem,
+      };
+
+      // Apply classification rule for TRN tasks (Training)
+      const configuredTask = applyClassificationRule(TaskClassification.TRN, baseTask);
+      tasks.push(configuredTask as IConfigurableTask);
+    });
+
+    // Add additional predefined tasks from task library that aren't covered by selections
+    // These are tasks that should always be included (e.g., orientation, compliance tasks)
+    const additionalTasks = taskLibrary.filter(t => {
+      // Include orientation, compliance, security, finance, and facility tasks
+      const alwaysIncludeClassifications = ['ORI', 'CMP', 'SEC', 'FIN', 'FAC'];
+      return alwaysIncludeClassifications.includes(t.Classification);
+    });
+
+    additionalTasks.forEach((libTask) => {
+      // Check if this task isn't already added
+      const alreadyExists = tasks.some(t => t.taskCode === libTask.TaskCode);
+      if (alreadyExists) return;
+
+      const category = classificationToCategory(libTask.Classification as string);
+      const classificationInfo = TASK_CLASSIFICATION_INFO[libTask.Classification as TaskClassification];
+      const classificationLabel = classificationInfo?.label || libTask.Classification;
+
+      const baseTask: Partial<IConfigurableTask> = {
+        id: `lib-${libTask.Id}`,
+        taskCode: libTask.TaskCode,
+        title: libTask.Title,
+        category: category,
+        sourceType: 'custom',
+        assignmentType: (libTask.DefaultAssignmentType as any) || 'role',
+        roleAssignment: libTask.DefaultAssigneeRole || classificationLabel,
+        daysOffset: libTask.DefaultDaysOffset ?? 0,
+        offsetType: (libTask.DefaultOffsetType as any) || 'on-start',
+        priority: (libTask.DefaultPriority as any) || 'Medium',
+        requiresApproval: libTask.RequiresApproval ?? false,
+        sendReminder: libTask.SendReminder ?? true,
+        reminderDaysBefore: libTask.ReminderDaysBefore ?? 1,
+        notifyOnComplete: libTask.NotifyOnComplete ?? true,
+        notifyAssigneeEmail: true,
+        notifyTeamsChat: false,
+        estimatedHours: libTask.EstimatedHours,
+        instructions: libTask.Instructions,
+        isSelected: true,
+        isConfigured: true, // Pre-configured from library
+      };
+
+      // Apply classification rule based on the task's classification
+      const configuredTask = applyClassificationRule(
+        libTask.Classification as TaskClassification,
+        baseTask
+      );
+      tasks.push(configuredTask as IConfigurableTask);
+    });
+
+    return tasks;
+  };
+
   const canProceed = (): boolean => {
     if (currentStep === 0) return !!wizardData.candidateId;
     if (currentStep === 1) return !!wizardData.startDate && !!wizardData.jobTitle;
     return true;
   };
 
-  const handleNext = (): void => { if (canProceed()) setCurrentStep(prev => prev + 1); };
-  const handleBack = (): void => setCurrentStep(prev => prev - 1);
+  const handleNext = (): void => {
+    if (!canProceed()) return;
+
+    console.log('[OnboardingWizard] handleNext called, currentStep:', currentStep);
+
+    // When moving to Configure step (step 7), build tasks but DON'T auto-open panel
+    // Let user see the Configure step first, then click button to open panel
+    if (currentStep === 6) {
+      const tasks = buildConfigurableTasks();
+      console.log('[OnboardingWizard] Built tasks count:', tasks.length);
+      setConfiguredTasks(tasks);
+      console.log('[OnboardingWizard] Moving to step 7 (Configure Tasks)');
+      setCurrentStep(7); // ALWAYS move to Configure step (shows configure prompt UI)
+      // Don't auto-open panel - let user click "Configure Tasks" button
+    } else if (currentStep === 7) {
+      // If on Configure step and tasks configured, move to Review
+      console.log('[OnboardingWizard] Moving from step 7 to step 8 (Review)');
+      setCurrentStep(8);
+    } else {
+      console.log('[OnboardingWizard] Moving to next step:', currentStep + 1);
+      setCurrentStep(prev => prev + 1);
+    }
+  };
+
+  const handleBack = (): void => {
+    if (currentStep === 7) {
+      // If going back from Configure, close the panel and go to Training
+      setShowTaskConfig(false);
+      setCurrentStep(6);
+    } else {
+      setCurrentStep(prev => prev - 1);
+    }
+  };
+
+  const handleTaskConfigConfirm = (tasks: IConfigurableTask[]): void => {
+    setConfiguredTasks(tasks);
+    setTasksConfirmed(true); // Mark as confirmed so summary view shows
+    setShowTaskConfig(false);
+    setCurrentStep(8); // Move to Review step
+  };
+
+  const handleTaskConfigDismiss = (): void => {
+    setShowTaskConfig(false);
+    setCurrentStep(6); // Go back to Training step if dismissed
+  };
 
   const handleSubmit = async (): Promise<void> => {
     setSubmitting(true);
@@ -190,12 +534,8 @@ export const OnboardingWizard: React.FC<IProps> = ({ sp, isOpen, onDismiss, onCo
     try {
       const svc = new OnboardingService(sp);
 
-      // Count total tasks
-      const docTasks = selectedDocs.filter(d => d.required).length;
-      const sysTasks = selectedSystems.filter(s => s.requested).length;
-      const eqTasks = selectedAssets.filter(e => e.requested).length;
-      const trainTasks = selectedTraining.filter(t => t.mandatory).length;
-      const totalTasks = docTasks + sysTasks + eqTasks + trainTasks;
+      // Use configured tasks
+      const totalTasks = configuredTasks.length;
 
       const onboarding = await svc.createOnboarding({
         CandidateId: wizardData.candidateId,
@@ -213,55 +553,46 @@ export const OnboardingWizard: React.FC<IProps> = ({ sp, isOpen, onDismiss, onCo
       if (onboarding?.Id) {
         let sortOrder = 1;
 
-        // Document tasks
-        for (const doc of selectedDocs.filter(d => d.required)) {
-          await svc.createOnboardingTask({
-            Title: `Collect: ${doc.name}`,
-            OnboardingId: onboarding.Id,
-            Category: 'Documentation' as any,
-            Status: doc.received ? OnboardingTaskStatus.Completed : OnboardingTaskStatus.Pending,
-            Priority: 'High',
-            SortOrder: sortOrder++,
-          });
-        }
+        // Create tasks from configured tasks
+        for (const task of configuredTasks) {
+          // Calculate due date based on offset
+          let dueDate: Date | undefined;
+          if (wizardData.startDate) {
+            dueDate = new Date(wizardData.startDate);
+            switch (task.offsetType) {
+              case 'before-start':
+                dueDate.setDate(dueDate.getDate() - Math.abs(task.daysOffset));
+                break;
+              case 'on-start':
+                // No change
+                break;
+              case 'after-start':
+                dueDate.setDate(dueDate.getDate() + Math.abs(task.daysOffset));
+                break;
+            }
+          }
 
-        // System access tasks
-        for (const sys of selectedSystems.filter(s => s.requested)) {
+          // Map 'Critical' to 'High' for IOnboardingTask compatibility
+          const mappedPriority: 'Low' | 'Medium' | 'High' = task.priority === 'Critical' ? 'High' : task.priority;
+
           await svc.createOnboardingTask({
-            Title: `Set up ${sys.name} (${sys.role})`,
+            Title: task.title,
             OnboardingId: onboarding.Id,
-            Category: 'System Access' as any,
+            Category: task.category as any,
             Status: OnboardingTaskStatus.Pending,
-            Priority: 'High',
+            Priority: mappedPriority,
             SortOrder: sortOrder++,
+            DueDate: dueDate,
+            AssignedToId: task.assigneeId,
+            EstimatedHours: task.estimatedHours,
+            Notes: task.instructions,
           });
+
+          // TODO: If task.requiresApproval is true, create approval record
+          // TODO: If notifications enabled, queue notification
         }
 
-        // Equipment tasks
-        for (const eq of selectedAssets.filter(e => e.requested)) {
-          await svc.createOnboardingTask({
-            Title: `Provision ${eq.name}${eq.quantity > 1 ? ` x${eq.quantity}` : ''}`,
-            OnboardingId: onboarding.Id,
-            Category: 'Equipment' as any,
-            Status: OnboardingTaskStatus.Pending,
-            Priority: 'Medium',
-            SortOrder: sortOrder++,
-          });
-        }
-
-        // Training tasks
-        for (const tr of selectedTraining.filter(t => t.mandatory)) {
-          await svc.createOnboardingTask({
-            Title: tr.name,
-            OnboardingId: onboarding.Id,
-            Category: 'Training' as any,
-            Status: tr.scheduled ? OnboardingTaskStatus.InProgress : OnboardingTaskStatus.Pending,
-            Priority: 'Medium',
-            SortOrder: sortOrder++,
-          });
-        }
-
-        // Recalculate in case some docs were marked received
+        // Recalculate progress
         await svc.recalculateProgress(onboarding.Id);
         setSubmitted(true);
       }
@@ -509,16 +840,143 @@ export const OnboardingWizard: React.FC<IProps> = ({ sp, isOpen, onDismiss, onCo
     </div>
   );
 
+  // Step 7 - Task Configuration (handled by TaskConfigurationPanel)
+  // This renders when the TaskConfigurationPanel is closed but user is on step 7
   const renderStep7 = (): JSX.Element => {
-    const reqDocs = selectedDocs.filter(d => d.required);
-    const recDocs = selectedDocs.filter(d => d.received);
-    const systems = selectedSystems.filter(s => s.requested);
-    const equip = selectedAssets.filter(e => e.requested);
-    const mandatoryTraining = selectedTraining.filter(t => t.mandatory);
+    const taskCount = configuredTasks.length || buildConfigurableTasks().length;
+    const configuredCount = configuredTasks.filter(t => t.isConfigured).length;
 
+    // If tasks have been confirmed via TaskConfigurationPanel, show summary with option to reconfigure
+    if (tasksConfirmed && configuredTasks.length > 0 && !showTaskConfig) {
+      return (
+        <div style={{ padding: '20px 0' }}>
+          <div style={{ textAlign: 'center', marginBottom: 24 }}>
+            <div style={{
+              width: 64, height: 64, borderRadius: '50%', background: '#e6ffed',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px'
+            }}>
+              <Icon iconName="CheckMark" style={{ fontSize: 28, color: '#059669' }} />
+            </div>
+            <h2 style={{ fontSize: 18, fontWeight: 600, color: '#323130', marginBottom: 4, marginTop: 0 }}>
+              Tasks Configured
+            </h2>
+            <p style={{ fontSize: 13, color: '#605e5c', margin: 0 }}>
+              {configuredCount} of {taskCount} tasks have been configured
+            </p>
+          </div>
+
+          {/* Task Summary by Category */}
+          <div style={{ background: '#f9f8ff', borderRadius: 8, padding: 16, marginBottom: 16 }}>
+            {Object.entries(configuredTasks.reduce((acc, task) => {
+              if (!acc[task.category]) acc[task.category] = [];
+              acc[task.category].push(task);
+              return acc;
+            }, {} as Record<string, typeof configuredTasks>)).map(([category, tasks]) => (
+              <div key={category} style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: '#005BAA', marginBottom: 6 }}>{category}</div>
+                {tasks.slice(0, 3).map(task => (
+                  <div key={task.id} style={{ fontSize: 13, color: '#323130', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Icon iconName="CheckboxComposite" style={{ fontSize: 12, color: '#059669' }} />
+                    <span style={{ flex: 1 }}>{task.title}</span>
+                    {task.roleAssignment && <span style={{ fontSize: 11, color: '#8a8886' }}>{task.roleAssignment}</span>}
+                  </div>
+                ))}
+                {tasks.length > 3 && (
+                  <div style={{ fontSize: 12, color: '#8a8886', marginLeft: 20 }}>+{tasks.length - 3} more</div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div style={{ textAlign: 'center' }}>
+            <button
+              onClick={() => setShowTaskConfig(true)}
+              style={{
+                padding: '10px 24px', borderRadius: 8, border: '1px solid #005BAA',
+                background: 'transparent', color: '#005BAA', fontSize: 13, fontWeight: 600, cursor: 'pointer'
+              }}
+            >
+              <Icon iconName="Edit" style={{ marginRight: 8 }} />
+              Edit Task Configuration
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // Initial view - prompt to configure tasks (or show message if no tasks)
+    if (taskCount === 0) {
+      return (
+        <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+          <div style={{
+            width: 80, height: 80, borderRadius: '50%', background: '#f3f2f1',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px'
+          }}>
+            <Icon iconName="TaskManager" style={{ fontSize: 36, color: '#8a8886' }} />
+          </div>
+          <h2 style={{ fontSize: 20, fontWeight: 600, color: '#323130', marginBottom: 8, marginTop: 0 }}>No Tasks to Configure</h2>
+          <p style={{ fontSize: 14, color: '#605e5c', marginBottom: 24 }}>
+            No documents, systems, equipment, or training were selected in the previous steps.
+            <br />You can go back to add selections, or proceed to review.
+          </p>
+          <div style={{ background: '#fff4ce', borderRadius: 8, padding: 16, textAlign: 'left', maxWidth: 400, margin: '0 auto' }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#8a6d3b', marginBottom: 8 }}>
+              <Icon iconName="Info" style={{ marginRight: 8 }} />Tip
+            </div>
+            <div style={{ fontSize: 13, color: '#8a6d3b' }}>
+              Go back to the Documents, Systems, Equipment, or Training steps to select items that will create tasks for this onboarding.
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+        <div style={{
+          width: 80, height: 80, borderRadius: '50%', background: 'linear-gradient(135deg, #005BAA 0%, #004A8F 100%)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px'
+        }}>
+          <Icon iconName="TaskManager" style={{ fontSize: 36, color: '#fff' }} />
+        </div>
+        <h2 style={{ fontSize: 20, fontWeight: 600, color: '#323130', marginBottom: 8, marginTop: 0 }}>Configure Tasks</h2>
+        <p style={{ fontSize: 14, color: '#605e5c', marginBottom: 24 }}>
+          You have selected <strong>{taskCount}</strong> tasks for this onboarding.
+          <br />Click below to assign, schedule, and set priorities for each task.
+        </p>
+        <button
+          onClick={() => {
+            if (configuredTasks.length === 0) {
+              const tasks = buildConfigurableTasks();
+              setConfiguredTasks(tasks);
+            }
+            setShowTaskConfig(true);
+          }}
+          style={{
+            padding: '12px 32px', borderRadius: 8, border: 'none',
+            background: 'linear-gradient(135deg, #005BAA 0%, #004A8F 100%)',
+            color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer'
+          }}
+        >
+          <Icon iconName="Settings" style={{ marginRight: 8 }} />
+          Configure Tasks
+        </button>
+      </div>
+    );
+  };
+
+  // Step 8 - Review
+  const renderStep8 = (): JSX.Element => {
     const summaryCard: React.CSSProperties = { background: '#f9f8ff', borderRadius: 8, padding: 16, marginBottom: 12 };
     const summaryLabel: React.CSSProperties = { fontSize: 12, fontWeight: 600, color: '#005BAA', textTransform: 'uppercase', marginBottom: 8 };
     const summaryValue: React.CSSProperties = { fontSize: 13, color: '#323130', marginBottom: 4 };
+
+    // Group tasks by category
+    const tasksByCategory = configuredTasks.reduce((acc, task) => {
+      if (!acc[task.category]) acc[task.category] = [];
+      acc[task.category].push(task);
+      return acc;
+    }, {} as Record<string, IConfigurableTask[]>);
 
     return (
       <div>
@@ -532,31 +990,27 @@ export const OnboardingWizard: React.FC<IProps> = ({ sp, isOpen, onDismiss, onCo
         </div>
 
         <div style={summaryCard}>
-          <div style={summaryLabel}>Documents ({reqDocs.length} required, {recDocs.length} received)</div>
-          {reqDocs.map(d => (
-            <div key={d.id} style={summaryValue}>
-              <Icon iconName={d.received ? 'CheckboxComposite' : 'Checkbox'} style={{ marginRight: 8, fontSize: 12, color: d.received ? '#059669' : '#8a8886' }} />
-              {d.name}
-            </div>
-          ))}
-        </div>
-
-        <div style={summaryCard}>
-          <div style={summaryLabel}>System Access ({systems.length} systems)</div>
-          {systems.map(s => <div key={s.id} style={summaryValue}>{s.name} — {s.role}</div>)}
-        </div>
-
-        <div style={summaryCard}>
-          <div style={summaryLabel}>Equipment ({equip.length} items)</div>
-          {equip.map(e => <div key={e.id} style={summaryValue}>{e.name}{e.quantity > 1 ? ` x${e.quantity}` : ''}</div>)}
-        </div>
-
-        <div style={summaryCard}>
-          <div style={summaryLabel}>Training ({mandatoryTraining.length} mandatory)</div>
-          {mandatoryTraining.map(t => (
-            <div key={t.id} style={summaryValue}>
-              <Icon iconName={t.scheduled ? 'Calendar' : 'Clock'} style={{ marginRight: 8, fontSize: 12, color: t.scheduled ? '#059669' : '#d97706' }} />
-              {t.name} {t.scheduled ? '(Scheduled)' : '(Not Scheduled)'}
+          <div style={summaryLabel}>Tasks Summary ({configuredTasks.length} total)</div>
+          {Object.entries(tasksByCategory).map(([category, tasks]) => (
+            <div key={category} style={{ marginBottom: 12 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: '#605e5c', marginBottom: 4 }}>
+                {category} ({tasks.length})
+              </div>
+              {tasks.map(task => (
+                <div key={task.id} style={{ ...summaryValue, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Icon
+                    iconName={task.isConfigured ? 'CheckboxComposite' : 'Checkbox'}
+                    style={{ fontSize: 12, color: task.isConfigured ? '#059669' : '#8a8886' }}
+                  />
+                  <span style={{ flex: 1 }}>{task.title}</span>
+                  {task.assignmentType === 'role' && task.roleAssignment && (
+                    <span style={{ fontSize: 11, color: '#8a8886' }}>{task.roleAssignment}</span>
+                  )}
+                  {task.requiresApproval && (
+                    <Icon iconName="Shield" style={{ fontSize: 11, color: '#d97706' }} title="Requires approval" />
+                  )}
+                </div>
+              ))}
             </div>
           ))}
         </div>
@@ -567,10 +1021,7 @@ export const OnboardingWizard: React.FC<IProps> = ({ sp, isOpen, onDismiss, onCo
   };
 
   const renderSuccessScreen = (): JSX.Element => {
-    const totalTasks = selectedDocs.filter(d => d.required).length +
-      selectedSystems.filter(s => s.requested).length +
-      selectedAssets.filter(e => e.requested).length +
-      selectedTraining.filter(t => t.mandatory).length;
+    const totalTasks = configuredTasks.length;
 
     return (
       <div style={{ textAlign: 'center', padding: '40px 20px' }}>
@@ -594,19 +1045,19 @@ export const OnboardingWizard: React.FC<IProps> = ({ sp, isOpen, onDismiss, onCo
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div style={{ background: '#fff', borderRadius: 8, padding: 12, border: '1px solid #e9e5f5' }}>
-              <div style={{ fontSize: 20, fontWeight: 700, color: '#005BAA' }}>{selectedDocs.filter(d => d.required).length}</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: '#005BAA' }}>{configuredTasks.filter(t => t.category === 'Documentation').length}</div>
               <div style={{ fontSize: 11, color: '#8a8886' }}>Documents</div>
             </div>
             <div style={{ background: '#fff', borderRadius: 8, padding: 12, border: '1px solid #e9e5f5' }}>
-              <div style={{ fontSize: 20, fontWeight: 700, color: '#005BAA' }}>{selectedSystems.filter(s => s.requested).length}</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: '#005BAA' }}>{configuredTasks.filter(t => t.category === 'System Access').length}</div>
               <div style={{ fontSize: 11, color: '#8a8886' }}>Systems</div>
             </div>
             <div style={{ background: '#fff', borderRadius: 8, padding: 12, border: '1px solid #e9e5f5' }}>
-              <div style={{ fontSize: 20, fontWeight: 700, color: '#005BAA' }}>{selectedAssets.filter(e => e.requested).length}</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: '#005BAA' }}>{configuredTasks.filter(t => t.category === 'Equipment').length}</div>
               <div style={{ fontSize: 11, color: '#8a8886' }}>Equipment</div>
             </div>
             <div style={{ background: '#fff', borderRadius: 8, padding: 12, border: '1px solid #e9e5f5' }}>
-              <div style={{ fontSize: 20, fontWeight: 700, color: '#005BAA' }}>{selectedTraining.filter(t => t.mandatory).length}</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: '#005BAA' }}>{configuredTasks.filter(t => t.category === 'Training').length}</div>
               <div style={{ fontSize: 11, color: '#8a8886' }}>Training</div>
             </div>
           </div>
@@ -649,6 +1100,7 @@ export const OnboardingWizard: React.FC<IProps> = ({ sp, isOpen, onDismiss, onCo
       case 5: return renderStep5();
       case 6: return renderStep6();
       case 7: return renderStep7();
+      case 8: return renderStep8();
       default: return renderStep0();
     }
   };
@@ -661,7 +1113,7 @@ export const OnboardingWizard: React.FC<IProps> = ({ sp, isOpen, onDismiss, onCo
       <div>
         <div className={styles.panelTitle}>{submitted ? 'Onboarding Complete' : 'Start Onboarding'}</div>
         <div className={styles.panelSubtitle}>
-          {submitted ? 'Employee onboarding has been created' : `Step ${currentStep + 1} of 8 — ${STEPS[currentStep].label}`}
+          {submitted ? 'Employee onboarding has been created' : `Step ${currentStep + 1} of 9 — ${STEPS[currentStep]?.label || 'Review'}`}
         </div>
       </div>
     </div>
@@ -676,8 +1128,10 @@ export const OnboardingWizard: React.FC<IProps> = ({ sp, isOpen, onDismiss, onCo
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button className={styles.btnSecondary} onClick={onDismiss}>Cancel</button>
-          {currentStep < 7 ? (
-            <button className={styles.btnPrimary} onClick={handleNext} disabled={!canProceed()}>Next</button>
+          {currentStep < 8 ? (
+            <button className={styles.btnPrimary} onClick={handleNext} disabled={!canProceed()}>
+              {currentStep === 6 ? 'Next' : currentStep === 7 ? (tasksConfirmed ? 'Review & Submit' : 'Skip Configuration') : 'Next'}
+            </button>
           ) : (
             <button className={styles.btnPrimary} onClick={handleSubmit} disabled={submitting}>
               {submitting ? 'Creating...' : 'Start Onboarding'}
@@ -689,49 +1143,64 @@ export const OnboardingWizard: React.FC<IProps> = ({ sp, isOpen, onDismiss, onCo
   };
 
   return (
-    <Panel
-      isOpen={isOpen}
-      type={PanelType.large}
-      onDismiss={onDismiss}
-      hasCloseButton={false}
-      isBlocking={true}
-      onRenderHeader={onRenderHeader}
-      onRenderFooterContent={onRenderFooter}
-      isFooterAtBottom={true}
-      className={styles.rmPanel}
-    >
-      <div className={styles.panelBody}>
-        {/* Step indicator */}
-        {!submitted && !loadingConfig && (
-          <div style={{ display: 'flex', alignItems: 'center', padding: '16px 0 24px', marginBottom: 24, borderBottom: '1px solid #edebe9' }}>
-            {STEPS.map((step, i) => (
-              <React.Fragment key={i}>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 0 }}>
-                  <div style={{
-                    width: 28, height: 28, borderRadius: '50%',
-                    background: i < currentStep ? '#059669' : i === currentStep ? '#005BAA' : '#edebe9',
-                    color: i <= currentStep ? '#fff' : '#8a8886',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontWeight: 600, fontSize: 11, transition: 'all 0.3s ease',
-                  }}>
-                    {i < currentStep ? <Icon iconName="CheckMark" style={{ fontSize: 12 }} /> : i + 1}
+    <>
+      <Panel
+        isOpen={isOpen && !showTaskConfig}
+        type={PanelType.large}
+        onDismiss={onDismiss}
+        hasCloseButton={false}
+        isBlocking={true}
+        onRenderHeader={onRenderHeader}
+        onRenderFooterContent={onRenderFooter}
+        isFooterAtBottom={true}
+        className={styles.rmPanel}
+      >
+        <div className={styles.panelBody}>
+          {/* Step indicator */}
+          {!submitted && !loadingConfig && (
+            <div style={{ display: 'flex', alignItems: 'center', padding: '16px 0 24px', marginBottom: 24, borderBottom: '1px solid #edebe9' }}>
+              {STEPS.map((step, i) => (
+                <React.Fragment key={i}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 0 }}>
+                    <div style={{
+                      width: 28, height: 28, borderRadius: '50%',
+                      background: i < currentStep ? '#059669' : i === currentStep ? '#005BAA' : '#edebe9',
+                      color: i <= currentStep ? '#fff' : '#8a8886',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontWeight: 600, fontSize: 11, transition: 'all 0.3s ease',
+                    }}>
+                      {i < currentStep ? <Icon iconName="CheckMark" style={{ fontSize: 12 }} /> : i + 1}
+                    </div>
+                    <div style={{
+                      fontSize: 9, color: i === currentStep ? '#005BAA' : '#605e5c',
+                      fontWeight: i === currentStep ? 600 : 400, marginTop: 4, whiteSpace: 'nowrap',
+                    }}>{step.label}</div>
                   </div>
-                  <div style={{
-                    fontSize: 9, color: i === currentStep ? '#005BAA' : '#605e5c',
-                    fontWeight: i === currentStep ? 600 : 400, marginTop: 4, whiteSpace: 'nowrap',
-                  }}>{step.label}</div>
-                </div>
-                {i < STEPS.length - 1 && (
-                  <div style={{ flex: 1, height: 2, background: i < currentStep ? '#059669' : '#edebe9', margin: '0 2px', marginBottom: 18 }} />
-                )}
-              </React.Fragment>
-            ))}
-          </div>
-        )}
+                  {i < STEPS.length - 1 && (
+                    <div style={{ flex: 1, height: 2, background: i < currentStep ? '#059669' : '#edebe9', margin: '0 2px', marginBottom: 18 }} />
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
+          )}
 
-        {/* Step content */}
-        {renderCurrentStep()}
-      </div>
-    </Panel>
+          {/* Step content */}
+          {renderCurrentStep()}
+        </div>
+      </Panel>
+
+      {/* Task Configuration Panel (full screen when open) */}
+      <TaskConfigurationPanel
+        sp={sp}
+        context={context}
+        isOpen={showTaskConfig}
+        tasks={configuredTasks}
+        startDate={wizardData.startDate}
+        employeeName={wizardData.candidateName}
+        processType="onboarding"
+        onDismiss={handleTaskConfigDismiss}
+        onConfirm={handleTaskConfigConfirm}
+      />
+    </>
   );
 };

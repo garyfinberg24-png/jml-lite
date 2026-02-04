@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JML Dashboard - V2 Icon Buttons</title>
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; background: #f8fafc; color: #323130; }
+
+    :root {
+      --joiner: #005BAA;
+      --joiner-light: #dbeafe;
+      --mover: #ea580c;
+      --mover-light: #ffedd5;
+      --leaver: #d13438;
+      --leaver-light: #fee2e2;
+      --success: #107c10;
+    }
+
+    .container { max-width: 1400px; margin: 0 auto; padding: 32px; }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #005BAA 0%, #004A8F 100%);
+      color: white;
+      padding: 24px 32px;
+      margin-bottom: 32px;
+      border-radius: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header h1 { font-size: 28px; font-weight: 600; }
+    .header p { opacity: 0.9; font-size: 14px; }
+    .header-actions { display: flex; gap: 12px; }
+    .header-btn {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .header-btn:hover { background: rgba(255,255,255,0.3); }
+
+    /* Intro Banner - Minimal */
+    .intro-banner {
+      background: white;
+      border-radius: 16px;
+      padding: 28px 32px;
+      margin-bottom: 32px;
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      border-left: 5px solid var(--joiner);
+    }
+    .intro-icon {
+      width: 72px;
+      height: 72px;
+      background: linear-gradient(135deg, var(--joiner) 0%, #0078d4 100%);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .intro-icon svg { width: 36px; height: 36px; color: white; }
+    .intro-content { flex: 1; }
+    .intro-title { font-size: 22px; font-weight: 700; color: #1a1a1a; margin-bottom: 8px; }
+    .intro-text { font-size: 14px; color: #64748b; line-height: 1.6; max-width: 700px; }
+    .intro-stats { display: flex; gap: 32px; margin-top: 16px; }
+    .intro-stat { text-align: center; }
+    .intro-stat-value { font-size: 24px; font-weight: 700; color: var(--joiner); }
+    .intro-stat-label { font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* Large Icon Action Buttons - V2 Style */
+    .action-buttons {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+    .action-btn {
+      flex: 1;
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .action-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+    .action-btn.joiner:hover { border-color: var(--joiner); }
+    .action-btn.mover:hover { border-color: var(--mover); }
+    .action-btn.leaver:hover { border-color: var(--leaver); }
+
+    .action-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      position: relative;
+    }
+    .action-btn.joiner .action-icon { background: var(--joiner-light); }
+    .action-btn.mover .action-icon { background: var(--mover-light); }
+    .action-btn.leaver .action-icon { background: var(--leaver-light); }
+    .action-icon svg { width: 36px; height: 36px; }
+    .action-btn.joiner svg { color: var(--joiner); }
+    .action-btn.mover svg { color: var(--mover); }
+    .action-btn.leaver svg { color: var(--leaver); }
+
+    .action-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: var(--leaver);
+      color: white;
+      font-size: 12px;
+      font-weight: 700;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid white;
+    }
+    .action-btn.joiner .action-badge { background: var(--joiner); }
+    .action-btn.mover .action-badge { background: var(--mover); }
+    .action-btn.leaver .action-badge { background: var(--leaver); }
+
+    .action-btn h3 { font-size: 18px; font-weight: 600; margin-bottom: 6px; color: #1e293b; }
+    .action-btn p { font-size: 13px; color: #64748b; margin-bottom: 16px; line-height: 1.4; }
+    .action-btn .cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .action-btn.joiner .cta { color: var(--joiner); background: var(--joiner-light); }
+    .action-btn.mover .cta { color: var(--mover); background: var(--mover-light); }
+    .action-btn.leaver .cta { color: var(--leaver); background: var(--leaver-light); }
+    .action-btn:hover .cta { transform: scale(1.05); }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .stat-card .icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+    .stat-card.blue .icon { background: var(--joiner-light); color: var(--joiner); }
+    .stat-card.green .icon { background: #dcfce7; color: var(--success); }
+    .stat-card.orange .icon { background: var(--mover-light); color: var(--mover); }
+    .stat-card.red .icon { background: var(--leaver-light); color: var(--leaver); }
+    .stat-card .value { font-size: 28px; font-weight: 700; color: #1e293b; }
+    .stat-card .label { font-size: 13px; color: #64748b; margin-top: 4px; }
+
+    /* Content Grid */
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .card-header h3 { font-size: 16px; font-weight: 600; color: #1e293b; }
+    .card-header a { font-size: 13px; color: var(--joiner); text-decoration: none; }
+
+    .list-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      margin-bottom: 8px;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+    .list-item:hover { background: #f8fafc; }
+    .list-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .list-item.joiner .list-avatar { background: var(--joiner-light); color: var(--joiner); }
+    .list-item.mover .list-avatar { background: var(--mover-light); color: var(--mover); }
+    .list-item.leaver .list-avatar { background: var(--leaver-light); color: var(--leaver); }
+    .list-info { flex: 1; }
+    .list-name { font-weight: 500; font-size: 14px; color: #1e293b; }
+    .list-meta { font-size: 12px; color: #94a3b8; }
+    .list-status {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-weight: 500;
+    }
+    .list-status.active { background: #dbeafe; color: var(--joiner); }
+    .list-status.pending { background: #fef3c7; color: #d97706; }
+    .list-status.completed { background: #dcfce7; color: var(--success); }
+
+    /* Key Features Callout */
+    .features-callout {
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 16px;
+    }
+    .features-callout h4 { font-size: 14px; font-weight: 600; color: var(--joiner); margin-bottom: 12px; }
+    .feature-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #475569;
+      background: white;
+      padding: 6px 12px;
+      border-radius: 6px;
+    }
+    .feature-item svg { width: 14px; height: 14px; color: var(--joiner); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div>
+        <h1>JML Dashboard</h1>
+        <p>Employee Lifecycle Management</p>
+      </div>
+      <div class="header-actions">
+        <button class="header-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          Search
+        </button>
+        <button class="header-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Reports
+        </button>
+      </div>
+    </div>
+
+    <!-- Intro Banner -->
+    <div class="intro-banner">
+      <div class="intro-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
+      <div class="intro-content">
+        <h2 class="intro-title">Welcome to JML Lite</h2>
+        <p class="intro-text">
+          Your complete solution for managing the employee lifecycle. From day one onboarding through internal transitions to a smooth offboarding experience - JML keeps everything organized, compliant, and on track.
+        </p>
+        <div class="intro-stats">
+          <div class="intro-stat">
+            <div class="intro-stat-value">156</div>
+            <div class="intro-stat-label">Employees Onboarded</div>
+          </div>
+          <div class="intro-stat">
+            <div class="intro-stat-value">98%</div>
+            <div class="intro-stat-label">Task Completion</div>
+          </div>
+          <div class="intro-stat">
+            <div class="intro-stat-value">4.2</div>
+            <div class="intro-stat-label">Avg. Days to Complete</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons with Circular Icons -->
+    <div class="action-buttons">
+      <div class="action-btn joiner">
+        <div class="action-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+          <span class="action-badge">12</span>
+        </div>
+        <h3>Onboarding</h3>
+        <p>Welcome new team members with structured workflows</p>
+        <span class="cta">
+          Start Onboarding
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </span>
+      </div>
+
+      <div class="action-btn mover">
+        <div class="action-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          <span class="action-badge">5</span>
+        </div>
+        <h3>Transfers</h3>
+        <p>Manage moves, promotions, and role changes</p>
+        <span class="cta">
+          Start Transfer
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </span>
+      </div>
+
+      <div class="action-btn leaver">
+        <div class="action-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="18" y1="8" x2="23" y2="13"/><line x1="23" y1="8" x2="18" y2="13"/></svg>
+          <span class="action-badge">3</span>
+        </div>
+        <h3>Offboarding</h3>
+        <p>Ensure compliant and complete departures</p>
+        <span class="cta">
+          Start Offboarding
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </span>
+      </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class="stat-card blue">
+        <div class="icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <div class="value">8</div>
+        <div class="label">This Month's Joiners</div>
+      </div>
+      <div class="stat-card green">
+        <div class="icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <div class="value">15</div>
+        <div class="label">Completed This Week</div>
+      </div>
+      <div class="stat-card orange">
+        <div class="icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div class="value">20</div>
+        <div class="label">Active Processes</div>
+      </div>
+      <div class="stat-card red">
+        <div class="icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <div class="value">2</div>
+        <div class="label">Overdue Tasks</div>
+      </div>
+    </div>
+
+    <!-- Content Grid -->
+    <div class="content-grid">
+      <div class="card">
+        <div class="card-header">
+          <h3>Recent Activity</h3>
+          <a href="#">View All</a>
+        </div>
+        <div class="list-item joiner">
+          <div class="list-avatar">SJ</div>
+          <div class="list-info">
+            <div class="list-name">Sarah Johnson</div>
+            <div class="list-meta">Software Developer - IT</div>
+          </div>
+          <span class="list-status active">Onboarding</span>
+        </div>
+        <div class="list-item mover">
+          <div class="list-avatar">MC</div>
+          <div class="list-info">
+            <div class="list-name">Michael Chen</div>
+            <div class="list-meta">Sales to Marketing</div>
+          </div>
+          <span class="list-status pending">Transfer</span>
+        </div>
+        <div class="list-item leaver">
+          <div class="list-avatar">EW</div>
+          <div class="list-info">
+            <div class="list-name">Emma Williams</div>
+            <div class="list-meta">Last day: 15 Feb</div>
+          </div>
+          <span class="list-status active">Offboarding</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3>Upcoming Start Dates</h3>
+          <a href="#">View Calendar</a>
+        </div>
+        <div class="list-item joiner">
+          <div class="list-avatar">JP</div>
+          <div class="list-info">
+            <div class="list-name">James Peterson</div>
+            <div class="list-meta">Product Manager</div>
+          </div>
+          <span class="list-status active">10 Feb</span>
+        </div>
+        <div class="list-item joiner">
+          <div class="list-avatar">LK</div>
+          <div class="list-info">
+            <div class="list-name">Lisa Kim</div>
+            <div class="list-meta">UX Designer</div>
+          </div>
+          <span class="list-status pending">17 Feb</span>
+        </div>
+
+        <div class="features-callout">
+          <h4>Key Features</h4>
+          <div class="feature-list">
+            <span class="feature-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              Task Automation
+            </span>
+            <span class="feature-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+              Document Tracking
+            </span>
+            <span class="feature-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Compliance
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,6 +1,6 @@
-// Activity Log — localStorage-backed event log for Recruitment Manager notifications
+// Activity Log — localStorage-backed event log for JML Lite notifications
 
-const STORAGE_KEY = 'rm_activity_log';
+const STORAGE_KEY = 'jml_activity_log';
 const MAX_ENTRIES = 50;
 
 export interface IActivityEntry {

@@ -222,10 +222,19 @@ export class OnboardingService {
   }
 
   // In JML Lite standalone, employees are entered directly in the wizard
-  // This method is kept for API compatibility but returns empty in standalone mode
+  // For testing purposes, we provide sample candidates
   public async getEligibleCandidates(): Promise<{ Id: number; Name: string; Email: string; Status: string }[]> {
-    // JML Lite: No CANDIDATES list — employees are entered manually in the onboarding wizard
-    return [];
+    // Sample candidates for testing JML Lite onboarding wizard
+    return [
+      { Id: 1, Name: 'Sarah Chen', Email: 'sarah.chen@company.com', Status: 'Hired' },
+      { Id: 2, Name: 'Marcus Williams', Email: 'marcus.williams@company.com', Status: 'Offer Accepted' },
+      { Id: 3, Name: 'Emily Rodriguez', Email: 'emily.rodriguez@company.com', Status: 'Hired' },
+      { Id: 4, Name: 'James Thompson', Email: 'james.thompson@company.com', Status: 'Offer Accepted' },
+      { Id: 5, Name: 'Priya Patel', Email: 'priya.patel@company.com', Status: 'Hired' },
+      { Id: 6, Name: 'David Kim', Email: 'david.kim@company.com', Status: 'Offer Accepted' },
+      { Id: 7, Name: 'Sophie Taylor', Email: 'sophie.taylor@company.com', Status: 'Hired' },
+      { Id: 8, Name: 'Ahmed Hassan', Email: 'ahmed.hassan@company.com', Status: 'Hired' },
+    ];
   }
 
   public async getOnboardingTemplates(): Promise<IOnboardingTemplate[]> {

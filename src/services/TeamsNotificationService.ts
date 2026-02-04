@@ -1,11 +1,16 @@
 // Teams Notification Service — Push notifications for tasks and approvals
-// Uses Microsoft Graph API to send Adaptive Cards to MS Teams channels and users
+// Uses Microsoft Graph API to send notifications to MS Teams users
+// Requires API permissions: ChatMessage.Send, User.Read.All
 
 import { SPFI } from '@pnp/sp';
 import '@pnp/sp/webs';
+import '@pnp/sp/lists';
+import '@pnp/sp/items';
 import { graphfi, SPFx as graphSPFx } from '@pnp/graph';
 import '@pnp/graph/users';
 import '@pnp/graph/teams';
+import '@pnp/graph/chats';
+import { JML_LISTS } from '../constants/SharePointListNames';
 
 export interface ITeamsNotification {
   title: string;
@@ -442,7 +447,7 @@ export class TeamsNotificationService {
   ): Promise<void> {
     try {
       // Fire-and-forget logging to audit trail
-      await this.sp.web.lists.getByTitle('RM_AuditTrail').items.add({
+      await this.sp.web.lists.getByTitle(JML_LISTS.AUDIT_TRAIL).items.add({
         Title: `Teams Notification: ${title}`,
         Action: 'Notification Sent',
         EntityType: 'TeamsNotification',
@@ -457,5 +462,137 @@ export class TeamsNotificationService {
       // Audit logging is fire-and-forget
       console.warn('[TeamsNotificationService] Audit log failed:', error);
     }
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // MICROSOFT GRAPH API INTEGRATION
+  // ═══════════════════════════════════════════════════════════════
+
+  /**
+   * Send a Teams chat message to a user using Microsoft Graph API
+   * Requires: Chat.ReadWrite, User.Read.All permissions
+   */
+  public async sendTeamsChatMessage(
+    userEmail: string,
+    subject: string,
+    body: string
+  ): Promise<boolean> {
+    if (!this._graph) {
+      console.warn('[TeamsNotificationService] Graph client not available');
+      return false;
+    }
+
+    try {
+      // Get user ID from email
+      const user = await this._graph.users.getById(userEmail)();
+      if (!user?.id) {
+        console.warn('[TeamsNotificationService] User not found:', userEmail);
+        return false;
+      }
+
+      // Create a 1:1 chat with the user
+      const chat = await (this._graph as any).me.chats.add({
+        chatType: 'oneOnOne',
+        members: [
+          {
+            '@odata.type': '#microsoft.graph.aadUserConversationMember',
+            roles: ['owner'],
+            'user@odata.bind': `https://graph.microsoft.com/v1.0/users/${user.id}`
+          }
+        ]
+      });
+
+      if (!chat?.id) {
+        console.warn('[TeamsNotificationService] Failed to create chat');
+        return false;
+      }
+
+      // Send message to the chat
+      await (this._graph as any).chats.getById(chat.id).messages.add({
+        body: {
+          contentType: 'html',
+          content: `<b>${subject}</b><br/><br/>${body}`
+        }
+      });
+
+      console.log('[TeamsNotificationService] Teams message sent to:', userEmail);
+      return true;
+    } catch (error) {
+      console.error('[TeamsNotificationService] Error sending Teams message:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Send an Adaptive Card to a Teams channel webhook
+   * This method doesn't require Graph API permissions - uses incoming webhook URL
+   */
+  public async sendToTeamsWebhook(
+    webhookUrl: string,
+    card: any
+  ): Promise<boolean> {
+    try {
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          type: 'message',
+          attachments: [
+            {
+              contentType: 'application/vnd.microsoft.card.adaptive',
+              contentUrl: null,
+              content: card
+            }
+          ]
+        })
+      });
+
+      if (!response.ok) {
+        console.error('[TeamsNotificationService] Webhook failed:', response.status);
+        return false;
+      }
+
+      console.log('[TeamsNotificationService] Message sent to Teams webhook');
+      return true;
+    } catch (error) {
+      console.error('[TeamsNotificationService] Error sending to webhook:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Get configured Teams webhook URL from JML_Configuration
+   */
+  public async getTeamsWebhookUrl(): Promise<string | null> {
+    try {
+      const items = await this.sp.web.lists.getByTitle(JML_LISTS.CONFIGURATION).items
+        .filter("ConfigKey eq 'TeamsWebhookUrl'")
+        .select('ConfigValue')();
+
+      return items.length > 0 ? items[0].ConfigValue : null;
+    } catch (error) {
+      console.warn('[TeamsNotificationService] Failed to get webhook URL:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Send notification via configured webhook (if available)
+   * Falls back to logging if no webhook configured
+   */
+  public async sendViaWebhook(notification: ITeamsNotification): Promise<boolean> {
+    const webhookUrl = await this.getTeamsWebhookUrl();
+
+    if (webhookUrl) {
+      const card = this.buildGeneralCard(notification);
+      return this.sendToTeamsWebhook(webhookUrl, card);
+    }
+
+    // Fallback to logging
+    console.log('[TeamsNotificationService] No webhook configured, logging notification');
+    await this.logNotification(notification.category, notification.title, notification.recipientEmail || '');
+    return true;
   }
 }

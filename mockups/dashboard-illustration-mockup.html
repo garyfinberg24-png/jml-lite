@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JML Lite Dashboard - Illustration Mockups</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f5f5f5;
+      padding: 40px;
+    }
+    h1 { color: #1a1a1a; margin-bottom: 8px; }
+    p.subtitle { color: #666; margin-bottom: 40px; }
+    .mockup-section { margin-bottom: 60px; }
+    .mockup-section h2 {
+      color: #005BAA;
+      font-size: 18px;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #005BAA;
+    }
+    .mockup-section p.desc { color: #666; font-size: 14px; margin-bottom: 20px; }
+
+    /* Dashboard Intro Card Styles */
+    .intro-card {
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      border-radius: 16px;
+      padding: 32px;
+      border: 1px solid #e2e8f0;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      min-height: 280px;
+    }
+    .intro-content { max-width: 55%; position: relative; z-index: 2; }
+    .intro-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #005BAA;
+      color: white;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+    }
+    .intro-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 12px;
+    }
+    .intro-desc {
+      font-size: 15px;
+      line-height: 1.7;
+      color: #4a5568;
+      margin-bottom: 20px;
+    }
+    .feature-tags { display: flex; flex-wrap: wrap; gap: 12px; }
+    .feature-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: white;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #4a5568;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    .illustration-area {
+      width: 40%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    /* Option 1: Abstract Circles Pattern */
+    .option1 .circles-pattern {
+      position: relative;
+      width: 300px;
+      height: 220px;
+    }
+    .option1 .circle {
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0.9;
+    }
+    .option1 .circle-1 { width: 120px; height: 120px; background: #005BAA; top: 20px; left: 60px; }
+    .option1 .circle-2 { width: 80px; height: 80px; background: #ea580c; top: 80px; left: 160px; }
+    .option1 .circle-3 { width: 60px; height: 60px; background: #d13438; top: 10px; left: 180px; }
+    .option1 .circle-4 { width: 100px; height: 100px; background: rgba(0,91,170,0.2); top: 100px; left: 40px; }
+    .option1 .circle-5 { width: 40px; height: 40px; background: #10b981; top: 140px; left: 200px; }
+    .option1 .icon-overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 48px;
+      color: white;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    /* Option 2: Isometric Cards */
+    .option2 .iso-cards {
+      position: relative;
+      width: 280px;
+      height: 200px;
+      transform: perspective(500px) rotateX(10deg) rotateY(-15deg);
+    }
+    .option2 .iso-card {
+      position: absolute;
+      width: 100px;
+      height: 120px;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      transition: transform 0.3s;
+    }
+    .option2 .iso-card:hover { transform: translateY(-5px); }
+    .option2 .iso-card-1 { background: linear-gradient(135deg, #005BAA, #004A8F); left: 0; top: 40px; }
+    .option2 .iso-card-2 { background: linear-gradient(135deg, #ea580c, #c2410c); left: 90px; top: 20px; }
+    .option2 .iso-card-3 { background: linear-gradient(135deg, #d13438, #b91c1c); left: 180px; top: 50px; }
+    .option2 .iso-card .card-icon { font-size: 32px; color: white; margin-bottom: 8px; }
+    .option2 .iso-card .card-label { font-size: 11px; color: rgba(255,255,255,0.9); font-weight: 600; }
+
+    /* Option 3: Connected Nodes Network */
+    .option3 .network {
+      position: relative;
+      width: 300px;
+      height: 220px;
+    }
+    .option3 .node {
+      position: absolute;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    }
+    .option3 .node-main {
+      width: 80px; height: 80px;
+      background: linear-gradient(135deg, #005BAA, #004A8F);
+      top: 70px; left: 110px;
+      z-index: 3;
+    }
+    .option3 .node-join {
+      width: 56px; height: 56px;
+      background: linear-gradient(135deg, #10b981, #059669);
+      top: 20px; left: 40px;
+    }
+    .option3 .node-move {
+      width: 56px; height: 56px;
+      background: linear-gradient(135deg, #ea580c, #c2410c);
+      top: 10px; left: 180px;
+    }
+    .option3 .node-leave {
+      width: 56px; height: 56px;
+      background: linear-gradient(135deg, #d13438, #b91c1c);
+      top: 150px; left: 200px;
+    }
+    .option3 .node-task {
+      width: 44px; height: 44px;
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      top: 160px; left: 50px;
+    }
+    .option3 .node-icon { color: white; font-size: 24px; }
+    .option3 .node-main .node-icon { font-size: 32px; }
+    .option3 .connection {
+      position: absolute;
+      height: 2px;
+      background: linear-gradient(90deg, rgba(0,91,170,0.3), rgba(0,91,170,0.1));
+      transform-origin: left center;
+      z-index: 1;
+    }
+    .option3 .conn-1 { width: 80px; top: 95px; left: 90px; transform: rotate(-35deg); }
+    .option3 .conn-2 { width: 90px; top: 85px; left: 175px; transform: rotate(25deg); }
+    .option3 .conn-3 { width: 70px; top: 145px; left: 180px; transform: rotate(50deg); }
+    .option3 .conn-4 { width: 80px; top: 150px; left: 100px; transform: rotate(150deg); }
+
+    /* Option 4: Gradient Wave with Icons */
+    .option4 .wave-container {
+      position: relative;
+      width: 320px;
+      height: 200px;
+    }
+    .option4 .wave-bg {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(0,91,170,0.1) 0%, rgba(234,88,12,0.1) 50%, rgba(209,52,56,0.1) 100%);
+      border-radius: 100px 20px 100px 20px;
+    }
+    .option4 .floating-icons {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+    .option4 .float-icon {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: white;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+      animation: float 3s ease-in-out infinite;
+    }
+    .option4 .fi-1 { background: #005BAA; top: 20px; left: 40px; animation-delay: 0s; }
+    .option4 .fi-2 { background: #ea580c; top: 80px; left: 130px; animation-delay: 0.5s; }
+    .option4 .fi-3 { background: #d13438; top: 30px; left: 220px; animation-delay: 1s; }
+    .option4 .fi-4 { background: #10b981; top: 120px; left: 60px; animation-delay: 1.5s; }
+    .option4 .fi-5 { background: #6366f1; top: 130px; left: 200px; animation-delay: 2s; }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    /* Option 5: Timeline Flow */
+    .option5 .timeline-flow {
+      position: relative;
+      width: 300px;
+      height: 180px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+    }
+    .option5 .timeline-line {
+      position: absolute;
+      top: 50%;
+      left: 30px;
+      right: 30px;
+      height: 4px;
+      background: linear-gradient(90deg, #005BAA, #ea580c, #d13438);
+      border-radius: 2px;
+      z-index: 1;
+    }
+    .option5 .timeline-node {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .option5 .tn-circle {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      color: white;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    .option5 .tn-1 .tn-circle { background: linear-gradient(135deg, #005BAA, #004A8F); }
+    .option5 .tn-2 .tn-circle { background: linear-gradient(135deg, #ea580c, #c2410c); }
+    .option5 .tn-3 .tn-circle { background: linear-gradient(135deg, #d13438, #b91c1c); }
+    .option5 .tn-label { font-size: 12px; font-weight: 600; color: #4a5568; }
+
+    /* SVG Icons (using Unicode/Emoji as placeholders - in real app use Fluent icons) */
+    .icon-people::before { content: "👥"; }
+    .icon-join::before { content: "➕"; }
+    .icon-sync::before { content: "🔄"; }
+    .icon-leave::before { content: "👋"; }
+    .icon-task::before { content: "✓"; }
+    .icon-doc::before { content: "📄"; }
+    .icon-calendar::before { content: "📅"; }
+
+    /* Recommendation Badge */
+    .recommended {
+      display: inline-block;
+      background: #10b981;
+      color: white;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 4px;
+      margin-left: 12px;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+  <h1>JML Lite Dashboard - Illustration Options</h1>
+  <p class="subtitle">Choose an illustration style for the dashboard intro header right side</p>
+
+  <!-- Option 1: Abstract Circles -->
+  <div class="mockup-section">
+    <h2>Option 1: Abstract Circles Pattern</h2>
+    <p class="desc">Modern, minimalist design with overlapping circles in JML theme colors (Blue, Orange, Red)</p>
+    <div class="intro-card option1">
+      <div class="intro-content">
+        <div class="intro-badge">👥 Employee Lifecycle Management</div>
+        <h2 class="intro-title">Welcome to JML Lite</h2>
+        <p class="intro-desc">
+          JML (Joiner, Mover, Leaver) is your complete employee lifecycle management solution.
+          Streamline onboarding for new hires, manage internal transfers seamlessly, and ensure
+          compliant offboarding processes.
+        </p>
+        <div class="feature-tags">
+          <span class="feature-tag">✓ Automated Task Management</span>
+          <span class="feature-tag">📄 Document Tracking</span>
+          <span class="feature-tag">📅 Timeline Management</span>
+        </div>
+      </div>
+      <div class="illustration-area">
+        <div class="circles-pattern">
+          <div class="circle circle-1"></div>
+          <div class="circle circle-2"></div>
+          <div class="circle circle-3"></div>
+          <div class="circle circle-4"></div>
+          <div class="circle circle-5"></div>
+          <div class="icon-overlay">👥</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Option 2: Isometric Cards -->
+  <div class="mockup-section">
+    <h2>Option 2: Isometric 3D Cards <span class="recommended">RECOMMENDED</span></h2>
+    <p class="desc">Three floating cards representing Joiner (blue), Mover (orange), and Leaver (red) with subtle 3D perspective</p>
+    <div class="intro-card option2">
+      <div class="intro-content">
+        <div class="intro-badge">👥 Employee Lifecycle Management</div>
+        <h2 class="intro-title">Welcome to JML Lite</h2>
+        <p class="intro-desc">
+          JML (Joiner, Mover, Leaver) is your complete employee lifecycle management solution.
+          Streamline onboarding for new hires, manage internal transfers seamlessly, and ensure
+          compliant offboarding processes.
+        </p>
+        <div class="feature-tags">
+          <span class="feature-tag">✓ Automated Task Management</span>
+          <span class="feature-tag">📄 Document Tracking</span>
+          <span class="feature-tag">📅 Timeline Management</span>
+        </div>
+      </div>
+      <div class="illustration-area">
+        <div class="iso-cards">
+          <div class="iso-card iso-card-1">
+            <span class="card-icon">➕</span>
+            <span class="card-label">JOINER</span>
+          </div>
+          <div class="iso-card iso-card-2">
+            <span class="card-icon">🔄</span>
+            <span class="card-label">MOVER</span>
+          </div>
+          <div class="iso-card iso-card-3">
+            <span class="card-icon">👋</span>
+            <span class="card-label">LEAVER</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Option 3: Connected Nodes -->
+  <div class="mockup-section">
+    <h2>Option 3: Connected Network Nodes</h2>
+    <p class="desc">Central hub with connected workflow nodes - shows the interconnected nature of JML processes</p>
+    <div class="intro-card option3">
+      <div class="intro-content">
+        <div class="intro-badge">👥 Employee Lifecycle Management</div>
+        <h2 class="intro-title">Welcome to JML Lite</h2>
+        <p class="intro-desc">
+          JML (Joiner, Mover, Leaver) is your complete employee lifecycle management solution.
+          Streamline onboarding for new hires, manage internal transfers seamlessly, and ensure
+          compliant offboarding processes.
+        </p>
+        <div class="feature-tags">
+          <span class="feature-tag">✓ Automated Task Management</span>
+          <span class="feature-tag">📄 Document Tracking</span>
+          <span class="feature-tag">📅 Timeline Management</span>
+        </div>
+      </div>
+      <div class="illustration-area">
+        <div class="network">
+          <div class="connection conn-1"></div>
+          <div class="connection conn-2"></div>
+          <div class="connection conn-3"></div>
+          <div class="connection conn-4"></div>
+          <div class="node node-main"><span class="node-icon">👥</span></div>
+          <div class="node node-join"><span class="node-icon">➕</span></div>
+          <div class="node node-move"><span class="node-icon">🔄</span></div>
+          <div class="node node-leave"><span class="node-icon">👋</span></div>
+          <div class="node node-task"><span class="node-icon">✓</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Option 4: Gradient Wave with Floating Icons -->
+  <div class="mockup-section">
+    <h2>Option 4: Gradient Wave with Floating Icons</h2>
+    <p class="desc">Soft gradient background with animated floating icon cards - dynamic and modern</p>
+    <div class="intro-card option4">
+      <div class="intro-content">
+        <div class="intro-badge">👥 Employee Lifecycle Management</div>
+        <h2 class="intro-title">Welcome to JML Lite</h2>
+        <p class="intro-desc">
+          JML (Joiner, Mover, Leaver) is your complete employee lifecycle management solution.
+          Streamline onboarding for new hires, manage internal transfers seamlessly, and ensure
+          compliant offboarding processes.
+        </p>
+        <div class="feature-tags">
+          <span class="feature-tag">✓ Automated Task Management</span>
+          <span class="feature-tag">📄 Document Tracking</span>
+          <span class="feature-tag">📅 Timeline Management</span>
+        </div>
+      </div>
+      <div class="illustration-area">
+        <div class="wave-container">
+          <div class="wave-bg"></div>
+          <div class="floating-icons">
+            <div class="float-icon fi-1">➕</div>
+            <div class="float-icon fi-2">🔄</div>
+            <div class="float-icon fi-3">👋</div>
+            <div class="float-icon fi-4">📄</div>
+            <div class="float-icon fi-5">✓</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Option 5: Timeline Flow -->
+  <div class="mockup-section">
+    <h2>Option 5: Horizontal Timeline Flow</h2>
+    <p class="desc">Linear journey showing the JML lifecycle from joining to leaving</p>
+    <div class="intro-card option5">
+      <div class="intro-content">
+        <div class="intro-badge">👥 Employee Lifecycle Management</div>
+        <h2 class="intro-title">Welcome to JML Lite</h2>
+        <p class="intro-desc">
+          JML (Joiner, Mover, Leaver) is your complete employee lifecycle management solution.
+          Streamline onboarding for new hires, manage internal transfers seamlessly, and ensure
+          compliant offboarding processes.
+        </p>
+        <div class="feature-tags">
+          <span class="feature-tag">✓ Automated Task Management</span>
+          <span class="feature-tag">📄 Document Tracking</span>
+          <span class="feature-tag">📅 Timeline Management</span>
+        </div>
+      </div>
+      <div class="illustration-area">
+        <div class="timeline-flow">
+          <div class="timeline-line"></div>
+          <div class="timeline-node tn-1">
+            <div class="tn-circle">➕</div>
+            <span class="tn-label">Join</span>
+          </div>
+          <div class="timeline-node tn-2">
+            <div class="tn-circle">🔄</div>
+            <span class="tn-label">Move</span>
+          </div>
+          <div class="timeline-node tn-3">
+            <div class="tn-circle">👋</div>
+            <span class="tn-label">Leave</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top: 40px; padding: 24px; background: #fff; border-radius: 12px; border-left: 4px solid #005BAA;">
+    <h3 style="color: #005BAA; margin-bottom: 12px;">Implementation Notes</h3>
+    <ul style="color: #4a5568; line-height: 1.8; margin-left: 20px;">
+      <li><strong>Option 2 (Isometric Cards)</strong> is recommended - it clearly represents the three JML processes</li>
+      <li>Icons will use Fluent UI icons (AddFriend, Sync, UserRemove) instead of emoji</li>
+      <li>The illustration will be rendered as inline React/CSS, not as an external image</li>
+      <li>Hover effects can be added for interactivity (cards lift on hover)</li>
+      <li>Colors match the JML theme: Blue (#005BAA), Orange (#ea580c), Red (#d13438)</li>
+    </ul>
+  </div>
+</body>
+</html>

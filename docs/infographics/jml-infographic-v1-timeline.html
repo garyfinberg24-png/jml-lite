@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JML Lite Process Overview - Timeline View</title>
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      min-height: 100vh;
+      padding: 40px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .logo-icon {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, #005BAA 0%, #004A8F 100%);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 32px rgba(0, 91, 170, 0.3);
+    }
+
+    .logo-icon svg {
+      width: 32px;
+      height: 32px;
+      fill: white;
+    }
+
+    .logo-text {
+      text-align: left;
+    }
+
+    .logo-title {
+      font-size: 32px;
+      font-weight: 700;
+      color: #1a1a2e;
+    }
+
+    .logo-subtitle {
+      font-size: 14px;
+      color: #64748b;
+      font-weight: 500;
+    }
+
+    .header h2 {
+      font-size: 24px;
+      color: #334155;
+      font-weight: 400;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      font-size: 16px;
+      color: #64748b;
+    }
+
+    /* Timeline Container */
+    .timeline {
+      position: relative;
+      padding: 40px 0;
+    }
+
+    /* Central Timeline Line */
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: linear-gradient(180deg, #005BAA 0%, #ea580c 50%, #d13438 100%);
+      transform: translateX(-50%);
+      border-radius: 4px;
+    }
+
+    /* Process Section */
+    .process-section {
+      display: flex;
+      margin-bottom: 80px;
+      position: relative;
+    }
+
+    .process-section:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Alternating layout */
+    .process-section.left .process-content {
+      width: 45%;
+      padding-right: 60px;
+      text-align: right;
+    }
+
+    .process-section.right .process-content {
+      width: 45%;
+      margin-left: 55%;
+      padding-left: 60px;
+      text-align: left;
+    }
+
+    /* Center Node */
+    .timeline-node {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    }
+
+    .timeline-node.joiner {
+      background: linear-gradient(135deg, #005BAA 0%, #0078d4 100%);
+    }
+
+    .timeline-node.mover {
+      background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
+    }
+
+    .timeline-node.leaver {
+      background: linear-gradient(135deg, #d13438 0%, #ef4444 100%);
+    }
+
+    .timeline-node svg {
+      width: 36px;
+      height: 36px;
+      fill: white;
+    }
+
+    /* Process Header */
+    .process-header {
+      margin-bottom: 24px;
+    }
+
+    .process-label {
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+
+    .process-label.joiner {
+      background: rgba(0, 91, 170, 0.1);
+      color: #005BAA;
+    }
+
+    .process-label.mover {
+      background: rgba(234, 88, 12, 0.1);
+      color: #ea580c;
+    }
+
+    .process-label.leaver {
+      background: rgba(209, 52, 56, 0.1);
+      color: #d13438;
+    }
+
+    .process-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin-bottom: 8px;
+    }
+
+    .process-desc {
+      font-size: 15px;
+      color: #64748b;
+      line-height: 1.6;
+    }
+
+    /* Steps Card */
+    .steps-card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    }
+
+    .steps-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #64748b;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .step-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .step-item:last-child {
+      border-bottom: none;
+    }
+
+    .process-section.left .step-item {
+      flex-direction: row-reverse;
+    }
+
+    .step-number {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .step-number.joiner { background: #005BAA; }
+    .step-number.mover { background: #ea580c; }
+    .step-number.leaver { background: #d13438; }
+
+    .step-text {
+      font-size: 14px;
+      color: #334155;
+    }
+
+    /* Stats Row */
+    .stats-row {
+      display: flex;
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .process-section.left .stats-row {
+      justify-content: flex-end;
+    }
+
+    .stat-item {
+      background: #f8fafc;
+      padding: 12px 20px;
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1a1a2e;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Footer */
+    .footer {
+      margin-top: 60px;
+      text-align: center;
+      padding: 32px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    }
+
+    .footer-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1a1a2e;
+      margin-bottom: 20px;
+    }
+
+    .roles-row {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+    }
+
+    .role-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .role-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .role-icon.user { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+    .role-icon.manager { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); }
+    .role-icon.admin { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+
+    .role-icon svg {
+      width: 22px;
+      height: 22px;
+      fill: white;
+    }
+
+    .role-text {
+      text-align: left;
+    }
+
+    .role-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1a1a2e;
+    }
+
+    .role-desc {
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    /* DWx Badge */
+    .dwx-badge {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: white;
+      padding: 12px 20px;
+      border-radius: 30px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .dwx-badge strong {
+      color: #005BAA;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+        </div>
+        <div class="logo-text">
+          <div class="logo-title">JML Lite</div>
+          <div class="logo-subtitle">Employee Lifecycle Management</div>
+        </div>
+      </div>
+      <h2>The Complete Employee Journey</h2>
+      <p>From first day to farewell - managing every step of the employee lifecycle</p>
+    </div>
+
+    <!-- Timeline -->
+    <div class="timeline">
+      <!-- JOINER Section -->
+      <div class="process-section left">
+        <div class="process-content">
+          <div class="process-header">
+            <span class="process-label joiner">Joiner</span>
+            <h3 class="process-title">Onboarding</h3>
+            <p class="process-desc">Welcome new employees with a structured 8-step process covering everything from paperwork to first-day readiness.</p>
+          </div>
+          <div class="steps-card">
+            <div class="steps-title">Wizard Steps</div>
+            <div class="step-item">
+              <span class="step-number joiner">1</span>
+              <span class="step-text">Employee Details & Contact Info</span>
+            </div>
+            <div class="step-item">
+              <span class="step-number joiner">2</span>
+              <span class="step-text">Job Title & Department</span>
+            </div>
+            <div class="step-item">
+              <span class="step-number joiner">3</span>
+              <span class="step-text">Start Date & Work Location</span>
+            </div>
+            <div class="step-item">
+              <span class="step-number joiner">4</span>
+              <span class="step-text">Documentation & Contracts</span>
+            </div>
+            <div class="step-item">
+              <span class="step-number joiner">5</span>
+              <span class="step-text">System Access & Permissions</span>
+            </div>
+            <div class="step-item">
+              <span class="step-number joiner">6</span>
+              <span class="step-text">Equipment & Assets</span>
+            </div>
+            <div class="step-item">
+              <span class="step-number joiner">7</span>
+              <span class="step-text">Training Assignments</span>
+            </div>
+            <div class="step-item">
+              <span class="step-number joiner">8</span>
+              <span class="step-text">Review & Submit</span>
+            </div>
+          </div>
+          <div class="stats-row">
+            <div class="stat-item">
+              <div class="stat-value">8</div>
+              <div class="stat-label">Steps</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">15+</div>
+              <div class="stat-label">Tasks</div>
+            </div>
+          </div>
+        </div>
+        <div class="timeline-node joiner">
+          <svg viewBox="0 0 24 24"><path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        </div>
+      </div>
+
+      <!-- MOVER Section -->
+      <div class="process-section right">
+        <div class="process-content">
+          <div class="process-header">
+            <span class="process-label mover">Mover</span>
+            <h3 class="process-title">Internal Transfers</h3>
+            <p class="process-desc">Seamlessly manage department changes, promotions, and role transitions with a 6-step workflow.</p>
+          </div>
+          <div class="steps-card">
+            <div class="steps-title">Wizard Steps</div>
+            <div class="step-item">
+              <span class="step-number mover">1</span>
+              <span class="step-text">Select Employee</span>
+            </div>
+            <div class="step-item">
+              <span class="step-number mover">2</span>
+              <span class="step-text">Transfer Type & Reason</span>
+            </div>
+            <div class="step-item">
+              <span class="step-number mover">3</span>
+              <span class="step-text">New Position & Department</span>
+            </div>
+            <div class="step-item">
+              <span class="step-number mover">4</span>
+              <span class="step-text">System Access Changes</span>
+            </div>
+            <div class="step-item">
+              <span class="step-number mover">5</span>
+              <span class="step-text">Asset Reassignment</span>
+            </div>
+            <div class="step-item">
+              <span class="step-number mover">6</span>
+              <span class="step-text">Review & Confirm</span>
+            </div>
+          </div>
+          <div class="stats-row">
+            <div class="stat-item">
+              <div class="stat-value">6</div>
+              <div class="stat-label">Steps</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">4</div>
+              <div class="stat-label">Types</div>
+            </div>
+          </div>
+        </div>
+        <div class="timeline-node mover">
+          <svg viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
+        </div>
+      </div>
+
+      <!-- LEAVER Section -->
+      <div class="process-section left">
+        <div class="process-content">
+          <div class="process-header">
+            <span class="process-label leaver">Leaver</span>
+            <h3 class="process-title">Offboarding</h3>
+            <p class="process-desc">Ensure compliant and complete separation with a 7-step process covering asset returns and knowledge transfer.</p>
+          </div>
+          <div class="steps-card">
+            <div class="steps-title">Wizard Steps</div>
+            <div class="step-item">
+              <span class="step-number leaver">1</span>
+              <span class="step-text">Employee & Termination Type</span>
+            </div>
+            <div class="step-item">
+              <span class="step-number leaver">2</span>
+              <span class="step-text">Last Working Day</span>
+            </div>
+            <div class="step-item">
+              <span class="step-number leaver">3</span>
+              <span class="step-text">Asset Return Checklist</span>
+            </div>
+            <div class="step-item">
+              <span class="step-number leaver">4</span>
+              <span class="step-text">System Access Revocation</span>
+            </div>
+            <div class="step-item">
+              <span class="step-number leaver">5</span>
+              <span class="step-text">Knowledge Transfer</span>
+            </div>
+            <div class="step-item">
+              <span class="step-number leaver">6</span>
+              <span class="step-text">Exit Interview</span>
+            </div>
+            <div class="step-item">
+              <span class="step-number leaver">7</span>
+              <span class="step-text">Review & Complete</span>
+            </div>
+          </div>
+          <div class="stats-row">
+            <div class="stat-item">
+              <div class="stat-value">7</div>
+              <div class="stat-label">Steps</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">5</div>
+              <div class="stat-label">Types</div>
+            </div>
+          </div>
+        </div>
+        <div class="timeline-node leaver">
+          <svg viewBox="0 0 24 24"><path d="M14 8c0-2.21-1.79-4-4-4S6 5.79 6 8s1.79 4 4 4 4-1.79 4-4zm3 2v2h6v-2h-6zM2 18v2h16v-2c0-2.66-5.33-4-8-4s-8 1.34-8 4z"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer - Roles -->
+    <div class="footer">
+      <div class="footer-title">Role-Based Access Control</div>
+      <div class="roles-row">
+        <div class="role-item">
+          <div class="role-icon user">
+            <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+          </div>
+          <div class="role-text">
+            <div class="role-name">User</div>
+            <div class="role-desc">My Onboarding, Search, Help</div>
+          </div>
+        </div>
+        <div class="role-item">
+          <div class="role-icon manager">
+            <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+          </div>
+          <div class="role-text">
+            <div class="role-name">Manager</div>
+            <div class="role-desc">Full JML Operations Access</div>
+          </div>
+        </div>
+        <div class="role-item">
+          <div class="role-icon admin">
+            <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+          </div>
+          <div class="role-text">
+            <div class="role-name">Admin</div>
+            <div class="role-desc">System Configuration</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DWx Badge -->
+  <div class="dwx-badge">
+    Part of <strong>DWx Suite</strong> by First Digital
+  </div>
+</body>
+</html>

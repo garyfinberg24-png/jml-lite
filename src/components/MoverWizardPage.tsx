@@ -861,8 +861,8 @@ export const MoverWizardPage: React.FC<IProps> = ({ sp, onComplete, onCancel }) 
           { value: 'In Progress', label: 'Status' },
         ]}
         summaryPanels={summaryPanels}
-        primaryAction={{ label: 'View Transfers', onClick: onComplete }}
-        secondaryAction={{ label: 'Start Another', onClick: () => { setSubmitted(false); setCurrentStep(0); } }}
+        primaryAction={{ icon: 'Sync', tooltip: 'Process Another Transfer', onClick: () => { setSubmitted(false); setCurrentStep(0); } }}
+        secondaryAction={{ icon: 'ChromeClose', tooltip: 'Close', onClick: onComplete }}
       />
     );
   }
@@ -892,8 +892,6 @@ export const MoverWizardPage: React.FC<IProps> = ({ sp, onComplete, onCancel }) 
       isLastStep={currentStep === STEPS.length - 1}
       isSubmitting={submitting}
       submitLabel="Create Transfer"
-      backToTrackerLabel="Back to Transfers"
-      onBackToTracker={onCancel}
     >
       {renderStepContent()}
     </JmlWizardLayout>
